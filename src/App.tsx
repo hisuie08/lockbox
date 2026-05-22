@@ -1,7 +1,6 @@
 import {
   Copy,
   Download,
-  FileKey2,
   KeyRound,
   LockKeyhole,
   Trash2,
