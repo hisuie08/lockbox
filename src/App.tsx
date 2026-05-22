@@ -4,14 +4,13 @@ import {
   FileKey2,
   KeyRound,
   LockKeyhole,
-  ShieldCheck,
   Trash2,
   UnlockKeyhole,
   Upload,
-} from "lucide-react"
-import { toast } from "sonner"
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/base/button";
 import {
   Card,
   CardAction,
@@ -19,34 +18,39 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Toaster } from "@/components/ui/sonner"
-import { useCryptoKeys } from "@/hooks/useCryptoKeys"
-import { useFileCrypto } from "@/hooks/useFileCrypto"
-import { downloadText } from "@/lib/download"
+} from "@/components/base/card";
+import { Input } from "@/components/base/input";
+import { Toaster } from "@/components/base/sonner";
+import { useCryptoKeys } from "@/hooks/useCryptoKeys";
+import { useFileCrypto } from "@/hooks/useFileCrypto";
+import { downloadText } from "@/lib/download";
+import { Header } from "./components/ui/header";
+import { Algorithmns } from "./components/ui/algorithms";
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) {
-    return "0 B"
+    return "0 B";
   }
 
-  const units = ["B", "KB", "MB", "GB"]
-  const unitIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  const value = bytes / 1024 ** unitIndex
+  const units = ["B", "KB", "MB", "GB"];
+  const unitIndex = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  const value = bytes / 1024 ** unitIndex;
 
-  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
+  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
 async function copyText(value: string, label: string) {
-  await navigator.clipboard.writeText(value)
-  toast.success(`${label} copied`)
+  await navigator.clipboard.writeText(value);
+  toast.success(`${label} copied`);
 }
 
 function ResultDownload(props: {
-  href: string
-  filename: string
-  label: string
+  href: string;
+  filename: string;
+  label: string;
 }) {
   return (
     <a
@@ -60,43 +64,18 @@ function ResultDownload(props: {
       <span className="truncate">{props.label}</span>
       <Download aria-hidden="true" />
     </a>
-  )
+  );
 }
 
 function App() {
-  const keys = useCryptoKeys()
-  const files = useFileCrypto()
-  const error = keys.error ?? files.error
+  const keys = useCryptoKeys();
+  const files = useFileCrypto();
+  const error = keys.error ?? files.error;
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <ShieldCheck aria-hidden="true" className="size-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-normal">Lockbox</h1>
-              <p className="text-sm text-muted-foreground">RSA-OAEP + AES-GCM</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:items-center">
-            <div className="rounded-md border border-border bg-card px-3 py-2">
-              <span className="text-muted-foreground">Public</span>{" "}
-              <span className={keys.publicKey ? "font-medium text-emerald-700" : "font-medium"}>
-                {keys.publicKey ? "Loaded" : "Empty"}
-              </span>
-            </div>
-            <div className="rounded-md border border-border bg-card px-3 py-2">
-              <span className="text-muted-foreground">Private</span>{" "}
-              <span className={keys.privateKey ? "font-medium text-emerald-700" : "font-medium"}>
-                {keys.privateKey ? "Loaded" : "Empty"}
-              </span>
-            </div>
-          </div>
-        </header>
+        <Header privateKey={keys.privateKey} publicKey={keys.publicKey} />
 
         {error ? (
           <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -113,7 +92,10 @@ function App() {
               </CardTitle>
               <CardDescription>JWK import/export</CardDescription>
               <CardAction>
-                <Button onClick={keys.generateKeys} disabled={keys.isGenerating}>
+                <Button
+                  onClick={keys.generateKeys}
+                  disabled={keys.isGenerating}
+                >
                   <KeyRound aria-hidden="true" />
                   {keys.isGenerating ? "Generating" : "Generate"}
                 </Button>
@@ -127,7 +109,9 @@ function App() {
                     className="min-h-52 resize-y rounded-md border border-input bg-background px-3 py-2 font-mono text-xs shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     spellCheck={false}
                     value={keys.publicKeyText}
-                    onChange={(event) => keys.setPublicKeyText(event.target.value)}
+                    onChange={(event) =>
+                      keys.setPublicKeyText(event.target.value)
+                    }
                   />
                 </label>
 
@@ -137,8 +121,12 @@ function App() {
                     className="min-h-52 resize-y rounded-md border border-input bg-background px-3 py-2 font-mono text-xs shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     spellCheck={false}
                     value={keys.privateKeyText}
-                    onChange={(event) => { keys.setPrivateKeyText(event.target.value) }}
-                    onFocus={(event) => { event.target.select() }}
+                    onChange={(event) => {
+                      keys.setPrivateKeyText(event.target.value);
+                    }}
+                    onFocus={(event) => {
+                      event.target.select();
+                    }}
                   />
                 </label>
               </div>
@@ -155,7 +143,12 @@ function App() {
                 <Button
                   variant="outline"
                   disabled={!keys.publicKeyText}
-                  onClick={() => downloadText(keys.publicKeyText, "lockbox-public-key.jwk.json")}
+                  onClick={() =>
+                    downloadText(
+                      keys.publicKeyText,
+                      "lockbox-public-key.jwk.json",
+                    )
+                  }
                 >
                   <Download aria-hidden="true" />
                   Public JWK
@@ -163,7 +156,12 @@ function App() {
                 <Button
                   variant="outline"
                   disabled={!keys.privateKeyText}
-                  onClick={() => downloadText(keys.privateKeyText, "lockbox-private-key.jwk.json")}
+                  onClick={() =>
+                    downloadText(
+                      keys.privateKeyText,
+                      "lockbox-private-key.jwk.json",
+                    )
+                  }
                 >
                   <Download aria-hidden="true" />
                   Private JWK
@@ -203,13 +201,15 @@ function App() {
                   <LockKeyhole aria-hidden="true" className="size-4" />
                   Encrypt
                 </CardTitle>
-                <CardDescription>{files.fileToEncrypt?.name ?? "No file selected"}</CardDescription>
+                <CardDescription>
+                  {files.fileToEncrypt?.name ?? "No file selected"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
                 <Input
                   type="file"
                   onChange={(event) => {
-                    files.setFileToEncrypt(event.target.files?.[0] ?? null)
+                    files.setFileToEncrypt(event.target.files?.[0] ?? null);
                   }}
                 />
                 {files.fileToEncrypt ? (
@@ -221,7 +221,11 @@ function App() {
                   </div>
                 ) : null}
                 <Button
-                  disabled={!files.fileToEncrypt || !keys.publicKey || files.isEncrypting}
+                  disabled={
+                    !files.fileToEncrypt ||
+                    !keys.publicKey ||
+                    files.isEncrypting
+                  }
                   onClick={() => files.encryptSelectedFile(keys.publicKey)}
                 >
                   <LockKeyhole aria-hidden="true" />
@@ -243,14 +247,16 @@ function App() {
                   <UnlockKeyhole aria-hidden="true" className="size-4" />
                   Decrypt
                 </CardTitle>
-                <CardDescription>{files.fileToDecrypt?.name ?? "No file selected"}</CardDescription>
+                <CardDescription>
+                  {files.fileToDecrypt?.name ?? "No file selected"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
                 <Input
                   type="file"
                   accept="application/json,.json"
                   onChange={(event) => {
-                    files.setFileToDecrypt(event.target.files?.[0] ?? null)
+                    files.setFileToDecrypt(event.target.files?.[0] ?? null);
                   }}
                 />
                 {files.fileToDecrypt ? (
@@ -262,7 +268,11 @@ function App() {
                   </div>
                 ) : null}
                 <Button
-                  disabled={!files.fileToDecrypt || !keys.privateKey || files.isDecrypting}
+                  disabled={
+                    !files.fileToDecrypt ||
+                    !keys.privateKey ||
+                    files.isDecrypting
+                  }
                   onClick={() => files.decryptSelectedFile(keys.privateKey)}
                 >
                   <UnlockKeyhole aria-hidden="true" />
@@ -277,29 +287,13 @@ function App() {
                 ) : null}
               </CardContent>
             </Card>
-
-            <Card className="rounded-lg" size="sm">
-              <CardContent className="grid gap-3 pt-0">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <FileKey2 aria-hidden="true" className="size-4" />
-                  Session
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md bg-muted px-3 py-2">
-                    AES-GCM <span className="text-muted-foreground">256</span>
-                  </div>
-                  <div className="rounded-md bg-muted px-3 py-2">
-                    RSA-OAEP <span className="text-muted-foreground">4096</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Algorithmns />
           </div>
         </section>
       </div>
       <Toaster position="bottom-right" />
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
