@@ -18,30 +18,48 @@ export async function exportPrivateKey(key: CryptoKey): Promise<JsonWebKey> {
 }
 
 export async function importPublicKey(jwk: JsonWebKey): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "RSA-OAEP", hash: "SHA-256" },
-    true,
-    ["encrypt"],
-  )
+  try {
+    return await crypto.subtle.importKey(
+      "jwk",
+      jwk,
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      true,
+      ["encrypt"],
+    )
+  } catch {
+    throw new Error("Public JWK must be a valid RSA-OAEP public key.")
+  }
 }
 
 export async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "RSA-OAEP", hash: "SHA-256" },
-    true,
-    ["decrypt"],
-  )
+  try {
+    return await crypto.subtle.importKey(
+      "jwk",
+      jwk,
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      true,
+      ["decrypt"],
+    )
+  } catch {
+    throw new Error("Private JWK must be a valid RSA-OAEP private key.")
+  }
 }
 
 export function parseJwk(value: string): JsonWebKey {
-  const parsed = JSON.parse(value) as JsonWebKey
+  if (!value.trim()) {
+    throw new Error("Paste a JWK before loading it.")
+  }
 
-  if (typeof parsed !== "object" || parsed === null || typeof parsed.kty !== "string") {
-    throw new Error("Key must be a JSON Web Key.")
+  let parsed: JsonWebKey
+
+  try {
+    parsed = JSON.parse(value) as JsonWebKey
+  } catch {
+    throw new Error("JWK must be valid JSON.")
+  }
+
+  if (typeof parsed !== "object" || parsed === null || parsed.kty !== "RSA") {
+    throw new Error("JWK must be an RSA key.")
   }
 
   return parsed

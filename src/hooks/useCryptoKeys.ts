@@ -20,7 +20,11 @@ type CryptoKeyState = {
 }
 
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Key operation failed."
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  return "Key operation failed."
 }
 
 export function useCryptoKeys() {
@@ -79,11 +83,21 @@ export function useCryptoKeys() {
   }
 
   function setPublicKeyText(publicKeyText: string) {
-    setState((current) => ({ ...current, publicKeyText }))
+    setState((current) => ({
+      ...current,
+      publicKey: null,
+      publicKeyText,
+      error: null,
+    }))
   }
 
   function setPrivateKeyText(privateKeyText: string) {
-    setState((current) => ({ ...current, privateKeyText }))
+    setState((current) => ({
+      ...current,
+      privateKey: null,
+      privateKeyText,
+      error: null,
+    }))
   }
 
   function clearPrivateKey() {

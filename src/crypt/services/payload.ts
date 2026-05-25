@@ -42,7 +42,13 @@ export function serializeEncryptedFilePayload(payload: EncryptedFilePayload): Bl
 }
 
 export function parseEncryptedFilePayload(value: string): EncryptedFilePayload {
-  const parsed = JSON.parse(value) as Partial<EncryptedFilePayload>
+  let parsed: Partial<EncryptedFilePayload>
+
+  try {
+    parsed = JSON.parse(value) as Partial<EncryptedFilePayload>
+  } catch {
+    throw new Error("Choose a Lockbox encrypted JSON file.")
+  }
 
   if (
     parsed.version !== encryptedFileVersion ||
@@ -56,7 +62,7 @@ export function parseEncryptedFilePayload(value: string): EncryptedFilePayload {
     typeof parsed.ciphertext !== "string" ||
     typeof parsed.createdAt !== "string"
   ) {
-    throw new Error("Encrypted file format is not supported.")
+    throw new Error("Choose an encrypted file created by this app.")
   }
 
   return {

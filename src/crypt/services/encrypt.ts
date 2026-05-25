@@ -18,11 +18,17 @@ export async function encryptFile(input: {
     ["encrypt", "decrypt"],
   )
   const rawAesKey = await crypto.subtle.exportKey("raw", aesKey)
-  const encryptedKey = await crypto.subtle.encrypt(
-    { name: "RSA-OAEP" },
-    input.publicKey,
-    rawAesKey,
-  )
+  let encryptedKey: ArrayBuffer
+
+  try {
+    encryptedKey = await crypto.subtle.encrypt(
+      { name: "RSA-OAEP" },
+      input.publicKey,
+      rawAesKey,
+    )
+  } catch {
+    throw new Error("Loaded public key cannot encrypt files.")
+  }
   const iv = crypto.getRandomValues(new Uint8Array(12)) as Uint8Array<ArrayBuffer>
   const metadata = createEncryptedFileMetadata({
     originalName: input.file.name,

@@ -20,7 +20,11 @@ type FileCryptoState = {
 }
 
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "File operation failed."
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  return "File operation failed."
 }
 
 function toFileResult(blob: Blob, filename: string): FileResult {
@@ -65,11 +69,33 @@ export function useFileCrypto() {
   }, [])
 
   function setFileToEncrypt(file: File | null) {
-    setState((current) => ({ ...current, fileToEncrypt: file, error: null }))
+    setState((current) => {
+      if (current.encryptedResult) {
+        URL.revokeObjectURL(current.encryptedResult.url)
+      }
+
+      return {
+        ...current,
+        encryptedResult: null,
+        fileToEncrypt: file,
+        error: null,
+      }
+    })
   }
 
   function setFileToDecrypt(file: File | null) {
-    setState((current) => ({ ...current, fileToDecrypt: file, error: null }))
+    setState((current) => {
+      if (current.decryptedResult) {
+        URL.revokeObjectURL(current.decryptedResult.url)
+      }
+
+      return {
+        ...current,
+        decryptedResult: null,
+        fileToDecrypt: file,
+        error: null,
+      }
+    })
   }
 
   async function encryptSelectedFile(publicKey: CryptoKey | null) {
@@ -81,7 +107,18 @@ export function useFileCrypto() {
       return
     }
 
-    setState((current) => ({ ...current, isEncrypting: true, error: null }))
+    setState((current) => {
+      if (current.encryptedResult) {
+        URL.revokeObjectURL(current.encryptedResult.url)
+      }
+
+      return {
+        ...current,
+        encryptedResult: null,
+        isEncrypting: true,
+        error: null,
+      }
+    })
 
     try {
       const result = await encryptFile({
@@ -119,7 +156,18 @@ export function useFileCrypto() {
       return
     }
 
-    setState((current) => ({ ...current, isDecrypting: true, error: null }))
+    setState((current) => {
+      if (current.decryptedResult) {
+        URL.revokeObjectURL(current.decryptedResult.url)
+      }
+
+      return {
+        ...current,
+        decryptedResult: null,
+        isDecrypting: true,
+        error: null,
+      }
+    })
 
     try {
       const result = await decryptFile({

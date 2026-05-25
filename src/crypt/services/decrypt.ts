@@ -17,11 +17,18 @@ export async function decryptFile(input: {
     iv: payload.iv,
     createdAt: payload.createdAt,
   }
-  const rawAesKey = await crypto.subtle.decrypt(
-    { name: "RSA-OAEP" },
-    input.privateKey,
-    base64ToBytes(payload.encryptedKey),
-  )
+  let rawAesKey: ArrayBuffer
+
+  try {
+    rawAesKey = await crypto.subtle.decrypt(
+      { name: "RSA-OAEP" },
+      input.privateKey,
+      base64ToBytes(payload.encryptedKey),
+    )
+  } catch {
+    throw new Error("This private key cannot unlock the encrypted file.")
+  }
+
   const aesKey = await crypto.subtle.importKey(
     "raw",
     rawAesKey,
@@ -29,15 +36,21 @@ export async function decryptFile(input: {
     false,
     ["decrypt"],
   )
-  const plaintext = await crypto.subtle.decrypt(
-    {
-      name: "AES-GCM",
-      iv: base64ToBytes(payload.iv),
-      additionalData: createAdditionalData(metadata),
-    },
-    aesKey,
-    base64ToBytes(payload.ciphertext),
-  )
+  let plaintext: ArrayBuffer
+
+  try {
+    plaintext = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: base64ToBytes(payload.iv),
+        additionalData: createAdditionalData(metadata),
+      },
+      aesKey,
+      base64ToBytes(payload.ciphertext),
+    )
+  } catch {
+    throw new Error("Encrypted file authentication failed. The file may be corrupted or modified.")
+  }
 
   return {
     blob: new Blob([plaintext], {

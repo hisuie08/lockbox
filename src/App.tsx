@@ -7,6 +7,7 @@ import {
   UnlockKeyhole,
   Upload,
 } from "lucide-react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button, buttonVariants } from "@/components/base/button";
@@ -42,8 +43,12 @@ function formatBytes(bytes: number): string {
 }
 
 async function copyText(value: string, label: string) {
-  await navigator.clipboard.writeText(value);
-  toast.success(`${label} copied`);
+  try {
+    await navigator.clipboard.writeText(value);
+    toast.success(`${label} copied`);
+  } catch {
+    toast.error("Clipboard permission was blocked.");
+  }
 }
 
 function ResultDownload(props: {
@@ -69,16 +74,37 @@ function ResultDownload(props: {
 function App() {
   const keys = useCryptoKeys();
   const files = useFileCrypto();
-  const error = keys.error ?? files.error;
+  const errors = [keys.error, files.error].filter(
+    (error): error is string => Boolean(error),
+  );
+
+  useEffect(() => {
+    if (keys.error) {
+      toast.error(keys.error);
+    }
+  }, [keys.error]);
+
+  useEffect(() => {
+    if (files.error) {
+      toast.error(files.error);
+    }
+  }, [files.error]);
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <Header privateKey={keys.privateKey} publicKey={keys.publicKey} />
 
-        {error ? (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {error}
+        {errors.length > 0 ? (
+          <div className="grid gap-2">
+            {errors.map((error) => (
+              <div
+                className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                key={error}
+              >
+                {error}
+              </div>
+            ))}
           </div>
         ) : null}
 
