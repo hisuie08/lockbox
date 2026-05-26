@@ -74,8 +74,8 @@ function ResultDownload(props: {
 function App() {
   const keys = useCryptoKeys();
   const files = useFileCrypto();
-  const errors = [keys.error, files.error].filter(
-    (error): error is string => Boolean(error),
+  const errors = [keys.error, files.error].filter((error): error is string =>
+    Boolean(error),
   );
 
   useEffect(() => {
@@ -137,6 +137,9 @@ function App() {
                     onChange={(event) =>
                       keys.setPublicKeyText(event.target.value)
                     }
+                    onFocus={(event) => {
+                      event.target.select();
+                    }}
                   />
                 </label>
 
