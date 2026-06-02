@@ -1,12 +1,12 @@
-import { base64ToBytes } from "./encoding"
-import { createAdditionalData, parseEncryptedFilePayload } from "./payload"
-import type { DecryptFileResult, EncryptedFileMetadata } from "./types"
+import { base64ToBytes } from "./encoding";
+import { createAdditionalData, parseEncryptedFilePayload } from "./payload";
+import type { DecryptFileResult, EncryptedFileMetadata } from "./types";
 
 export async function decryptFile(input: {
-  file: File
-  privateKey: CryptoKey
+  file: File;
+  privateKey: CryptoKey;
 }): Promise<DecryptFileResult> {
-  const payload = parseEncryptedFilePayload(await input.file.text())
+  const payload = parseEncryptedFilePayload(await input.file.text());
   const metadata: EncryptedFileMetadata = {
     version: payload.version,
     algorithms: payload.algorithms,
@@ -16,17 +16,17 @@ export async function decryptFile(input: {
     encryptedKey: payload.encryptedKey,
     iv: payload.iv,
     createdAt: payload.createdAt,
-  }
-  let rawAesKey: ArrayBuffer
+  };
+  let rawAesKey: ArrayBuffer;
 
   try {
     rawAesKey = await crypto.subtle.decrypt(
       { name: "RSA-OAEP" },
       input.privateKey,
       base64ToBytes(payload.encryptedKey),
-    )
+    );
   } catch {
-    throw new Error("This private key cannot unlock the encrypted file.")
+    throw new Error("This private key cannot unlock the encrypted file.");
   }
 
   const aesKey = await crypto.subtle.importKey(
@@ -35,8 +35,8 @@ export async function decryptFile(input: {
     { name: "AES-GCM", length: 256 },
     false,
     ["decrypt"],
-  )
-  let plaintext: ArrayBuffer
+  );
+  let plaintext: ArrayBuffer;
 
   try {
     plaintext = await crypto.subtle.decrypt(
@@ -47,9 +47,11 @@ export async function decryptFile(input: {
       },
       aesKey,
       base64ToBytes(payload.ciphertext),
-    )
+    );
   } catch {
-    throw new Error("Encrypted file authentication failed. The file may be corrupted or modified.")
+    throw new Error(
+      "Encrypted file authentication failed. The file may be corrupted or modified.",
+    );
   }
 
   return {
@@ -58,5 +60,5 @@ export async function decryptFile(input: {
     }),
     filename: payload.originalName || "decrypted-file",
     metadata,
-  }
+  };
 }

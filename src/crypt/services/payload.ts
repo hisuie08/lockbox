@@ -1,23 +1,23 @@
-import { encodeText, stableJson } from "./encoding"
+import { encodeText, stableJson } from "./encoding";
 import {
   encryptedFileVersion,
   type EncryptedFileAlgorithms,
   type EncryptedFileMetadata,
   type EncryptedFilePayload,
-} from "./types"
+} from "./types";
 
 export const encryptedFileAlgorithms = {
   keyEncryption: "RSA-OAEP-4096-SHA-256",
   contentEncryption: "AES-GCM-256",
-} satisfies EncryptedFileAlgorithms
+} satisfies EncryptedFileAlgorithms;
 
 export function createEncryptedFileMetadata(input: {
-  originalName: string
-  originalType: string
-  originalSize: number
-  encryptedKey: string
-  iv: string
-  createdAt: string
+  originalName: string;
+  originalType: string;
+  originalSize: number;
+  encryptedKey: string;
+  iv: string;
+  createdAt: string;
 }): EncryptedFileMetadata {
   return {
     version: encryptedFileVersion,
@@ -28,32 +28,38 @@ export function createEncryptedFileMetadata(input: {
     encryptedKey: input.encryptedKey,
     iv: input.iv,
     createdAt: input.createdAt,
-  }
+  };
 }
 
-export function createAdditionalData(metadata: EncryptedFileMetadata): Uint8Array<ArrayBuffer> {
-  return encodeText(stableJson(metadata))
+export function createAdditionalData(
+  metadata: EncryptedFileMetadata,
+): Uint8Array<ArrayBuffer> {
+  return encodeText(stableJson(metadata));
 }
 
-export function serializeEncryptedFilePayload(payload: EncryptedFilePayload): Blob {
+export function serializeEncryptedFilePayload(
+  payload: EncryptedFilePayload,
+): Blob {
   return new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
-  })
+  });
 }
 
 export function parseEncryptedFilePayload(value: string): EncryptedFilePayload {
-  let parsed: Partial<EncryptedFilePayload>
+  let parsed: Partial<EncryptedFilePayload>;
 
   try {
-    parsed = JSON.parse(value) as Partial<EncryptedFilePayload>
+    parsed = JSON.parse(value) as Partial<EncryptedFilePayload>;
   } catch {
-    throw new Error("Choose a Lockbox encrypted JSON file.")
+    throw new Error("Choose a Lockbox encrypted JSON file.");
   }
 
   if (
     parsed.version !== encryptedFileVersion ||
-    parsed.algorithms?.keyEncryption !== encryptedFileAlgorithms.keyEncryption ||
-    parsed.algorithms?.contentEncryption !== encryptedFileAlgorithms.contentEncryption ||
+    parsed.algorithms?.keyEncryption !==
+      encryptedFileAlgorithms.keyEncryption ||
+    parsed.algorithms?.contentEncryption !==
+      encryptedFileAlgorithms.contentEncryption ||
     typeof parsed.originalName !== "string" ||
     typeof parsed.originalType !== "string" ||
     typeof parsed.originalSize !== "number" ||
@@ -62,7 +68,7 @@ export function parseEncryptedFilePayload(value: string): EncryptedFilePayload {
     typeof parsed.ciphertext !== "string" ||
     typeof parsed.createdAt !== "string"
   ) {
-    throw new Error("Choose an encrypted file created by this app.")
+    throw new Error("Choose an encrypted file created by this app.");
   }
 
   return {
@@ -75,10 +81,10 @@ export function parseEncryptedFilePayload(value: string): EncryptedFilePayload {
     iv: parsed.iv,
     ciphertext: parsed.ciphertext,
     createdAt: parsed.createdAt,
-  }
+  };
 }
 
 export function getEncryptedFilename(originalName: string): string {
-  const safeName = originalName.trim() || "file"
-  return `${safeName}.encrypted.json`
+  const safeName = originalName.trim() || "file";
+  return `${safeName}.encrypted.json`;
 }

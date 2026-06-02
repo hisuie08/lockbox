@@ -77,7 +77,10 @@ export function useFileCrypto() {
     });
   }
 
-  function setFileToEncrypt(maxFileSize: number, event: React.ChangeEvent<HTMLInputElement>) {
+  function setFileToEncrypt(
+    maxFileSize: number,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0] ?? null;
     if (file && file.size > maxFileSize) {
       setError(`File size exceeds the limit of ${formatBytes(maxFileSize)}.`);
@@ -98,7 +101,10 @@ export function useFileCrypto() {
     });
   }
 
-  function setFileToDecrypt(maxFileSize: number, event: React.ChangeEvent<HTMLInputElement>) {
+  function setFileToDecrypt(
+    maxFileSize: number,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0] ?? null;
     if (file && file.size > maxFileSize) {
       setError(`File size exceeds the limit of ${formatBytes(maxFileSize)}.`);

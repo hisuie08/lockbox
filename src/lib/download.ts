@@ -1,11 +1,11 @@
 export function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement("a")
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
 
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export function downloadText(contents: string, filename: string) {
@@ -14,5 +14,5 @@ export function downloadText(contents: string, filename: string) {
       type: "application/json",
     }),
     filename,
-  )
+  );
 }

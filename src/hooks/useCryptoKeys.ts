@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react";
 
 import {
   exportPrivateKey,
@@ -8,23 +8,23 @@ import {
   importPrivateKey,
   importPublicKey,
   parseJwk,
-} from "@/crypt/services/genKeyPair"
+} from "@/crypt/services/genKeyPair";
 
 type CryptoKeyState = {
-  publicKey: CryptoKey | null
-  privateKey: CryptoKey | null
-  publicKeyText: string
-  privateKeyText: string
-  isGenerating: boolean
-  error: string | null
-}
+  publicKey: CryptoKey | null;
+  privateKey: CryptoKey | null;
+  publicKeyText: string;
+  privateKeyText: string;
+  isGenerating: boolean;
+  error: string | null;
+};
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
-    return error.message
+    return error.message;
   }
 
-  return "Key operation failed."
+  return "Key operation failed.";
 }
 
 export function useCryptoKeys() {
@@ -35,17 +35,17 @@ export function useCryptoKeys() {
     privateKeyText: "",
     isGenerating: false,
     error: null,
-  })
+  });
 
   async function generateKeys() {
-    setState((current) => ({ ...current, isGenerating: true, error: null }))
+    setState((current) => ({ ...current, isGenerating: true, error: null }));
 
     try {
-      const keyPair = await genKeyPair()
+      const keyPair = await genKeyPair();
       const [publicJwk, privateJwk] = await Promise.all([
         exportPublicKey(keyPair.publicKey),
         exportPrivateKey(keyPair.privateKey),
-      ])
+      ]);
 
       setState({
         publicKey: keyPair.publicKey,
@@ -54,32 +54,36 @@ export function useCryptoKeys() {
         privateKeyText: formatJwk(privateJwk),
         isGenerating: false,
         error: null,
-      })
+      });
     } catch (error) {
       setState((current) => ({
         ...current,
         isGenerating: false,
         error: getErrorMessage(error),
-      }))
+      }));
     }
   }
 
   async function importPublicKeyText() {
     try {
-      const publicKey = await importPublicKey(parseJwk(state.publicKeyText))
-      setState((current) => ({ ...current, publicKey, error: null }))
+      const publicKey = await importPublicKey(parseJwk(state.publicKeyText));
+      setState((current) => ({ ...current, publicKey, error: null }));
     } catch (error) {
-      setState((current) => ({ ...current, error: getErrorMessage(error) }))
+      setState((current) => ({ ...current, error: getErrorMessage(error) }));
     }
   }
 
   async function importPrivateKeyText() {
     try {
-      const privateKey = await importPrivateKey(parseJwk(state.privateKeyText))
-      setState((current) => ({ ...current, privateKey, error: null }))
+      const privateKey = await importPrivateKey(parseJwk(state.privateKeyText));
+      setState((current) => ({ ...current, privateKey, error: null }));
     } catch (error) {
-      setState((current) => ({ ...current, error: getErrorMessage(error) }))
+      setState((current) => ({ ...current, error: getErrorMessage(error) }));
     }
+  }
+  function getFingerPrint(key: CryptoKey): string {
+    const data = `${key.type}:${key.algorithm.name}:${key.extractable}`;
+    return btoa(data);
   }
 
   function setPublicKeyText(publicKeyText: string) {
@@ -88,7 +92,7 @@ export function useCryptoKeys() {
       publicKey: null,
       publicKeyText,
       error: null,
-    }))
+    }));
   }
 
   function setPrivateKeyText(privateKeyText: string) {
@@ -97,7 +101,7 @@ export function useCryptoKeys() {
       privateKey: null,
       privateKeyText,
       error: null,
-    }))
+    }));
   }
 
   function clearPrivateKey() {
@@ -106,16 +110,17 @@ export function useCryptoKeys() {
       privateKey: null,
       privateKeyText: "",
       error: null,
-    }))
+    }));
   }
 
   return {
     ...state,
     clearPrivateKey,
     generateKeys,
+    getFingerPrint,
     importPrivateKeyText,
     importPublicKeyText,
     setPrivateKeyText,
     setPublicKeyText,
-  }
+  };
 }

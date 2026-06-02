@@ -19,7 +19,7 @@ import { Header } from "@/components/ui/header";
 import { Algorithmns } from "@/components/ui/algorithms";
 import { DecryptFileCard, EncryptFileCard } from "@/components/ui/file";
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
+const MAX_FILE_SIZE = 1.5 * 1024 * 1024 * 1024;
 
 async function copyText(value: string, label: string) {
   try {
@@ -89,6 +89,11 @@ function App() {
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="grid gap-2">
                   <span className="text-sm font-medium">Public key</span>
+                  {keys.publicKey && (
+                    <p className="text-xs text-muted-foreground">
+                      Fingerprint: {keys.getFingerPrint(keys.publicKey)}
+                    </p>
+                  )}
                   <textarea
                     className="min-h-52 resize-y rounded-md border border-input bg-background px-3 py-2 font-mono text-xs shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     spellCheck={false}
