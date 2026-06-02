@@ -1,16 +1,8 @@
-import {
-  Copy,
-  Download,
-  KeyRound,
-  LockKeyhole,
-  Trash2,
-  UnlockKeyhole,
-  Upload,
-} from "lucide-react";
+import { Copy, Download, KeyRound, Trash2, Upload } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { Button, buttonVariants } from "@/components/base/button";
+import { Button } from "@/components/base/button";
 import {
   Card,
   CardAction,
@@ -19,28 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/base/card";
-import { Input } from "@/components/base/input";
 import { Toaster } from "@/components/base/sonner";
 import { useCryptoKeys } from "@/hooks/useCryptoKeys";
 import { useFileCrypto } from "@/hooks/useFileCrypto";
 import { downloadText } from "@/lib/download";
-import { Header } from "./components/ui/header";
-import { Algorithmns } from "./components/ui/algorithms";
+import { Header } from "@/components/ui/header";
+import { Algorithmns } from "@/components/ui/algorithms";
+import { DecryptFileCard, EncryptFileCard } from "@/components/ui/file";
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) {
-    return "0 B";
-  }
-
-  const units = ["B", "KB", "MB", "GB"];
-  const unitIndex = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  const value = bytes / 1024 ** unitIndex;
-
-  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-}
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
 
 async function copyText(value: string, label: string) {
   try {
@@ -49,26 +28,6 @@ async function copyText(value: string, label: string) {
   } catch {
     toast.error("Clipboard permission was blocked.");
   }
-}
-
-function ResultDownload(props: {
-  href: string;
-  filename: string;
-  label: string;
-}) {
-  return (
-    <a
-      className={buttonVariants({
-        variant: "outline",
-        className: "w-full justify-between",
-      })}
-      href={props.href}
-      download={props.filename}
-    >
-      <span className="truncate">{props.label}</span>
-      <Download aria-hidden="true" />
-    </a>
-  );
 }
 
 function App() {
@@ -223,98 +182,17 @@ function App() {
           </Card>
 
           <div className="grid gap-6">
-            <Card className="rounded-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <LockKeyhole aria-hidden="true" className="size-4" />
-                  Encrypt
-                </CardTitle>
-                <CardDescription>
-                  {files.fileToEncrypt?.name ?? "No file selected"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <Input
-                  type="file"
-                  onChange={(event) => {
-                    files.setFileToEncrypt(event.target.files?.[0] ?? null);
-                  }}
-                />
-                {files.fileToEncrypt ? (
-                  <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
-                    <span className="truncate">{files.fileToEncrypt.name}</span>
-                    <span className="shrink-0 text-muted-foreground">
-                      {formatBytes(files.fileToEncrypt.size)}
-                    </span>
-                  </div>
-                ) : null}
-                <Button
-                  disabled={
-                    !files.fileToEncrypt ||
-                    !keys.publicKey ||
-                    files.isEncrypting
-                  }
-                  onClick={() => files.encryptSelectedFile(keys.publicKey)}
-                >
-                  <LockKeyhole aria-hidden="true" />
-                  {files.isEncrypting ? "Encrypting" : "Encrypt file"}
-                </Button>
-                {files.encryptedResult ? (
-                  <ResultDownload
-                    href={files.encryptedResult.url}
-                    filename={files.encryptedResult.filename}
-                    label={files.encryptedResult.filename}
-                  />
-                ) : null}
-              </CardContent>
-            </Card>
+            <EncryptFileCard
+              files={files}
+              keys={keys}
+              maxFileSize={MAX_FILE_SIZE}
+            />
+            <DecryptFileCard
+              files={files}
+              keys={keys}
+              maxFileSize={MAX_FILE_SIZE}
+            />
 
-            <Card className="rounded-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UnlockKeyhole aria-hidden="true" className="size-4" />
-                  Decrypt
-                </CardTitle>
-                <CardDescription>
-                  {files.fileToDecrypt?.name ?? "No file selected"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <Input
-                  type="file"
-                  accept="application/json,.json"
-                  onChange={(event) => {
-                    files.setFileToDecrypt(event.target.files?.[0] ?? null);
-                  }}
-                />
-                {files.fileToDecrypt ? (
-                  <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
-                    <span className="truncate">{files.fileToDecrypt.name}</span>
-                    <span className="shrink-0 text-muted-foreground">
-                      {formatBytes(files.fileToDecrypt.size)}
-                    </span>
-                  </div>
-                ) : null}
-                <Button
-                  disabled={
-                    !files.fileToDecrypt ||
-                    !keys.privateKey ||
-                    files.isDecrypting
-                  }
-                  onClick={() => files.decryptSelectedFile(keys.privateKey)}
-                >
-                  <UnlockKeyhole aria-hidden="true" />
-                  {files.isDecrypting ? "Decrypting" : "Decrypt file"}
-                </Button>
-                {files.decryptedResult ? (
-                  <ResultDownload
-                    href={files.decryptedResult.url}
-                    filename={files.decryptedResult.filename}
-                    label={files.decryptedResult.filename}
-                  />
-                ) : null}
-              </CardContent>
-            </Card>
             <Algorithmns />
           </div>
         </section>
