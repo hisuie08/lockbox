@@ -6,9 +6,8 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/base/dialog";
-import { Check, Copy, Download, KeyRound } from "lucide-react";
+import { Check, Copy, KeyRound } from "lucide-react";
 import { CardContent, CardTitle } from "../../base/card";
-import { downloadText } from "@/lib/download";
 import { useCopyText } from "@/hooks/useClipboard";
 import {
   InputGroup,
@@ -21,6 +20,7 @@ import {
   canonicalizeRsaJwk,
   exportPrivateKey,
 } from "@/crypt/services/genKeyPair";
+import { DownloadPrivKey, DownloadPubKey } from "./save";
 
 function useSafeSave() {
   const [isPubSaved, setPubSaved] = useState<boolean>(false);
@@ -102,11 +102,10 @@ function ModalContent(props: {
     >
       <CardTitle>New KeyPair</CardTitle>
       <CardContent className="grid gap-5">
-        <span className="text-sm font-medium">FingerPrint</span>
-        {!props.keys.isGenerating ? (
-          <span>{props.keys.publicKeyThumbprint}</span>
-        ) : null}
         <div className="grid gap-3 md:grid-cols-2">
+          <label>
+            <span className="text-sm font-medium">FingerPrint</span>
+          </label>
           <div className="grid gap-3">
             <CopyableKeyView
               generating={props.keys.isGenerating}
@@ -127,40 +126,24 @@ function ModalContent(props: {
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <Button
-            variant="outline"
-            disabled={!props.keys.publicKeyText}
-            onClick={() => {
-              downloadText(
-                props.keys.publicKeyText,
-                "lockbox-public-key.jwk.json",
-              );
-              setPubSaved(true);
-            }}
-          >
-            <Download aria-hidden="true" />
-            Public Key
-          </Button>
-          <Button
-            variant="outline"
-            disabled={!props.keys.privateKeyText}
-            onClick={() => {
-              downloadText(
-                props.keys.privateKeyText,
-                "lockbox-private-key.jwk.json",
-              );
-              setPrivSaved(true);
-            }}
-          >
-            <Download aria-hidden="true" />
-            Private Key
-          </Button>
+          <DownloadPubKey
+            keyText={props.keys.publicKeyText}
+            callbackSaved={setPubSaved}
+            isGenerating={props.keys.isGenerating}
+          />
+          <DownloadPrivKey
+            keyText={props.keys.privateKeyText}
+            callbackSaved={setPrivSaved}
+            isGenerating={props.keys.isGenerating}
+          />
         </div>
-        <DialogClose>
-          <Button variant={"ghost"} disabled={!closable}>
-            {closable ? "Close" : "Save both keys before close"}
+        {closable ? (
+          <DialogClose>Close</DialogClose>
+        ) : (
+          <Button variant={"outline"} disabled={!closable} className="border-0">
+            Save both keys before close
           </Button>
-        </DialogClose>
+        )}
       </CardContent>
     </DialogContent>
   );

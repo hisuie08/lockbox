@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/base/card";
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole, UnlockKeyhole } from "lucide-react";
 import { Button } from "@/components/base/button";
 import { useCryptoKeys } from "@/hooks/useCryptoKeys";
 import type { FileResult } from "@/hooks/useFileCrypto";
@@ -145,7 +145,7 @@ export function DecryptFileCard(
   return (
     <Card className="rounded-lg">
       <Header
-        icon={<LockKeyhole aria-hidden="true" className="size-4" />}
+        icon={<UnlockKeyhole aria-hidden="true" className="size-4" />}
         title={"Decrypt"}
         maxFileSize={props.maxFileSize}
         fileName={props.files.fileToDecrypt?.name ?? null}
@@ -175,7 +175,7 @@ export function DecryptFileCard(
             props.files.isDecrypting
           }
           isProcessing={props.files.isDecrypting}
-          icon={<LockKeyhole aria-hidden="true" />}
+          icon={<UnlockKeyhole aria-hidden="true" />}
           onClick={() => props.files.decryptSelectedFile(props.keys.privateKey)}
           label="Decrypt"
         />
