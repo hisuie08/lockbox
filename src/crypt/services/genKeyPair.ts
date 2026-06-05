@@ -65,6 +65,45 @@ export function parseJwk(value: string): JsonWebKey {
   return parsed;
 }
 
-export function formatJwk(jwk: JsonWebKey): string {
-  return JSON.stringify(jwk, null, 2);
+export function canonicalizeRsaJwk(jwk: JsonWebKey): string {
+  if (
+    jwk.kty !== "RSA" ||
+    typeof jwk.e !== "string" ||
+    typeof jwk.n !== "string"
+  ) {
+    throw new Error("Invalid RSA JWK");
+  }
+
+  return JSON.stringify({
+    e: jwk.e,
+    kty: jwk.kty,
+    n: jwk.n,
+  });
+}
+
+function toBase64Url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+export async function getJwkThumbPrint(key: CryptoKey): Promise<string> {
+  const jwk = await exportPublicKey(key);
+
+  const canonicalJwk = canonicalizeRsaJwk(jwk);
+
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(canonicalJwk),
+  );
+
+  return toBase64Url(digest);
 }

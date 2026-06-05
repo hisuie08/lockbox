@@ -91,7 +91,7 @@ function ModalContent(props: { keys: ReturnType<typeof useCryptoKeys> }) {
       <CardContent className="grid gap-5">
         <span className="text-sm font-medium">FingerPrint</span>
         {!props.keys.isGenerating ? (
-          <span>{props.keys.publicKeyFingerprint}</span>
+          <span>{props.keys.publicKeyThumbprint}</span>
         ) : null}
         <div className="grid gap-3 md:grid-cols-2">
           <div className="grid gap-3">

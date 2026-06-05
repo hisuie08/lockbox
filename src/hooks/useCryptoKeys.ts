@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
 import {
+  canonicalizeRsaJwk,
   exportPrivateKey,
   exportPublicKey,
-  formatJwk,
   genKeyPair,
+  getJwkThumbPrint,
   importPrivateKey,
   importPublicKey,
   parseJwk,
@@ -37,37 +38,26 @@ export function useCryptoKeys() {
     error: null,
   });
 
-  const [publicKeyFingerprint, setPubFinger] = useState<string>("");
+  const [publicKeyThumbprint, setPubFinger] = useState<string>("");
   useEffect(() => {
     const update = async () => {
       if (state.publicKey) {
-        const fp = await getFingerPrint(state.publicKey);
+        const fp = await getJwkThumbPrint(state.publicKey);
         setPubFinger(fp);
       }
     };
     update();
   }, [state.publicKey]);
-  const [privateKeyFingerprint, setPrivFinger] = useState<string>("");
+  const [privateKeyThumbprint, setPrivFinger] = useState<string>("");
   useEffect(() => {
     const update = async () => {
       if (state.privateKey) {
-        const fp = await getFingerPrint(state.privateKey);
+        const fp = await getJwkThumbPrint(state.privateKey);
         setPrivFinger(fp);
       }
     };
     update();
   }, [state.privateKey]);
-  async function getFingerPrint(key: CryptoKey): Promise<string> {
-    const exported = await exportPublicKey(key);
-    const requiredMembers = { e: exported.e, kty: exported.kty, n: exported.n };
-    const jwkString = formatJwk(requiredMembers);
-    const hashBuffer = await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(jwkString),
-    );
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return btoa(hashArray.map((b) => String.fromCharCode(b)).join(""));
-  }
 
   async function generateKeys() {
     setState((current) => ({ ...current, isGenerating: true, error: null }));
@@ -82,8 +72,8 @@ export function useCryptoKeys() {
       setState({
         publicKey: keyPair.publicKey,
         privateKey: keyPair.privateKey,
-        publicKeyText: formatJwk(publicJwk),
-        privateKeyText: formatJwk(privateJwk),
+        publicKeyText: canonicalizeRsaJwk(publicJwk),
+        privateKeyText: canonicalizeRsaJwk(privateJwk),
         isGenerating: false,
         error: null,
       });
@@ -140,8 +130,8 @@ export function useCryptoKeys() {
 
   return {
     ...state,
-    publicKeyFingerprint,
-    privateKeyFingerprint,
+    publicKeyThumbprint,
+    privateKeyThumbprint,
     clearPrivateKey,
     generateKeys,
     importPrivateKeyText,
