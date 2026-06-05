@@ -17,15 +17,26 @@ import {
   InputGroupInput,
 } from "../../base/input-group";
 import { useMemo, useState } from "react";
+import {
+  canonicalizeRsaJwk,
+  exportPrivateKey,
+} from "@/crypt/services/genKeyPair";
 
 function useSafeSave() {
   const [isPubSaved, setPubSaved] = useState<boolean>(false);
   const [isPrivSaved, setPrivSaved] = useState<boolean>(false);
+  function init() {
+    setPrivSaved(false);
+    setPubSaved(false);
+  }
   const closable = useMemo<boolean>(
     () => isPubSaved && isPrivSaved,
     [isPubSaved, isPrivSaved],
   );
   return {
+    init,
+    isPubSaved,
+    isPrivSaved,
     setPubSaved,
     setPrivSaved,
     closable,
@@ -79,9 +90,11 @@ function CopyableKeyView(props: {
   );
 }
 
-function ModalContent(props: { keys: ReturnType<typeof useCryptoKeys> }) {
-  const { closable, setPubSaved, setPrivSaved } = useSafeSave();
-
+function ModalContent(props: {
+  keys: ReturnType<typeof useCryptoKeys>;
+  safeSave: ReturnType<typeof useSafeSave>;
+}) {
+  const { setPubSaved, setPrivSaved, closable } = props.safeSave;
   return (
     <DialogContent
       showCloseButton={false}
@@ -156,18 +169,37 @@ function ModalContent(props: { keys: ReturnType<typeof useCryptoKeys> }) {
 export function GenerateKeyAction(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
+  const safeSave = useSafeSave();
+  const protectKey = async (open: boolean) => {
+    if (!open) {
+      if (props.keys.privateKey) {
+        const jwk = await exportPrivateKey(props.keys.privateKey);
+        props.keys.setPrivateKeyText(canonicalizeRsaJwk(jwk));
+      }
+    }
+  };
+
   return (
-    <Dialog modal={true} disablePointerDismissal={true}>
+    <Dialog
+      modal={true}
+      disablePointerDismissal={true}
+      onOpenChangeComplete={(open) => {
+        protectKey(open);
+      }}
+    >
       <DialogTrigger>
         <Button
-          onClick={props.keys.generateKeys}
+          onClick={() => {
+            safeSave.init();
+            props.keys.generateKeys();
+          }}
           disabled={props.keys.isGenerating}
         >
           <KeyRound aria-hidden="true" />
           {props.keys.isGenerating ? "Generating" : "Generate"}
         </Button>
       </DialogTrigger>
-      <ModalContent keys={props.keys} />
+      <ModalContent keys={props.keys} safeSave={safeSave} />
     </Dialog>
   );
 }

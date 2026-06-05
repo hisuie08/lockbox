@@ -70,10 +70,10 @@ export function useCryptoKeys() {
       ]);
 
       setState({
-        publicKey: keyPair.publicKey,
+        publicKey: keyPair.privateKey,
         privateKey: keyPair.privateKey,
         publicKeyText: canonicalizeRsaJwk(publicJwk),
-        privateKeyText: canonicalizeRsaJwk(privateJwk),
+        privateKeyText: JSON.stringify(privateJwk),
         isGenerating: false,
         error: null,
       });
