@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   exportPrivateKey,
@@ -36,6 +36,38 @@ export function useCryptoKeys() {
     isGenerating: false,
     error: null,
   });
+
+  const [publicKeyFingerprint, setPubFinger] = useState<string>("");
+  useEffect(() => {
+    const update = async () => {
+      if (state.publicKey) {
+        const fp = await getFingerPrint(state.publicKey);
+        setPubFinger(fp);
+      }
+    };
+    update();
+  }, [state.publicKey]);
+  const [privateKeyFingerprint, setPrivFinger] = useState<string>("");
+  useEffect(() => {
+    const update = async () => {
+      if (state.privateKey) {
+        const fp = await getFingerPrint(state.privateKey);
+        setPrivFinger(fp);
+      }
+    };
+    update();
+  }, [state.privateKey]);
+  async function getFingerPrint(key: CryptoKey): Promise<string> {
+    const exported = await exportPublicKey(key);
+    const requiredMembers = { e: exported.e, kty: exported.kty, n: exported.n };
+    const jwkString = formatJwk(requiredMembers);
+    const hashBuffer = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(jwkString),
+    );
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return btoa(hashArray.map((b) => String.fromCharCode(b)).join(""));
+  }
 
   async function generateKeys() {
     setState((current) => ({ ...current, isGenerating: true, error: null }));
@@ -81,15 +113,9 @@ export function useCryptoKeys() {
       setState((current) => ({ ...current, error: getErrorMessage(error) }));
     }
   }
-  function getFingerPrint(key: CryptoKey): string {
-    const data = `${key.type}:${key.algorithm.name}:${key.extractable}`;
-    return btoa(data);
-  }
-
   function setPublicKeyText(publicKeyText: string) {
     setState((current) => ({
       ...current,
-      publicKey: null,
       publicKeyText,
       error: null,
     }));
@@ -98,7 +124,6 @@ export function useCryptoKeys() {
   function setPrivateKeyText(privateKeyText: string) {
     setState((current) => ({
       ...current,
-      privateKey: null,
       privateKeyText,
       error: null,
     }));
@@ -115,9 +140,10 @@ export function useCryptoKeys() {
 
   return {
     ...state,
+    publicKeyFingerprint,
+    privateKeyFingerprint,
     clearPrivateKey,
     generateKeys,
-    getFingerPrint,
     importPrivateKeyText,
     importPublicKeyText,
     setPrivateKeyText,
