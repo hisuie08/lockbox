@@ -72,9 +72,8 @@ export function useCryptoKeys() {
         exportPublicKey(keyPair.publicKey),
         exportPrivateKey(keyPair.privateKey),
       ]);
-
       setState({
-        publicKey: keyPair.privateKey,
+        publicKey: keyPair.publicKey,
         privateKey: keyPair.privateKey,
         publicKeyText: canonicalizeRsaJwk(publicJwk),
         privateKeyText: JSON.stringify(privateJwk),
