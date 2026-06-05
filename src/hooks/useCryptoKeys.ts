@@ -44,6 +44,8 @@ export function useCryptoKeys() {
       if (state.publicKey) {
         const fp = await getJwkThumbPrint(state.publicKey);
         setPubFinger(fp);
+      } else {
+        setPubFinger("");
       }
     };
     update();
@@ -54,6 +56,8 @@ export function useCryptoKeys() {
       if (state.privateKey) {
         const fp = await getJwkThumbPrint(state.privateKey);
         setPrivFinger(fp);
+      } else {
+        setPrivFinger("");
       }
     };
     update();
@@ -119,6 +123,14 @@ export function useCryptoKeys() {
     }));
   }
 
+  function clearPublicKey() {
+    setState((current) => ({
+      ...current,
+      publicKey: null,
+      publicKeyText: "",
+      error: null,
+    }));
+  }
   function clearPrivateKey() {
     setState((current) => ({
       ...current,
@@ -132,6 +144,7 @@ export function useCryptoKeys() {
     ...state,
     publicKeyThumbprint,
     privateKeyThumbprint,
+    clearPublicKey,
     clearPrivateKey,
     generateKeys,
     importPrivateKeyText,
