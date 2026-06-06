@@ -7,6 +7,9 @@ import {
 } from "./payload";
 import type { EncryptedFilePayload, EncryptFileResult } from "./types";
 
+// RSA-OAEP: 鍵暗号化鍵
+//AES-GCM: ファイル本体暗号化鍵
+
 export async function encryptFile(input: {
   file: File;
   publicKey: CryptoKey;
