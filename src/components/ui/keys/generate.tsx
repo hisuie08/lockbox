@@ -115,7 +115,7 @@ export function GenerateKeyAction(props: {
       >
         <CardTitle>New KeyPair</CardTitle>
         <CardContent className="grid gap-5">
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3">
             <div className="grid gap-3">
               <CopyableKeyView
                 generating={props.keys.isGenerating}
@@ -135,7 +135,7 @@ export function GenerateKeyAction(props: {
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2">
             <DownloadPubKey
               keyText={JSON.stringify(pubKey)}
               callbackSaved={setPubSaved}

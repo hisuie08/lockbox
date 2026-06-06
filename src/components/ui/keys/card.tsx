@@ -141,7 +141,12 @@ export function KeyControlCard(props: {
         {match ? null : <AlertKeyPairMismatch />}
         <div className="grid">
           <label className="grid gap-2">
-            <span className="text-sm font-medium">Public key</span>
+            <span className="text-sm font-medium">
+              Public key{" "}
+              {props.keys.publicJwk ? (
+                <span className="text-green-700 ml-1">Loaded</span>
+              ) : null}
+            </span>
             <PublicKeyView
               thumbprint={props.keys.publicKeyThumbprint}
               deleteCallback={props.keys.clearPublicKey}
@@ -151,7 +156,12 @@ export function KeyControlCard(props: {
         </div>
         <div className="grid">
           <label className="grid gap-2">
-            <span className="text-sm font-medium">Private key</span>
+            <span className="text-sm font-medium">
+              Private key
+              {props.keys.privateJwk ? (
+                <span className="text-green-700 ml-1">Loaded</span>
+              ) : null}
+            </span>
             <PrivateKeyView
               thumbprint={props.keys.privateKeyThumbprint}
               deleteCallback={props.keys.clearPrivateKey}
