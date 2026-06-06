@@ -8,6 +8,7 @@ import { type LockBoxJwk } from "@/crypt/services";
 import { useKeyLoad, type TypeKeyFor } from "@/hooks/useKeyLoad";
 import { Dialog, DialogContent, DialogTitle } from "@/components/base/dialog";
 import type { useDialog } from "@/hooks/useDialog";
+import { Check } from "lucide-react";
 
 export function InputKey(props: {
   title: string;
@@ -64,6 +65,12 @@ export function InputKey(props: {
                 loadKeyString(event);
               }}
             ></Textarea>
+          ) : null}
+          {isValid ? (
+            <div className="flex text-green-700">
+              <Check size={16} className="mr-1" color="green" />
+              <span color="green">Valid {props.keyType} key</span>
+            </div>
           ) : null}
           <Button
             type={"submit"}

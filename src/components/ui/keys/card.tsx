@@ -7,18 +7,8 @@ import {
   CardTitle,
 } from "@/components/base/card";
 import type { useCryptoKeys } from "@/hooks/useCryptoKeys";
-import {
-  Download,
-  Edit2Icon,
-  InfoIcon,
-  KeyRound,
-  MoreHorizontal,
-  TrashIcon,
-  Upload,
-} from "lucide-react";
+import { Edit2Icon, KeyRound, MoreHorizontal, TrashIcon } from "lucide-react";
 import { GenerateKeyAction } from "./generate";
-import { Button } from "@/components/base/button";
-import { downloadText } from "@/lib/download";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -34,6 +24,7 @@ import {
 } from "@/components/base/input-group";
 import { InputKey } from "./load";
 import { useDialog } from "@/hooks/useDialog";
+import { AlertKeyPairMismatch } from "../static";
 function Menu() {
   return (
     <DropdownMenuTrigger
@@ -63,10 +54,6 @@ function PublicKeyView(props: {
         <DropdownMenu>
           <Menu />
           <DropdownMenuContent align="end" sideOffset={8} alignOffset={-4}>
-            <DropdownMenuItem>
-              <InfoIcon />
-              Info
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => editDialog.setOpen(true)}>
               <Edit2Icon />
               Edit
@@ -136,6 +123,8 @@ function PrivateKeyView(props: {
 export function KeyControlCard(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
+  const match =
+    props.keys.publicKeyThumbprint == props.keys.privateKeyThumbprint;
   return (
     <Card className="rounded-lg">
       <CardHeader>
@@ -146,17 +135,11 @@ export function KeyControlCard(props: {
         <CardDescription>JWK import/export</CardDescription>
         <CardAction>
           <GenerateKeyAction keys={props.keys} />
-          <Button
-            onClick={props.keys.generateKeys}
-            disabled={props.keys.isGenerating}
-          >
-            <KeyRound aria-hidden="true" />
-            {props.keys.isGenerating ? "Generating" : "Generate"}
-          </Button>
         </CardAction>
       </CardHeader>
       <CardContent className="grid gap-5">
-        <div className="grid gap-3 md:grid-cols-2">
+        {match ? null : <AlertKeyPairMismatch />}
+        <div className="grid">
           <label className="grid gap-2">
             <span className="text-sm font-medium">Public key</span>
             <PublicKeyView
@@ -165,7 +148,8 @@ export function KeyControlCard(props: {
               keys={props.keys}
             />
           </label>
-
+        </div>
+        <div className="grid">
           <label className="grid gap-2">
             <span className="text-sm font-medium">Private key</span>
             <PrivateKeyView
@@ -174,30 +158,6 @@ export function KeyControlCard(props: {
               keys={props.keys}
             />
           </label>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <Button variant="outline">
-            <Upload aria-hidden="true" />
-            Load public
-          </Button>
-          <Button variant="outline">
-            <Upload aria-hidden="true" />
-            Load private
-          </Button>
-          <Button
-            variant="outline"
-            disabled={!props.keys.publicKeyText}
-            onClick={() => {
-              downloadText(
-                props.keys.publicKeyText,
-                "lockbox-public-key.jwk.json",
-              );
-            }}
-          >
-            <Download aria-hidden="true" />
-            Public JWK
-          </Button>
         </div>
       </CardContent>
     </Card>
