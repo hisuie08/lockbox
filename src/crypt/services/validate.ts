@@ -105,9 +105,12 @@ export function canonicalizeRsaJwk(jwk: JsonWebKey): string {
   });
 }
 
-export async function getJwkThumbPrint(key: CryptoKey): Promise<string> {
-  const jwk = await crypto.subtle.exportKey("jwk", key);
-
+export async function getJwkThumbPrint(
+  jwk: JsonWebKey | null,
+): Promise<string> {
+  if (!jwk) {
+    return "";
+  }
   const canonicalJwk = canonicalizeRsaJwk(jwk);
 
   const digest = await crypto.subtle.digest(

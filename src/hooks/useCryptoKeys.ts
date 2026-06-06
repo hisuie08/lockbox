@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   exportKey,
@@ -38,18 +38,10 @@ export function useCryptoKeys() {
     error: null,
   });
   const [publicKeyThumbprint, setPubFinger] = useState<string>("");
-  const publicKeyText = useMemo(
-    () => JSON.stringify(state.publicJwk),
-    [state.publicJwk],
-  );
-  const privateKeyText = useMemo(
-    () => JSON.stringify(state.privateJwk),
-    [state.privateJwk],
-  );
   useEffect(() => {
     const update = async () => {
       if (state.publicKey) {
-        const fp = await getJwkThumbPrint(state.publicKey);
+        const fp = await getJwkThumbPrint(state.publicJwk);
         setPubFinger(fp);
       } else {
         setPubFinger("");
@@ -61,8 +53,8 @@ export function useCryptoKeys() {
   useEffect(() => {
     const update = async () => {
       if (state.privateKey) {
-        const fp = await getJwkThumbPrint(state.privateKey);
-        setPrivFinger(fp);
+        const tp = await getJwkThumbPrint(state.privateJwk);
+        setPrivFinger(tp);
       } else {
         setPrivFinger("");
       }
@@ -70,9 +62,11 @@ export function useCryptoKeys() {
     update();
   }, [state.privateKey]);
 
-  async function generateKeys() {
+  async function generateKeys(): Promise<{
+    publicJwk: LockBoxJwk | null;
+    privateJwk: LockBoxJwk | null;
+  }> {
     setState((current) => ({ ...current, isGenerating: true, error: null }));
-
     try {
       const keyPair = await genKeyPair();
       const date = new Date();
@@ -81,20 +75,15 @@ export function useCryptoKeys() {
           exportKey(keyPair.publicKey, date),
           exportKey(keyPair.privateKey, date),
         ]);
-      setState({
-        publicKey: keyPair.publicKey,
-        privateKey: keyPair.privateKey,
-        publicJwk: publicJwk,
-        privateJwk: privateJwk,
-        isGenerating: false,
-        error: null,
-      });
+      setState((current) => ({ ...current, isGenerating: false, error: null }));
+      return { publicJwk: publicJwk, privateJwk: privateJwk };
     } catch (error) {
       setState((current) => ({
         ...current,
         isGenerating: false,
         error: getErrorMessage(error),
       }));
+      return { publicJwk: null, privateJwk: null };
     }
   }
 
@@ -151,8 +140,7 @@ export function useCryptoKeys() {
     ...state,
     publicKeyThumbprint,
     privateKeyThumbprint,
-    privateKeyText,
-    publicKeyText,
+    getThumbPrint: getJwkThumbPrint,
     clearPublicKey,
     clearPrivateKey,
     generateKeys,

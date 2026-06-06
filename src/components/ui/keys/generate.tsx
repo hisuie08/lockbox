@@ -17,6 +17,8 @@ import {
 } from "../../base/input-group";
 import { useMemo, useState } from "react";
 import { DownloadPrivKey, DownloadPubKey } from "./save";
+import type { LockBoxJwk } from "@/crypt/services";
+import { useDialog } from "@/hooks/useDialog";
 
 function useSafeSave() {
   const [isPubSaved, setPubSaved] = useState<boolean>(false);
@@ -86,77 +88,30 @@ function CopyableKeyView(props: {
   );
 }
 
-function ModalContent(props: {
-  keys: ReturnType<typeof useCryptoKeys>;
-  safeSave: ReturnType<typeof useSafeSave>;
-}) {
-  const { setPubSaved, setPrivSaved, closable } = props.safeSave;
-  return (
-    <DialogContent
-      showCloseButton={false}
-      className="h-auto max-h-[90vh] w-full sm:w-[500px]"
-    >
-      <CardTitle>New KeyPair</CardTitle>
-      <CardContent className="grid gap-5">
-        <div className="grid gap-3 md:grid-cols-2">
-          <label>
-            <span className="text-sm font-medium">FingerPrint</span>
-          </label>
-          <div className="grid gap-3">
-            <CopyableKeyView
-              generating={props.keys.isGenerating}
-              keyText={props.keys.publicKeyText}
-              keyLabel="Public Key"
-              callback={() => setPubSaved(true)}
-            />
-            <CopyableKeyView
-              generating={props.keys.isGenerating}
-              keyText={props.keys.privateKeyText}
-              keyLabel="Private Key"
-              asSecret
-              callback={() => {
-                setPrivSaved(true);
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <DownloadPubKey
-            keyText={props.keys.publicKeyText}
-            callbackSaved={setPubSaved}
-            isGenerating={props.keys.isGenerating}
-          />
-          <DownloadPrivKey
-            keyText={props.keys.privateKeyText}
-            callbackSaved={setPrivSaved}
-            isGenerating={props.keys.isGenerating}
-          />
-        </div>
-        {closable ? (
-          <DialogClose>Close</DialogClose>
-        ) : (
-          <Button variant={"outline"} disabled={!closable} className="border-0">
-            Save both keys before close
-          </Button>
-        )}
-      </CardContent>
-    </DialogContent>
-  );
-}
-
 export function GenerateKeyAction(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
-  const safeSave = useSafeSave();
-
+  const { isOpen, setOpen } = useDialog();
+  const [pubKey, setPubKey] = useState<LockBoxJwk | null>(null);
+  const [privKey, setPrivKey] = useState<LockBoxJwk | null>(null);
+  const { setPubSaved, setPrivSaved, closable, init } = useSafeSave();
+  async function generate() {
+    const { publicJwk, privateJwk } = await props.keys.generateKeys();
+    setPubKey(publicJwk);
+    setPrivKey(privateJwk);
+  }
   return (
-    <Dialog modal={true} disablePointerDismissal={true}>
+    <Dialog
+      modal={true}
+      open={isOpen}
+      onOpenChange={setOpen}
+      disablePointerDismissal={true}
+    >
       <DialogTrigger>
         <Button
           onClick={() => {
-            safeSave.init();
-            props.keys.generateKeys();
+            init();
+            generate();
           }}
           disabled={props.keys.isGenerating}
         >
@@ -164,7 +119,58 @@ export function GenerateKeyAction(props: {
           {props.keys.isGenerating ? "Generating" : "Generate"}
         </Button>
       </DialogTrigger>
-      <ModalContent keys={props.keys} safeSave={safeSave} />
+      <DialogContent
+        showCloseButton={false}
+        className="h-auto max-h-[90vh] w-full sm:w-[500px]"
+      >
+        <CardTitle>New KeyPair</CardTitle>
+        <CardContent className="grid gap-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3">
+              <CopyableKeyView
+                generating={props.keys.isGenerating}
+                keyText={JSON.stringify(pubKey)}
+                keyLabel="Public Key"
+                callback={() => setPubSaved(true)}
+              />
+              <CopyableKeyView
+                generating={props.keys.isGenerating}
+                keyText={JSON.stringify(privKey)}
+                keyLabel="Private Key"
+                asSecret
+                callback={() => {
+                  setPrivSaved(true);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <DownloadPubKey
+              keyText={JSON.stringify(pubKey)}
+              callbackSaved={setPubSaved}
+              isGenerating={props.keys.isGenerating}
+            />
+            <DownloadPrivKey
+              keyText={JSON.stringify(privKey)}
+              callbackSaved={setPrivSaved}
+              isGenerating={props.keys.isGenerating}
+            />
+          </div>
+          <Button
+            disabled={!closable}
+            onClick={() => {
+              props.keys.importPublicJwk(pubKey!);
+              props.keys.importPrivateJwk(privKey!);
+            }}
+          >
+            Save
+          </Button>
+          <Button variant={"outline"} onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+        </CardContent>
+      </DialogContent>
     </Dialog>
   );
 }
