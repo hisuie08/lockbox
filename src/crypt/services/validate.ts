@@ -22,7 +22,6 @@ function isBase64Url(value: unknown): value is string {
 
 export function validateRsaJwk(input: unknown): RsaJwkValidationResult {
   const errors: string[] = [];
-  
   if (typeof input != "object") {
     return {
       valid: false,
