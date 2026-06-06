@@ -101,12 +101,7 @@ export function GenerateKeyAction(props: {
     setPrivKey(privateJwk);
   }
   return (
-    <Dialog
-      modal={true}
-      open={isOpen}
-      onOpenChange={setOpen}
-      disablePointerDismissal={true}
-    >
+    <Dialog modal={true} open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger>
         <Button
           onClick={() => {
@@ -162,9 +157,10 @@ export function GenerateKeyAction(props: {
             onClick={() => {
               props.keys.importPublicJwk(pubKey!);
               props.keys.importPrivateJwk(privKey!);
+              setOpen(false);
             }}
           >
-            Save
+            {closable ? "Load these keys" : "Save or copy keys before close"}
           </Button>
           <Button variant={"outline"} onClick={() => setOpen(false)}>
             Cancel
