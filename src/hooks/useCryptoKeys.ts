@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 
 import {
-  exportPrivateKey,
-  exportPublicKey,
+  exportKey,
   genKeyPair,
   importPrivateKey,
   importPublicKey,
   parseJwk,
   getJwkThumbPrint,
+  type LockBoxJwk,
 } from "@/crypt/services";
 
 type CryptoKeyState = {
@@ -67,10 +67,12 @@ export function useCryptoKeys() {
 
     try {
       const keyPair = await genKeyPair();
-      const [publicJwk, privateJwk] = await Promise.all([
-        exportPublicKey(keyPair.publicKey),
-        exportPrivateKey(keyPair.privateKey),
-      ]);
+      const date = new Date();
+      const [publicJwk, privateJwk]: [LockBoxJwk, LockBoxJwk] =
+        await Promise.all([
+          exportKey(keyPair.publicKey, date),
+          exportKey(keyPair.privateKey, date),
+        ]);
       setState({
         publicKey: keyPair.publicKey,
         privateKey: keyPair.privateKey,
@@ -138,6 +140,10 @@ export function useCryptoKeys() {
     }));
   }
 
+  function setError(error: string) {
+    setState((current) => ({ ...current, error: error }));
+  }
+
   return {
     ...state,
     publicKeyThumbprint,
@@ -149,5 +155,6 @@ export function useCryptoKeys() {
     importPublicKeyText,
     setPrivateKeyText,
     setPublicKeyText,
+    setError,
   };
 }

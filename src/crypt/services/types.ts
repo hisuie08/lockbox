@@ -32,3 +32,7 @@ export type DecryptFileResult = {
   filename: string;
   metadata: EncryptedFileMetadata;
 };
+
+export type LockBoxJwk = JsonWebKey & {
+  created_at: Date;
+};

@@ -16,7 +16,6 @@ import {
   InputGroupInput,
 } from "../../base/input-group";
 import { useMemo, useState } from "react";
-import { canonicalizeRsaJwk, exportPrivateKey } from "@/crypt/services";
 import { DownloadPrivKey, DownloadPubKey } from "./save";
 
 function useSafeSave() {
@@ -150,22 +149,12 @@ export function GenerateKeyAction(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
   const safeSave = useSafeSave();
-  const protectKey = async (open: boolean) => {
-    if (!open) {
-      if (props.keys.privateKey) {
-        const jwk = await exportPrivateKey(props.keys.privateKey);
-        props.keys.setPrivateKeyText(canonicalizeRsaJwk(jwk));
-      }
-    }
-  };
 
   return (
     <Dialog
       modal={true}
       disablePointerDismissal={true}
-      onOpenChangeComplete={(open) => {
-        protectKey(open);
-      }}
+      onOpenChangeComplete={(open) => {}}
     >
       <DialogTrigger>
         <Button

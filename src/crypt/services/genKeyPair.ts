@@ -1,3 +1,5 @@
+import type { LockBoxJwk } from "./types";
+
 const rsaOaepParams = {
   name: "RSA-OAEP",
   modulusLength: 4096,
@@ -9,12 +11,11 @@ export async function genKeyPair(): Promise<CryptoKeyPair> {
   return crypto.subtle.generateKey(rsaOaepParams, true, ["encrypt", "decrypt"]);
 }
 
-export async function exportPublicKey(key: CryptoKey): Promise<JsonWebKey> {
-  return crypto.subtle.exportKey("jwk", key);
-}
-
-export async function exportPrivateKey(key: CryptoKey): Promise<JsonWebKey> {
-  return crypto.subtle.exportKey("jwk", key);
+export async function exportKey(
+  key: CryptoKey,
+  date: Date,
+): Promise<LockBoxJwk> {
+  return { ...(await crypto.subtle.exportKey("jwk", key)), created_at: date };
 }
 
 export async function importPublicKey(jwk: JsonWebKey): Promise<CryptoKey> {
@@ -45,15 +46,15 @@ export async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
   }
 }
 
-export function parseJwk(value: string): JsonWebKey {
+export function parseJwk(value: string): LockBoxJwk {
   if (!value.trim()) {
     throw new Error("Paste a JWK before loading it.");
   }
 
-  let parsed: JsonWebKey;
+  let parsed: LockBoxJwk;
 
   try {
-    parsed = JSON.parse(value) as JsonWebKey;
+    parsed = JSON.parse(value) as LockBoxJwk;
   } catch {
     throw new Error("JWK must be valid JSON.");
   }
