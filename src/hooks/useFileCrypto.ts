@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { decryptFile } from "@/crypt/services/decrypt";
-import { encryptFile } from "@/crypt/services/encrypt";
+import { decryptFile,encryptFile } from "@/crypt/services";
 import { formatBytes } from "@/lib/unit";
 export type FileResult = {
   blob: Blob;

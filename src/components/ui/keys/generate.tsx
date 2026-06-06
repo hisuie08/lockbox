@@ -16,10 +16,7 @@ import {
   InputGroupInput,
 } from "../../base/input-group";
 import { useMemo, useState } from "react";
-import {
-  canonicalizeRsaJwk,
-  exportPrivateKey,
-} from "@/crypt/services/genKeyPair";
+import { canonicalizeRsaJwk, exportPrivateKey } from "@/crypt/services";
 import { DownloadPrivKey, DownloadPubKey } from "./save";
 
 function useSafeSave() {

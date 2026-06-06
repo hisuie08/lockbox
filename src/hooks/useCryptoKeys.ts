@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 
 import {
-  canonicalizeRsaJwk,
   exportPrivateKey,
   exportPublicKey,
   genKeyPair,
-  getJwkThumbPrint,
   importPrivateKey,
   importPublicKey,
   parseJwk,
-} from "@/crypt/services/genKeyPair";
+  getJwkThumbPrint,
+} from "@/crypt/services";
 
 type CryptoKeyState = {
   publicKey: CryptoKey | null;
@@ -75,7 +74,7 @@ export function useCryptoKeys() {
       setState({
         publicKey: keyPair.publicKey,
         privateKey: keyPair.privateKey,
-        publicKeyText: canonicalizeRsaJwk(publicJwk),
+        publicKeyText: JSON.stringify(publicJwk),
         privateKeyText: JSON.stringify(privateJwk),
         isGenerating: false,
         error: null,
