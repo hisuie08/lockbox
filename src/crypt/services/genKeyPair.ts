@@ -47,10 +47,6 @@ export async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
 }
 
 export function parseJwk(value: string): LockBoxJwk {
-  if (!value.trim()) {
-    throw new Error("Paste a JWK before loading it.");
-  }
-
   let parsed: LockBoxJwk;
 
   try {
