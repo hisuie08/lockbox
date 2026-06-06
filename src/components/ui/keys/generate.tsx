@@ -1,11 +1,6 @@
 import { useCryptoKeys } from "@/hooks/useCryptoKeys";
 import { Button } from "@/components/base/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/base/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/base/dialog";
 import { Check, Copy, KeyRound } from "lucide-react";
 import { CardContent, CardTitle } from "../../base/card";
 import { useCopyText } from "@/hooks/useClipboard";
