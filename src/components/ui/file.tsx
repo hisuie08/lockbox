@@ -50,7 +50,7 @@ function ActionButton(props: {
   );
 }
 
-function FileInput(props: {
+export function FileInput(props: {
   maxFileSize: number;
   callback: (
     maxFileSize: number,

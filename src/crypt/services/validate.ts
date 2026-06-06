@@ -1,8 +1,10 @@
+import type { LockBoxJwk } from "./types";
+
 export type RsaJwkValidationResult =
   | {
       valid: true;
       keyType: "public" | "private";
-      jwk: JsonWebKey;
+      jwk: LockBoxJwk;
     }
   | {
       valid: false;
@@ -20,16 +22,16 @@ function isBase64Url(value: unknown): value is string {
 
 export function validateRsaJwk(input: unknown): RsaJwkValidationResult {
   const errors: string[] = [];
-
-  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+  
+  if (typeof input != "object") {
     return {
       valid: false,
       keyType: null,
-      errors: ["JWK must be an object"],
+      errors: ["JWK must be an object", `type ${typeof input}`],
     };
   }
 
-  const jwk = input as JsonWebKey;
+  const jwk = input as LockBoxJwk;
 
   if (jwk.kty !== "RSA") {
     errors.push("kty must be RSA");

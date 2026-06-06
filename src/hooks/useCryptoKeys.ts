@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   exportKey,
   genKeyPair,
   importPrivateKey,
   importPublicKey,
-  parseJwk,
   getJwkThumbPrint,
   type LockBoxJwk,
 } from "@/crypt/services";
@@ -13,8 +12,8 @@ import {
 type CryptoKeyState = {
   publicKey: CryptoKey | null;
   privateKey: CryptoKey | null;
-  publicKeyText: string;
-  privateKeyText: string;
+  publicJwk: LockBoxJwk | null;
+  privateJwk: LockBoxJwk | null;
   isGenerating: boolean;
   error: string | null;
 };
@@ -22,6 +21,8 @@ type CryptoKeyState = {
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return error.message;
+  } else if (error instanceof Array) {
+    return error.join(";");
   }
 
   return "Key operation failed.";
@@ -31,13 +32,20 @@ export function useCryptoKeys() {
   const [state, setState] = useState<CryptoKeyState>({
     publicKey: null,
     privateKey: null,
-    publicKeyText: "",
-    privateKeyText: "",
+    publicJwk: null,
+    privateJwk: null,
     isGenerating: false,
     error: null,
   });
-
   const [publicKeyThumbprint, setPubFinger] = useState<string>("");
+  const publicKeyText = useMemo(
+    () => JSON.stringify(state.publicJwk),
+    [state.publicJwk],
+  );
+  const privateKeyText = useMemo(
+    () => JSON.stringify(state.privateJwk),
+    [state.privateJwk],
+  );
   useEffect(() => {
     const update = async () => {
       if (state.publicKey) {
@@ -76,8 +84,8 @@ export function useCryptoKeys() {
       setState({
         publicKey: keyPair.publicKey,
         privateKey: keyPair.privateKey,
-        publicKeyText: JSON.stringify(publicJwk),
-        privateKeyText: JSON.stringify(privateJwk),
+        publicJwk: publicJwk,
+        privateJwk: privateJwk,
         isGenerating: false,
         error: null,
       });
@@ -90,37 +98,32 @@ export function useCryptoKeys() {
     }
   }
 
-  async function importPublicKeyText() {
+  async function importPublicJwk(jwk: LockBoxJwk) {
     try {
-      const publicKey = await importPublicKey(parseJwk(state.publicKeyText));
-      setState((current) => ({ ...current, publicKey, error: null }));
+      const publicKey = await importPublicKey(jwk);
+      setState((current) => ({
+        ...current,
+        publicKey: publicKey,
+        publicJwk: jwk,
+        error: null,
+      }));
     } catch (error) {
       setState((current) => ({ ...current, error: getErrorMessage(error) }));
     }
   }
 
-  async function importPrivateKeyText() {
+  async function importPrivateJwk(jwk: LockBoxJwk) {
     try {
-      const privateKey = await importPrivateKey(parseJwk(state.privateKeyText));
-      setState((current) => ({ ...current, privateKey, error: null }));
+      const privateKey = await importPrivateKey(jwk);
+      setState((current) => ({
+        ...current,
+        privateKey: privateKey,
+        privateJwk: jwk,
+        error: null,
+      }));
     } catch (error) {
       setState((current) => ({ ...current, error: getErrorMessage(error) }));
     }
-  }
-  function setPublicKeyText(publicKeyText: string) {
-    setState((current) => ({
-      ...current,
-      publicKeyText,
-      error: null,
-    }));
-  }
-
-  function setPrivateKeyText(privateKeyText: string) {
-    setState((current) => ({
-      ...current,
-      privateKeyText,
-      error: null,
-    }));
   }
 
   function clearPublicKey() {
@@ -148,13 +151,13 @@ export function useCryptoKeys() {
     ...state,
     publicKeyThumbprint,
     privateKeyThumbprint,
+    privateKeyText,
+    publicKeyText,
     clearPublicKey,
     clearPrivateKey,
     generateKeys,
-    importPrivateKeyText,
-    importPublicKeyText,
-    setPrivateKeyText,
-    setPublicKeyText,
+    importPrivateJwk,
+    importPublicJwk,
     setError,
   };
 }

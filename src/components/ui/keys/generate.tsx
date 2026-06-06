@@ -151,11 +151,7 @@ export function GenerateKeyAction(props: {
   const safeSave = useSafeSave();
 
   return (
-    <Dialog
-      modal={true}
-      disablePointerDismissal={true}
-      onOpenChangeComplete={(open) => {}}
-    >
+    <Dialog modal={true} disablePointerDismissal={true}>
       <DialogTrigger>
         <Button
           onClick={() => {
