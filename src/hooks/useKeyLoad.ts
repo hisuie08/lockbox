@@ -3,7 +3,7 @@ import {
   validateRsaJwk,
   type RsaJwkValidationResult,
 } from "@/crypt/services";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 
 export type TypeKeyFor = "public" | "private";
 export type LoadKeyState = {
@@ -16,15 +16,10 @@ export function useKeyLoad(keyType: TypeKeyFor) {
     error: "",
   });
 
-  const isValid = useMemo(() => {
-    return (
-      state.jwk != null && state.jwk?.valid && state.jwk.keyType == keyType
-    );
-  }, [state.jwk, keyType]);
+  const isValid =
+    state.jwk != null && state.jwk?.valid && state.jwk.keyType == keyType;
 
-  const validJwk = useMemo(() => {
-    return state.jwk?.valid ? state.jwk.jwk : null;
-  }, [state.jwk]);
+  const validJwk = state.jwk?.valid ? state.jwk.jwk : null;
 
   function loadKeyString(event: React.ChangeEvent<HTMLTextAreaElement>) {
     try {

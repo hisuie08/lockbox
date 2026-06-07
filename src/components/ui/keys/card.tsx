@@ -22,7 +22,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@/components/base/input-group";
-import { InputKey } from "./load";
+import { InputPublicKey, InputPrivateKey } from "./load";
 import { useDialog } from "@/hooks/useDialog";
 import { AlertKeyPairMismatch } from "../static";
 function Menu() {
@@ -70,12 +70,7 @@ function PublicKeyView(props: {
         </DropdownMenu>
       </InputGroupAddon>
       {editDialog.isOpen ? (
-        <InputKey
-          title="Edit Public Key"
-          keyType={"public"}
-          callback={props.keys.importPublicJwk}
-          dialog={editDialog}
-        />
+        <InputPublicKey keys={props.keys} dialog={editDialog} />
       ) : null}
     </InputGroup>
   );
@@ -110,12 +105,7 @@ function PrivateKeyView(props: {
         </DropdownMenu>
       </InputGroupAddon>
       {editDialog.isOpen ? (
-        <InputKey
-          title="Edit Private Key"
-          keyType={"private"}
-          callback={props.keys.importPrivateJwk}
-          dialog={editDialog}
-        />
+        <InputPrivateKey keys={props.keys} dialog={editDialog} />
       ) : null}
     </InputGroup>
   );
@@ -123,8 +113,6 @@ function PrivateKeyView(props: {
 export function KeyControlCard(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
-  const match =
-    props.keys.publicKeyThumbprint == props.keys.privateKeyThumbprint;
   return (
     <Card className="rounded-lg">
       <CardHeader>
@@ -138,12 +126,12 @@ export function KeyControlCard(props: {
         </CardAction>
       </CardHeader>
       <CardContent className="grid gap-5">
-        {match ? null : <AlertKeyPairMismatch />}
+        {props.keys.matchKeys ? null : <AlertKeyPairMismatch />}
         <div className="grid">
           <label className="grid gap-2">
             <span className="text-sm font-medium">
               Public key{" "}
-              {props.keys.publicJwk ? (
+              {props.keys.publicKey ? (
                 <span className="text-green-700 ml-1">Loaded</span>
               ) : null}
             </span>
@@ -158,7 +146,7 @@ export function KeyControlCard(props: {
           <label className="grid gap-2">
             <span className="text-sm font-medium">
               Private key
-              {props.keys.privateJwk ? (
+              {props.keys.privateKey ? (
                 <span className="text-green-700 ml-1">Loaded</span>
               ) : null}
             </span>

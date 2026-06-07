@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   exportKey,
@@ -7,6 +7,7 @@ import {
   importPublicKey,
   getJwkThumbPrint,
   type LockBoxJwk,
+  derivePublicKey,
 } from "@/crypt/services";
 
 type CryptoKeyState = {
@@ -62,6 +63,11 @@ export function useCryptoKeys() {
     update();
   }, [state.privateJwk]);
 
+  const matchKeys = useMemo(
+    () => publicKeyThumbprint === privateKeyThumbprint,
+    [privateKeyThumbprint, publicKeyThumbprint],
+  );
+
   async function generateKeys(): Promise<{
     publicJwk: LockBoxJwk | null;
     privateJwk: LockBoxJwk | null;
@@ -115,11 +121,21 @@ export function useCryptoKeys() {
     }
   }
 
+  async function importBothJwk(privateJwk: LockBoxJwk) {
+    importPrivateJwk(privateJwk);
+    try {
+      const publicJwk = derivePublicKey(privateJwk);
+      importPublicJwk(publicJwk);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
+    }
+  }
+
   function clearPublicKey() {
     setState((current) => ({
       ...current,
       publicKey: null,
-      publicKeyText: "",
+      publicJwk: null,
       error: null,
     }));
   }
@@ -127,7 +143,7 @@ export function useCryptoKeys() {
     setState((current) => ({
       ...current,
       privateKey: null,
-      privateKeyText: "",
+      privateJwk: null,
       error: null,
     }));
   }
@@ -138,6 +154,7 @@ export function useCryptoKeys() {
 
   return {
     ...state,
+    matchKeys,
     publicKeyThumbprint,
     privateKeyThumbprint,
     getThumbPrint: getJwkThumbPrint,
@@ -146,6 +163,7 @@ export function useCryptoKeys() {
     generateKeys,
     importPrivateJwk,
     importPublicJwk,
+    importBothJwk,
     setError,
   };
 }

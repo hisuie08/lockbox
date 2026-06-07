@@ -1,4 +1,4 @@
-import { encryptedFileAlgorithms } from "@/crypt/services/payload";
+import { encryptedFileAlgorithms } from "@/crypt/services";
 import { FileKey2 } from "lucide-react";
 import { Card, CardContent } from "../base/card";
 

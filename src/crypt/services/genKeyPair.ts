@@ -1,4 +1,5 @@
 import type { LockBoxJwk } from "./types";
+import { validateRsaJwk } from "./validate";
 
 const rsaOaepParams = {
   name: "RSA-OAEP",
@@ -60,4 +61,18 @@ export function parseJwk(value: string): LockBoxJwk {
   }
 
   return parsed;
+}
+
+export function derivePublicKey(privateJwk: LockBoxJwk) {
+  const derived = { ...privateJwk };
+  const privateFields = ["d", "p", "q", "dp", "dq", "qi"] as const;
+  for (const k of privateFields) {
+    delete derived?.[k];
+  }
+  derived.key_ops = ["encrypt"];
+  const check = validateRsaJwk(derived);
+  if (check.valid && check.keyType == "public") {
+    return check.jwk;
+  }
+  throw new Error("failed to get public key");
 }

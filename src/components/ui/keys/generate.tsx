@@ -1,6 +1,6 @@
 import { useCryptoKeys } from "@/hooks/useCryptoKeys";
 import { Button } from "@/components/base/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/base/dialog";
+import { Dialog, DialogContent } from "@/components/base/dialog";
 import { Check, Copy, KeyRound } from "lucide-react";
 import { CardContent, CardTitle } from "../../base/card";
 import { useCopyText } from "@/hooks/useClipboard";
@@ -97,18 +97,17 @@ export function GenerateKeyAction(props: {
   }
   return (
     <Dialog modal={true} open={isOpen} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button
-          onClick={() => {
-            init();
-            generate();
-          }}
-          disabled={props.keys.isGenerating}
-        >
-          <KeyRound aria-hidden="true" />
-          {props.keys.isGenerating ? "Generating" : "Generate"}
-        </Button>
-      </DialogTrigger>
+      <Button
+        onClick={() => {
+          setOpen(true);
+          init();
+          generate();
+        }}
+        disabled={props.keys.isGenerating}
+      >
+        <KeyRound aria-hidden="true" />
+        {props.keys.isGenerating ? "Generating" : "Generate"}
+      </Button>
       <DialogContent
         showCloseButton={false}
         className="h-auto max-h-[90vh] w-full sm:w-[500px]"

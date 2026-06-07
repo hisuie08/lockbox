@@ -1,14 +1,3 @@
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
-
-export function encodeText(value: string): Uint8Array<ArrayBuffer> {
-  return textEncoder.encode(value) as Uint8Array<ArrayBuffer>;
-}
-
-export function decodeText(value: BufferSource): string {
-  return textDecoder.decode(value);
-}
-
 export function bytesToBase64(bytes: Uint8Array<ArrayBufferLike>): string {
   const chunkSize = 0x8000;
   let binary = "";
@@ -25,17 +14,24 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return bytesToBase64(new Uint8Array(buffer));
 }
 
-export function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
-  const binary = atob(value.replace(/\s/g, ""));
-  const bytes = new Uint8Array(binary.length) as Uint8Array<ArrayBuffer>;
 
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
+export function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binary = atob(base64);
+
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
   }
 
-  return bytes;
+  return bytes.buffer;
 }
 
-export function stableJson(value: unknown): string {
-  return JSON.stringify(value);
+export function uint32ToBytes(value: number): Uint8Array {
+  const buffer = new ArrayBuffer(4);
+  const view = new DataView(buffer);
+
+  view.setUint32(0, value, false);
+
+  return new Uint8Array(buffer);
 }
