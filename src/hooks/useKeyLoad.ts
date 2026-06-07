@@ -20,7 +20,7 @@ export function useKeyLoad(keyType: TypeKeyFor) {
     return (
       state.jwk != null && state.jwk?.valid && state.jwk.keyType == keyType
     );
-  }, [state.jwk]);
+  }, [state.jwk, keyType]);
 
   const validJwk = useMemo(() => {
     return state.jwk?.valid ? state.jwk.jwk : null;
@@ -69,7 +69,7 @@ export function useKeyLoad(keyType: TypeKeyFor) {
         setState({ jwk: k, error: "" });
       }
     } catch (e: unknown) {
-      let err = e instanceof Error ? e.message : (e as string);
+      const err = e instanceof Error ? e.message : (e as string);
       setState({ jwk: null, error: err });
     }
   }

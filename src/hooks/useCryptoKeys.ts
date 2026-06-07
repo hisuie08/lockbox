@@ -40,7 +40,7 @@ export function useCryptoKeys() {
   const [publicKeyThumbprint, setPubFinger] = useState<string>("");
   useEffect(() => {
     const update = async () => {
-      if (state.publicKey) {
+      if (state.publicJwk) {
         const fp = await getJwkThumbPrint(state.publicJwk);
         setPubFinger(fp);
       } else {
@@ -48,11 +48,11 @@ export function useCryptoKeys() {
       }
     };
     update();
-  }, [state.publicKey]);
+  }, [state.publicJwk]);
   const [privateKeyThumbprint, setPrivFinger] = useState<string>("");
   useEffect(() => {
     const update = async () => {
-      if (state.privateKey) {
+      if (state.privateJwk) {
         const tp = await getJwkThumbPrint(state.privateJwk);
         setPrivFinger(tp);
       } else {
@@ -60,7 +60,7 @@ export function useCryptoKeys() {
       }
     };
     update();
-  }, [state.privateKey]);
+  }, [state.privateJwk]);
 
   async function generateKeys(): Promise<{
     publicJwk: LockBoxJwk | null;
