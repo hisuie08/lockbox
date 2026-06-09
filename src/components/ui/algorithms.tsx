@@ -8,7 +8,7 @@ export function Algorithmns() {
       <CardContent className="grid gap-3 pt-0">
         <div className="flex items-center gap-2 text-sm font-medium">
           <FileKey2 aria-hidden="true" className="size-4" />
-          Session
+          暗号化アルゴリズム
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="rounded-md bg-muted px-3 py-2">

@@ -5,10 +5,9 @@ export function AlertKeyPairMismatch() {
   return (
     <Alert className="max-w-md border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
       <AlertTriangleIcon />
-      <AlertTitle>The thumbprints of the key pair do not match.</AlertTitle>
+      <AlertTitle>鍵のペアが一致していません</AlertTitle>
       <AlertDescription>
-        Note that files encrypted with this public key cannot be decrypted with
-        this private key.
+        この公開鍵で暗号化したファイルを、この秘密鍵で復号化は出来ないことに注意してください
       </AlertDescription>
     </Alert>
   );
@@ -17,8 +16,12 @@ export function AlertStreamNotSupported() {
   return (
     <Alert className="max-w-md border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
       <AlertTriangleIcon />
-      <AlertTitle>This browser does not support stream download</AlertTitle>
-      <AlertDescription></AlertDescription>
+      <AlertTitle>
+        このブラウザはストリームダウンロードをサポートしていません
+      </AlertTitle>
+      <AlertDescription>
+        扱うことができるファイルサイズが制限されています
+      </AlertDescription>
     </Alert>
   );
 }

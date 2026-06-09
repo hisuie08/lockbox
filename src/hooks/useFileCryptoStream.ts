@@ -169,7 +169,7 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
       setError(null);
       setWarning(null);
     } catch (error) {
-      if (error instanceof EncryptionError||FileCryptoError) {
+      if (error instanceof EncryptionError || FileCryptoError) {
         setError(getErrorMessage(error));
       }
       throw error;
@@ -213,9 +213,13 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
         if (!cancelled) {
           setOriginFile(origin);
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          setError("failed to load encrypted file");
+          if (error instanceof DecryptionError || FileCryptoError) {
+            setError(
+              "このファイルは暗号化されていないか、暗号情報が破損しているようです",
+            );
+          }
           setOriginFile(null);
         }
       }
@@ -239,7 +243,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       return;
     }
     if (!originFile) {
-      setError("Encrypted file metadata is not loaded yet.");
+      setError("暗号情報の読み込みが完了していません");
       return;
     }
     try {
@@ -261,8 +265,14 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       setError(null);
       setWarning(null);
     } catch (error) {
-      if (error instanceof DecryptionError||FileCryptoError) {
-        setError(getErrorMessage(error));
+      if (error instanceof DecryptionError || FileCryptoError) {
+        if ((error as Error).name == "InvalidPrivateKeyError") {
+          setError("秘密鍵がファイルに対応していません");
+        } else if ((error as Error).name == "AbortError") {
+          setError(null);
+        } else {
+          setError(getErrorMessage(error));
+        }
       }
       throw error;
     }

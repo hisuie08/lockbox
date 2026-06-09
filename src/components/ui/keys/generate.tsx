@@ -106,31 +106,33 @@ export function GenerateKeyAction(props: {
         disabled={props.keys.isGenerating}
       >
         <KeyRound aria-hidden="true" />
-        {props.keys.isGenerating ? "Generating" : "Generate"}
+        {props.keys.isGenerating ? "作成中" : "新規鍵ペア"}
       </Button>
       <DialogContent
         showCloseButton={false}
         className="h-auto max-h-[90vh] w-full sm:w-[500px]"
       >
-        <CardTitle>New KeyPair</CardTitle>
+        <CardTitle>新しい鍵ペアの作成</CardTitle>
         <CardContent className="grid gap-5">
           <div className="grid gap-3">
             <div className="grid gap-3">
               <CopyableKeyView
                 generating={props.keys.isGenerating}
                 keyText={JSON.stringify(pubKey)}
-                keyLabel="Public Key"
+                keyLabel="公開鍵"
                 callback={() => setPubSaved(true)}
               />
               <CopyableKeyView
                 generating={props.keys.isGenerating}
                 keyText={JSON.stringify(privKey)}
-                keyLabel="Private Key"
+                keyLabel="秘密鍵"
                 asSecret
                 callback={() => {
                   setPrivSaved(true);
                 }}
               />
+              <span className="text-destructive">秘密鍵は決して他人に共有しないでください</span>
+              <span className="text-destructive">これらの鍵ペアは今しか表示されません。確実に保存してください</span>
             </div>
           </div>
 
@@ -154,10 +156,10 @@ export function GenerateKeyAction(props: {
               setOpen(false);
             }}
           >
-            {closable ? "Load these keys" : "Save or copy keys before close"}
+            {closable ? "鍵ペアを使用する" : "2つの鍵を 保存 または コピー してください"}
           </Button>
           <Button variant={"outline"} onClick={() => setOpen(false)}>
-            Cancel
+            キャンセル
           </Button>
         </CardContent>
       </DialogContent>

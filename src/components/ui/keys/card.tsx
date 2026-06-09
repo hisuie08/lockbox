@@ -120,7 +120,7 @@ export function KeyControlCard(props: {
           <KeyRound aria-hidden="true" className="size-4" />
           Keys
         </CardTitle>
-        <CardDescription>JWK import/export</CardDescription>
+        <CardDescription>鍵ペアの管理</CardDescription>
         <CardAction>
           <GenerateKeyAction keys={props.keys} />
         </CardAction>
@@ -130,7 +130,7 @@ export function KeyControlCard(props: {
         <div className="grid">
           <label className="grid gap-2">
             <span className="text-sm font-medium">
-              Public key{" "}
+              公開鍵
               {props.keys.publicKey ? (
                 <span className="text-green-700 ml-1">Loaded</span>
               ) : null}
@@ -145,7 +145,7 @@ export function KeyControlCard(props: {
         <div className="grid">
           <label className="grid gap-2">
             <span className="text-sm font-medium">
-              Private key
+              秘密鍵
               {props.keys.privateKey ? (
                 <span className="text-green-700 ml-1">Loaded</span>
               ) : null}

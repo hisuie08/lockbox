@@ -17,7 +17,7 @@ export function DownloadPubKey(props: {
       }}
     >
       <Download aria-hidden="true" />
-      Public Key
+      公開鍵をダウンロード
     </Button>
   );
 }
@@ -37,7 +37,7 @@ export function DownloadPrivKey(props: {
       }}
     >
       <Download aria-hidden="true" />
-      Private Key
+      秘密鍵をダウンロード
     </Button>
   );
 }

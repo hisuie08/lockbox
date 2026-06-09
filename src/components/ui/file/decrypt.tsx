@@ -17,6 +17,7 @@ export function DecryptFileCard(props: {
           <UnlockKeyhole aria-hidden="true" className="size-4" />,
           "Decrypt",
         ]}
+        useKey="秘密鍵"
         maxFileSize={props.files.maxFileSize}
         fileName={props.files.fileToProcess?.name ?? null}
       />
@@ -65,10 +66,10 @@ export function DecryptFileCard(props: {
           onClick={() => props.files.decryptSelectedFile(props.keys.privateKey)}
           label={
             props.files.isProcessing
-              ? "Decrypting"
+              ? "処理中"
               : props.files.isDone
-                ? "Done"
-                : "Decrypt"
+                ? "完了"
+                : "復号化開始"
           }
         />
       </CardContent>

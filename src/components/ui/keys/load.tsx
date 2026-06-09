@@ -22,11 +22,11 @@ function SelectMethod(props: { value: string; callback: (_: string) => void }) {
     >
       <div className="flex items-center gap-3">
         <RadioGroupItem value="file" id="r1" />
-        <Label htmlFor="r1">Upload file</Label>
+        <Label htmlFor="r1">鍵ファイルをアップロード</Label>
       </div>
       <div className="flex items-center gap-3 w-fit">
         <RadioGroupItem value="paste" id="r2" />
-        <Label htmlFor="r2">Paste key</Label>
+        <Label htmlFor="r2">テキストとして貼り付け</Label>
       </div>
     </RadioGroup>
   );
@@ -72,7 +72,7 @@ export function InputPublicKey(props: {
   return (
     <Dialog open={props.dialog.isOpen} onOpenChange={props.dialog.setOpen}>
       <DialogContent>
-        <DialogTitle>Edit Public Key</DialogTitle>
+        <DialogTitle>公開鍵</DialogTitle>
         <div className="grid gap-3">
           <SelectMethod value={method} callback={setMethod} />
           <KeyInputField keyType={keyType} method={method} keyLoad={keyload} />
@@ -84,7 +84,7 @@ export function InputPublicKey(props: {
               props.dialog.setOpen(false);
             }}
           >
-            Load
+            この鍵を使用
           </Button>
         </div>
       </DialogContent>
@@ -104,18 +104,18 @@ export function InputPrivateKey(props: {
   return (
     <Dialog open={props.dialog.isOpen} onOpenChange={props.dialog.setOpen}>
       <DialogContent>
-        <DialogTitle>Edit Private Key</DialogTitle>
+        <DialogTitle>秘密鍵</DialogTitle>
         <div className="grid gap-3">
           <SelectMethod value={method} callback={setMethod} />
-          <Field orientation="horizontal">
+          <KeyInputField keyType={keyType} method={method} keyLoad={keyload} />
+          <Field orientation="horizontal" className="py-1">
             <Checkbox
               id="with-pub"
               checked={checked}
               onCheckedChange={setChecked}
             />
-            <Label htmlFor="with-pub">Load public key from private key</Label>
+            <Label htmlFor="with-pub">秘密鍵に対応する公開鍵を使用</Label>
           </Field>
-          <KeyInputField keyType={keyType} method={method} keyLoad={keyload} />
           <Button
             type={"submit"}
             disabled={!isValid}

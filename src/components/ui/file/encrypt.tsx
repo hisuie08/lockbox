@@ -17,6 +17,7 @@ export function EncryptFileCard(props: {
           <LockKeyhole aria-hidden="true" className="size-4" />,
           "Encrypt",
         ]}
+        useKey="公開鍵"
         maxFileSize={props.files.maxFileSize}
         fileName={props.files.fileToProcess?.name ?? null}
       />
@@ -42,7 +43,7 @@ export function EncryptFileCard(props: {
           </div>
         ) : null}
         {props.files.fileToProcess ? (
-          <Progress value={props.files.progress*100} max={100} min={0}>
+          <Progress value={props.files.progress * 100} max={100} min={0}>
             <ProgressValue />
           </Progress>
         ) : null}
@@ -63,10 +64,10 @@ export function EncryptFileCard(props: {
           onClick={() => props.files.encryptSelectedFile(props.keys.publicKey)}
           label={
             props.files.isProcessing
-              ? "Encrypting"
+              ? "処理中"
               : props.files.isDone
-                ? "Done"
-                : "Encrypt"
+                ? "完了"
+                : "暗号化開始"
           }
         />
       </CardContent>

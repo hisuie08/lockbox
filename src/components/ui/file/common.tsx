@@ -8,6 +8,7 @@ export function Header(props: {
   maxFileSize: number;
   fileName: string | null;
   children: React.ReactNode[];
+  useKey:string
 }) {
   const supported = useStreamSupport();
   return (
@@ -20,7 +21,7 @@ export function Header(props: {
           </span>
         )}
       </CardTitle>
-      <CardDescription>{props.fileName ?? "No file selected"}</CardDescription>
+      <CardDescription><strong>{props.useKey}</strong>を使用します</CardDescription>
     </CardHeader>
   );
 }

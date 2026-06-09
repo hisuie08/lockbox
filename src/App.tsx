@@ -33,14 +33,8 @@ function App() {
           <KeyControlCard keys={keys} />
 
           <div className="grid gap-6">
-            <EncryptFileCard
-              files={enc}
-              keys={keys}
-            />
-            <DecryptFileCard
-              files={dec}
-              keys={keys}
-            />
+            <EncryptFileCard files={enc} keys={keys} />
+            <DecryptFileCard files={dec} keys={keys} />
 
             <Algorithmns />
           </div>
