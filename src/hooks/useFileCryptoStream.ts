@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   decryptFileToStream,
+  DecryptionError,
   encryptFileToStream,
+  EncryptionError,
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt/services";
 import { BufferWriter } from "@/crypt/services/bufferWriter";
 import { downloadBlob } from "@/lib/download";
+import { FileCryptoError } from "@/crypt/services/errors";
 
 type UseFileCryptoOption = {
   maxFileSize: number;
@@ -25,7 +28,7 @@ function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return (error as Error).name + ": " + error.message;
   }
-  return "File operation failed.";
+  throw error;
 }
 
 function useFileCrypt(option: UseFileCryptoOption) {
@@ -166,7 +169,10 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
       setError(null);
       setWarning(null);
     } catch (error) {
-      setError(getErrorMessage(error));
+      if (error instanceof EncryptionError||FileCryptoError) {
+        setError(getErrorMessage(error));
+      }
+      throw error;
     }
   }
 
@@ -255,7 +261,10 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       setError(null);
       setWarning(null);
     } catch (error) {
-      setError(getErrorMessage(error));
+      if (error instanceof DecryptionError||FileCryptoError) {
+        setError(getErrorMessage(error));
+      }
+      throw error;
     }
   }
 

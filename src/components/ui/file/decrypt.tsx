@@ -33,13 +33,14 @@ export function DecryptFileCard(props: {
             event.target.value = "";
           }}
         />
-        {props.files.fileToProcess ? (
+        {props.files.fileToProcess && props.files.originFile ? (
+          //TODO: 詳細な情報表示
           <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
             <span className="truncate">{props.files.fileToProcess.name}</span>
             <span className="shrink-0 text-muted-foreground">
-              {formatBytes(props.files.originFile!.originalSize)}
+              {formatBytes(props.files.originFile.originalSize)}
             </span>
-            Original: {props.files.originFile?.originalName}
+            <span>{props.files.originFile?.originalName}</span>
           </div>
         ) : null}
         {props.files.fileToProcess ? (

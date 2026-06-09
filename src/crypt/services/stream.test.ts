@@ -116,12 +116,14 @@ describe("encrypted file stream", () => {
         fileSize: fileSize,
         publicKey: keyPair.publicKey,
         writer: pipe.writable.getWriter(),
+        onProgress: () => {},
       });
 
       const decryptPromise = decryptFileToStream({
         source: pipe.readable,
         privateKey: keyPair.privateKey,
         writer: hashWriter.stream.getWriter(),
+        onProgress: () => {},
       });
 
       const [, header] = await Promise.all([encryptPromise, decryptPromise]);

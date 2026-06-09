@@ -1,6 +1,37 @@
 import { arrayBufferToBase64, uint32ToBytes } from "./encoding";
-import { DEFAULT_CHUNK_SIZE, FILE_SIGNATURE, FORMAT_VERSION } from "./constants";
+import {
+  DEFAULT_CHUNK_SIZE,
+  FILE_SIGNATURE,
+  FORMAT_VERSION,
+} from "./constants";
 import type { EncryptedFileHeader } from "./types";
+import {
+  InputReadError,
+  OutputWriteError,
+  UnexpectedCryptoError,
+} from "./errors";
+
+export abstract class EncryptionError extends Error {
+  override cause?: unknown;
+
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = new.target.name;
+    this.cause = cause;
+  }
+}
+
+export class InvalidPublicKeyError extends EncryptionError {
+  constructor(cause?: unknown) {
+    super("The public key cannot be used for encryption.", cause);
+  }
+}
+
+export class AESKeyGenerationError extends EncryptionError {
+  constructor(cause?: unknown) {
+    super("Failed to generate encryption key.", cause);
+  }
+}
 
 const encoder = new TextEncoder();
 // RSA-OAEP: 鍵暗号化鍵
@@ -17,14 +48,20 @@ async function createHeader(input: {
   header: EncryptedFileHeader;
   aesKey: CryptoKey;
 }> {
-  const aesKey = await crypto.subtle.generateKey(
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    true,
-    ["encrypt", "decrypt"],
-  );
+  let aesKey: CryptoKey;
+
+  try {
+    aesKey = await crypto.subtle.generateKey(
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true,
+      ["encrypt", "decrypt"],
+    );
+  } catch (error) {
+    throw new AESKeyGenerationError(error);
+  }
 
   const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
 
@@ -32,12 +69,21 @@ async function createHeader(input: {
 
   try {
     encryptedKey = await crypto.subtle.encrypt(
-      { name: "RSA-OAEP" },
+      {
+        name: "RSA-OAEP",
+      },
       input.publicKey,
       rawAesKey,
     );
-  } catch {
-    throw new Error("Loaded public key cannot encrypt files.");
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "OperationError" || error.name === "InvalidAccessError")
+    ) {
+      throw new InvalidPublicKeyError(error);
+    }
+
+    throw new UnexpectedCryptoError(error);
   }
 
   return {
@@ -46,13 +92,10 @@ async function createHeader(input: {
       algorithm: "AES-GCM",
       rsaAlgorithm: "RSA-OAEP",
       chunkSize: input.chunkSize,
-
       encryptedKey: arrayBufferToBase64(encryptedKey),
-
       originalName: input.filename,
       originalType: input.filetype,
       originalSize: input.fileSize,
-
       createdAt: input.createdAt ?? new Date().toISOString(),
     },
   };
@@ -67,35 +110,40 @@ async function encryptChunk(
 }> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
-  const encrypted = await crypto.subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv,
-    },
-    aesKey,
-    plaintext as BufferSource,
-  );
+  try {
+    const encrypted = await crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      aesKey,
+      plaintext as BufferSource,
+    );
 
-  return {
-    iv,
-    ciphertext: new Uint8Array(encrypted),
-  };
+    return {
+      iv,
+      ciphertext: new Uint8Array(encrypted),
+    };
+  } catch (error) {
+    throw new UnexpectedCryptoError(error);
+  }
 }
+
 export async function writeHeader(
   writer: WritableStreamDefaultWriter<Uint8Array>,
   header: EncryptedFileHeader,
 ): Promise<void> {
-  const headerJson = JSON.stringify(header);
+  try {
+    const headerJson = JSON.stringify(header);
+    const headerBytes = encoder.encode(headerJson);
 
-  const headerBytes = encoder.encode(headerJson);
-
-  await writer.write(encoder.encode(FILE_SIGNATURE));
-
-  await writer.write(Uint8Array.of(FORMAT_VERSION));
-
-  await writer.write(uint32ToBytes(headerBytes.length));
-
-  await writer.write(headerBytes);
+    await writer.write(encoder.encode(FILE_SIGNATURE));
+    await writer.write(Uint8Array.of(FORMAT_VERSION));
+    await writer.write(uint32ToBytes(headerBytes.length));
+    await writer.write(headerBytes);
+  } catch (error) {
+    throw new OutputWriteError("Failed to write encrypted output.", error);
+  }
 }
 
 export async function writeChunk(
@@ -105,19 +153,19 @@ export async function writeChunk(
     ciphertext: Uint8Array;
   },
 ): Promise<void> {
-  const header = new Uint8Array(8);
+  try {
+    const header = new Uint8Array(8);
+    const view = new DataView(header.buffer);
 
-  const view = new DataView(header.buffer);
+    view.setUint32(0, chunk.ciphertext.length);
+    view.setUint32(4, chunk.iv.length);
 
-  view.setUint32(0, chunk.ciphertext.length);
-
-  view.setUint32(4, chunk.iv.length);
-
-  await writer.write(header);
-
-  await writer.write(chunk.iv);
-
-  await writer.write(chunk.ciphertext);
+    await writer.write(header);
+    await writer.write(chunk.iv);
+    await writer.write(chunk.ciphertext);
+  } catch (error) {
+    throw new OutputWriteError("Failed to write encrypted output.", error);
+  }
 }
 
 export async function encryptFileToStream(input: {
@@ -130,52 +178,77 @@ export async function encryptFileToStream(input: {
   onProgress: (progress: number) => void;
   createdAt?: string;
 }): Promise<void> {
-  const chunkSize = DEFAULT_CHUNK_SIZE;
-  let processedBytes = 0;
-  const { aesKey, header } = await createHeader({
-    ...input,
-    chunkSize: chunkSize,
-  });
+  try {
+    const chunkSize = DEFAULT_CHUNK_SIZE;
+    let processedBytes = 0;
 
-  await writeHeader(input.writer, header);
+    const { aesKey, header } = await createHeader({
+      ...input,
+      chunkSize,
+    });
 
-  const reader = input.source.getReader();
+    await writeHeader(input.writer, header);
 
-  let pending = new Uint8Array(0);
+    const reader = input.source.getReader();
 
-  while (true) {
-    const { done, value } = await reader.read();
+    let pending = new Uint8Array(0);
 
-    if (done) {
-      break;
+    while (true) {
+      let result;
+
+      try {
+        result = await reader.read();
+      } catch (error) {
+        throw new InputReadError("Failed to read input file.", error);
+      }
+
+      const { done, value } = result;
+
+      if (done) {
+        break;
+      }
+
+      processedBytes += value.length;
+      input.onProgress(processedBytes / input.fileSize);
+
+      const merged = new Uint8Array(pending.length + value.length);
+
+      merged.set(pending);
+      merged.set(value, pending.length);
+
+      let offset = 0;
+
+      while (merged.length - offset >= chunkSize) {
+        const chunk = merged.slice(offset, offset + chunkSize);
+
+        const encrypted = await encryptChunk(chunk, aesKey);
+
+        await writeChunk(input.writer, encrypted);
+
+        offset += chunkSize;
+      }
+
+      pending = merged.slice(offset);
     }
-    processedBytes += value.length;
-    input.onProgress?.(processedBytes / input.fileSize);
-    const merged = new Uint8Array(pending.length + value.length);
 
-    merged.set(pending);
-    merged.set(value, pending.length);
-
-    let offset = 0;
-
-    while (merged.length - offset >= chunkSize) {
-      const chunk = merged.slice(offset, offset + chunkSize);
-
-      const encrypted = await encryptChunk(chunk, aesKey);
+    if (pending.length > 0) {
+      const encrypted = await encryptChunk(pending, aesKey);
 
       await writeChunk(input.writer, encrypted);
-
-      offset += chunkSize;
     }
 
-    pending = merged.slice(offset);
-  }
+    try {
+      await input.writer.close();
+    } catch (error) {
+      throw new OutputWriteError("Failed to write encrypted output.", error);
+    }
 
-  if (pending.length > 0) {
-    const encrypted = await encryptChunk(pending, aesKey);
+    input.onProgress(1);
+  } catch (error) {
+    if (error instanceof EncryptionError) {
+      throw error;
+    }
 
-    await writeChunk(input.writer, encrypted);
+    throw new UnexpectedCryptoError(error);
   }
-  await input.writer.close();
-  input.onProgress(1);
 }

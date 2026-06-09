@@ -8,6 +8,7 @@ import {
   getJwkThumbPrint,
   type LockBoxJwk,
   derivePublicKey,
+  KeyPairError,
 } from "@/crypt/services";
 
 type CryptoKeyState = {
@@ -21,12 +22,9 @@ type CryptoKeyState = {
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
-    return error.message;
-  } else if (error instanceof Array) {
-    return error.join(";");
+    return (error as Error).name + ": " + error.message;
   }
-
-  return "Key operation failed.";
+  throw error;
 }
 
 export function useCryptoKeys() {
@@ -84,12 +82,15 @@ export function useCryptoKeys() {
       setState((current) => ({ ...current, isGenerating: false, error: null }));
       return { publicJwk: publicJwk, privateJwk: privateJwk };
     } catch (error) {
-      setState((current) => ({
-        ...current,
-        isGenerating: false,
-        error: getErrorMessage(error),
-      }));
-      return { publicJwk: null, privateJwk: null };
+      if (error instanceof KeyPairError) {
+        setState((current) => ({
+          ...current,
+          isGenerating: false,
+          error: getErrorMessage(error),
+        }));
+        return { publicJwk: null, privateJwk: null };
+      }
+      throw error;
     }
   }
 
@@ -103,7 +104,10 @@ export function useCryptoKeys() {
         error: null,
       }));
     } catch (error) {
-      setState((current) => ({ ...current, error: getErrorMessage(error) }));
+      if (error instanceof KeyPairError) {
+        setState((current) => ({ ...current, error: getErrorMessage(error) }));
+      }
+      throw error;
     }
   }
 
@@ -117,7 +121,10 @@ export function useCryptoKeys() {
         error: null,
       }));
     } catch (error) {
-      setState((current) => ({ ...current, error: getErrorMessage(error) }));
+      if (error instanceof KeyPairError) {
+        setState((current) => ({ ...current, error: getErrorMessage(error) }));
+      }
+      throw error;
     }
   }
 
@@ -126,8 +133,11 @@ export function useCryptoKeys() {
     try {
       const publicJwk = derivePublicKey(privateJwk);
       importPublicJwk(publicJwk);
-    } catch (e: unknown) {
-      setError(getErrorMessage(e));
+    } catch (error) {
+      if (error instanceof KeyPairError) {
+        setState((current) => ({ ...current, error: getErrorMessage(error) }));
+      }
+      throw error;
     }
   }
 

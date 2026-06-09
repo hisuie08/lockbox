@@ -1,5 +1,43 @@
 import type { LockBoxJwk } from "./types";
 import { validateRsaJwk } from "./validate";
+export abstract class KeyPairError extends Error {
+  override cause?: unknown;
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = new.target.name;
+    this.cause = cause;
+  }
+}
+
+export class KeyGenerationError extends KeyPairError {
+  constructor(cause?: unknown) {
+    super("key generation failed", cause);
+  }
+}
+
+export class KeyImportError extends KeyPairError {
+  constructor(keytype: string, cause?: unknown) {
+    super(`Public JWK must be a valid RSA-OAEP ${keytype} key.`, cause);
+  }
+}
+
+export class KeyParseError extends KeyPairError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
+  }
+}
+
+export class KeyExportError extends KeyPairError {
+  constructor(cause?: unknown) {
+    super("Failed to export key.", cause);
+  }
+}
+
+export class KeyDerivationError extends KeyPairError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
+  }
+}
 
 const rsaOaepParams = {
   name: "RSA-OAEP",
@@ -9,14 +47,28 @@ const rsaOaepParams = {
 } satisfies RsaHashedKeyGenParams;
 
 export async function genKeyPair(): Promise<CryptoKeyPair> {
-  return crypto.subtle.generateKey(rsaOaepParams, true, ["encrypt", "decrypt"]);
+  try {
+    return await crypto.subtle.generateKey(rsaOaepParams, true, [
+      "encrypt",
+      "decrypt",
+    ]);
+  } catch (err) {
+    throw new KeyGenerationError(err);
+  }
 }
 
 export async function exportKey(
   key: CryptoKey,
   date: Date,
 ): Promise<LockBoxJwk> {
-  return { ...(await crypto.subtle.exportKey("jwk", key)), created_at: date };
+  try {
+    return {
+      ...(await crypto.subtle.exportKey("jwk", key)),
+      created_at: date,
+    };
+  } catch (err) {
+    throw new KeyExportError(err);
+  }
 }
 
 export async function importPublicKey(jwk: JsonWebKey): Promise<CryptoKey> {
@@ -28,8 +80,8 @@ export async function importPublicKey(jwk: JsonWebKey): Promise<CryptoKey> {
       true,
       ["encrypt"],
     );
-  } catch {
-    throw new Error("Public JWK must be a valid RSA-OAEP public key.");
+  } catch (err) {
+    throw new KeyImportError("public", err);
   }
 }
 
@@ -42,25 +94,17 @@ export async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
       false,
       ["decrypt"],
     );
-  } catch {
-    throw new Error("Private JWK must be a valid RSA-OAEP private key.");
+  } catch (err) {
+    throw new KeyImportError("private", err);
   }
 }
 
 export function parseJwk(value: string): LockBoxJwk {
-  let parsed: LockBoxJwk;
-
   try {
-    parsed = JSON.parse(value) as LockBoxJwk;
-  } catch {
-    throw new Error("JWK must be valid JSON.");
+    return JSON.parse(value) as LockBoxJwk;
+  } catch (err) {
+    throw new KeyParseError("JWK must be valid JSON.", err);
   }
-
-  if (typeof parsed !== "object" || parsed === null || parsed.kty !== "RSA") {
-    throw new Error("JWK must be an RSA key.");
-  }
-
-  return parsed;
 }
 
 export function derivePublicKey(privateJwk: LockBoxJwk) {
@@ -71,8 +115,9 @@ export function derivePublicKey(privateJwk: LockBoxJwk) {
   }
   derived.key_ops = ["encrypt"];
   const check = validateRsaJwk(derived);
-  if (check.valid && check.keyType == "public") {
+  if (check.valid == true && check.keyType == "public") {
     return check.jwk;
+  } else {
+    throw new KeyDerivationError("public key drivation failed");
   }
-  throw new Error("failed to get public key");
 }
