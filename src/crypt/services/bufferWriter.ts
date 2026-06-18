@@ -1,3 +1,4 @@
+// Firefox等 stream非対応ブラウザ用
 export class BufferWriter {
   private readonly chunks: Uint8Array[] = [];
 
