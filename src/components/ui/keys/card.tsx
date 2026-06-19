@@ -7,7 +7,13 @@ import {
   CardTitle,
 } from "@/components/base/card";
 import type { useCryptoKeys } from "@/hooks/useCryptoKeys";
-import { Edit2Icon, KeyRound, MoreHorizontal, TrashIcon } from "lucide-react";
+import {
+  Edit2Icon,
+  KeyRound,
+  MoreHorizontal,
+  Share2Icon,
+  TrashIcon,
+} from "lucide-react";
 import { GenerateKeyAction } from "./generate";
 import {
   DropdownMenu,
@@ -25,6 +31,8 @@ import {
 import { InputPublicKey, InputPrivateKey } from "./load";
 import { useDialog } from "@/hooks/useDialog";
 import { AlertKeyPairMismatch } from "../static";
+import { useShareLink } from "@/hooks/useShareLink";
+import { useCopyText } from "@/hooks/useClipboard";
 function Menu() {
   return (
     <DropdownMenuTrigger
@@ -47,6 +55,12 @@ function PublicKeyView(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
   const editDialog = useDialog();
+  const { genLink } = useShareLink();
+  const { copy } = useCopyText();
+  function shareCallback() {
+    const link = genLink(props.keys.publicJwk);
+    copy(link, "public link");
+  }
   return (
     <InputGroup>
       <InputGroupInput readOnly disabled value={props.thumbprint} />
@@ -57,6 +71,13 @@ function PublicKeyView(props: {
             <DropdownMenuItem onClick={() => editDialog.setOpen(true)}>
               <Edit2Icon />
               Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={props.keys.publicKey == null}
+              onClick={shareCallback}
+            >
+              <Share2Icon />
+              Share Link
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

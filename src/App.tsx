@@ -8,6 +8,7 @@ import { AlertStreamNotSupported } from "./components/ui/static";
 import { EncryptFileCard } from "@/components/ui/file/encrypt";
 import { useFileDecrypt, useFileEncrypt } from "./hooks/useFileCryptoStream";
 import { DecryptFileCard } from "./components/ui/file/decrypt";
+import { useShareLink } from "./hooks/useShareLink";
 
 const MAX_FILE_SIZE = 1.5 * 1024 * 1024 * 1024;
 const WARNING_FILE_SIZE = 500 * 1024 * 1024;
@@ -23,6 +24,14 @@ function App() {
   };
   const enc = useFileEncrypt(option);
   const dec = useFileDecrypt(option);
+  const { loadLink } = useShareLink();
+
+  // 公開鍵共有URL形式を読み込む
+  // ?kty=OKP&crv=X25519&x=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890
+  onload = async () => {
+    const publicJwk = loadLink();
+    if (publicJwk != null) await keys.importPublicJwk(publicJwk);
+  };
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
