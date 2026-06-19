@@ -10,10 +10,14 @@ export function Header(props: {
         <div className="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
           <ShieldCheck aria-hidden="true" className="size-5" />
         </div>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-normal">Lockbox</h1>
-          <p className="text-sm text-muted-foreground">X25519-HKDF + AES-GCM</p>
-        </div>
+        <a href="/">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-normal">Lockbox</h1>
+            <p className="text-sm text-muted-foreground">
+              X25519-HKDF + AES-GCM
+            </p>
+          </div>
+        </a>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:items-center">
