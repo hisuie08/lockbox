@@ -1,5 +1,5 @@
 import type { LockBoxJwk } from "./types";
-import { validateRsaJwk } from "./validate";
+
 export abstract class KeyPairError extends Error {
   override cause?: unknown;
   constructor(message: string, cause?: unknown) {
@@ -17,7 +17,7 @@ export class KeyGenerationError extends KeyPairError {
 
 export class KeyImportError extends KeyPairError {
   constructor(keytype: string, cause?: unknown) {
-    super(`Public JWK must be a valid RSA-OAEP ${keytype} key.`, cause);
+    super(`JWK must be a valid X25519 ${keytype} key.`, cause);
   }
 }
 
@@ -33,31 +33,15 @@ export class KeyExportError extends KeyPairError {
   }
 }
 
-export class KeyDerivationError extends KeyPairError {
-  constructor(message: string, cause?: unknown) {
-    super(message, cause);
-  }
-}
-
-const rsaOaepParams = {
-  name: "RSA-OAEP",
-  modulusLength: 4096,
-  publicExponent: new Uint8Array([1, 0, 1]),
-  hash: "SHA-256",
-} satisfies RsaHashedKeyGenParams;
-
 export async function genKeyPair(): Promise<CryptoKeyPair> {
   try {
-    return await crypto.subtle.generateKey(rsaOaepParams, true, [
-      "encrypt",
-      "decrypt",
-    ]);
+    return await crypto.subtle.generateKey("X25519", true, ["deriveBits"]);
   } catch (err) {
     throw new KeyGenerationError(err);
   }
 }
 
-export async function exportKey(
+export async function exportAsJwk(
   key: CryptoKey,
   date: Date,
 ): Promise<LockBoxJwk> {
@@ -76,24 +60,19 @@ export async function importPublicKey(jwk: JsonWebKey): Promise<CryptoKey> {
     return await crypto.subtle.importKey(
       "jwk",
       jwk,
-      { name: "RSA-OAEP", hash: "SHA-256" },
+      { name: "X25519" },
       true,
-      ["encrypt"],
+      [],
     );
   } catch (err) {
     throw new KeyImportError("public", err);
   }
 }
-
 export async function importPrivateKey(jwk: JsonWebKey): Promise<CryptoKey> {
   try {
-    return await crypto.subtle.importKey(
-      "jwk",
-      jwk,
-      { name: "RSA-OAEP", hash: "SHA-256" },
-      false,
-      ["decrypt"],
-    );
+    return await crypto.subtle.importKey("jwk", jwk, { name: "X25519" }, true, [
+      "deriveBits",
+    ]);
   } catch (err) {
     throw new KeyImportError("private", err);
   }
@@ -107,17 +86,7 @@ export function parseJwk(value: string): LockBoxJwk {
   }
 }
 
-export function derivePublicKey(privateJwk: LockBoxJwk) {
-  const derived = { ...privateJwk };
-  const privateFields = ["d", "p", "q", "dp", "dq", "qi"] as const;
-  for (const k of privateFields) {
-    delete derived?.[k];
-  }
-  derived.key_ops = ["encrypt"];
-  const check = validateRsaJwk(derived);
-  if (check.valid == true && check.keyType == "public") {
-    return check.jwk;
-  } else {
-    throw new KeyDerivationError("public key drivation failed");
-  }
+export function toPublicJwk(privateJwk: LockBoxJwk) {
+  delete privateJwk.d;
+  return privateJwk;
 }

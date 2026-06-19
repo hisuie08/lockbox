@@ -1,4 +1,4 @@
-import { arrayBufferToBase64, uint32ToBytes } from "./encoding";
+import { bytesToBase64Url, uint32ToBytes } from "./encoding";
 import {
   DEFAULT_CHUNK_SIZE,
   FILE_SIGNATURE,
@@ -10,6 +10,9 @@ import {
   OutputWriteError,
   UnexpectedCryptoError,
 } from "./errors";
+import { genKeyPair } from "./keyPair";
+import { deriveContentEncryptionKey } from "./kdf";
+import { getJwkThumbprint } from "./validate";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;
@@ -21,79 +24,43 @@ export abstract class EncryptionError extends Error {
   }
 }
 
-export class InvalidPublicKeyError extends EncryptionError {
-  constructor(cause?: unknown) {
-    super("The public key cannot be used for encryption.", cause);
-  }
-}
-
-export class AESKeyGenerationError extends EncryptionError {
-  constructor(cause?: unknown) {
-    super("Failed to generate encryption key.", cause);
-  }
-}
-
 const encoder = new TextEncoder();
-// RSA-OAEP: 鍵暗号化鍵
+// X25519-HKDF: 鍵暗号化鍵
 //AES-GCM: ファイル本体暗号化鍵
 
 async function createHeader(input: {
   filename: string;
   filetype: string;
   fileSize: number;
-  publicKey: CryptoKey;
+  recipientPublicKey: CryptoKey;
+  recipientThumbprint: string;
   createdAt?: string;
   chunkSize: number;
 }): Promise<{
   header: EncryptedFileHeader;
   aesKey: CryptoKey;
 }> {
-  let aesKey: CryptoKey;
-
-  try {
-    aesKey = await crypto.subtle.generateKey(
-      {
-        name: "AES-GCM",
-        length: 256,
-      },
-      true,
-      ["encrypt", "decrypt"],
-    );
-  } catch (error) {
-    throw new AESKeyGenerationError(error);
-  }
-
-  const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
-
-  let encryptedKey: ArrayBuffer;
-
-  try {
-    encryptedKey = await crypto.subtle.encrypt(
-      {
-        name: "RSA-OAEP",
-      },
-      input.publicKey,
-      rawAesKey,
-    );
-  } catch (error) {
-    if (
-      error instanceof DOMException &&
-      (error.name === "OperationError" || error.name === "InvalidAccessError")
-    ) {
-      throw new InvalidPublicKeyError(error);
-    }
-
-    throw new UnexpectedCryptoError(error);
-  }
+  const ephemeral = await genKeyPair();
+  const ephemeralPubRaw = new Uint8Array(
+    await crypto.subtle.exportKey("raw", ephemeral.publicKey),
+  );
+  const salt = crypto.getRandomValues(new Uint8Array(32));
+  const aesKey = await deriveContentEncryptionKey(
+    input.recipientPublicKey,
+    ephemeral.privateKey,
+    salt,
+    "encrypt",
+  );
 
   return {
     aesKey,
     header: {
-      algorithm: "AES-GCM",
-      rsaAlgorithm: "RSA-OAEP",
+      algorithm: "X25519-HKDF-SHA-256-AES-GCM-256",
       chunkSize: input.chunkSize,
-      encryptedKey: arrayBufferToBase64(encryptedKey),
+      ephemeralPublicKey: bytesToBase64Url(ephemeralPubRaw),
+      recipientThumbprint: input.recipientThumbprint,
       originalName: input.filename,
+      hkdfSalt: bytesToBase64Url(salt),
       originalType: input.filetype,
       originalSize: input.fileSize,
       createdAt: input.createdAt ?? new Date().toISOString(),
@@ -102,7 +69,7 @@ async function createHeader(input: {
 }
 
 async function encryptChunk(
-  plaintext: Uint8Array,
+  content: Uint8Array,
   aesKey: CryptoKey,
 ): Promise<{
   iv: Uint8Array;
@@ -117,7 +84,7 @@ async function encryptChunk(
         iv,
       },
       aesKey,
-      plaintext as BufferSource,
+      content as BufferSource,
     );
 
     return {
@@ -181,9 +148,11 @@ export async function encryptFileToStream(input: {
   try {
     const chunkSize = DEFAULT_CHUNK_SIZE;
     let processedBytes = 0;
-
+    const publicJwk = await crypto.subtle.exportKey("jwk", input.publicKey);
     const { aesKey, header } = await createHeader({
       ...input,
+      recipientPublicKey: input.publicKey,
+      recipientThumbprint: await getJwkThumbprint(publicJwk),
       chunkSize,
     });
 

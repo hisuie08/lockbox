@@ -1,13 +1,13 @@
 import {
   parseJwk,
-  validateRsaJwk,
-  type RsaJwkValidationResult,
+  validateX25519Jwk,
+  type X25519JwkValidationResult,
 } from "@/crypt/services";
 import React, { useState } from "react";
 
 export type TypeKeyFor = "public" | "private";
 export type LoadKeyState = {
-  jwk: RsaJwkValidationResult | null;
+  jwk: X25519JwkValidationResult | null;
   error: string;
 };
 export function useKeyLoad(keyType: TypeKeyFor) {
@@ -49,7 +49,7 @@ export function useKeyLoad(keyType: TypeKeyFor) {
         return;
       }
       const parsed = parseJwk(input);
-      const k = validateRsaJwk(parsed);
+      const k = validateX25519Jwk(parsed);
 
       if (!k.valid) {
         setState({ jwk: null, error: k.errors.join(";") });

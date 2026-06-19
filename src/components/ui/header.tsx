@@ -12,7 +12,7 @@ export function Header(props: {
         </div>
         <div>
           <h1 className="text-2xl font-semibold tracking-normal">Lockbox</h1>
-          <p className="text-sm text-muted-foreground">RSA-OAEP + AES-GCM</p>
+          <p className="text-sm text-muted-foreground">X25519-HKDF + AES-GCM</p>
         </div>
       </div>
 

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  exportKey,
+  exportAsJwk,
   genKeyPair,
   importPrivateKey,
   importPublicKey,
-  getJwkThumbPrint,
+  getJwkThumbprint,
   type LockBoxJwk,
-  derivePublicKey,
+  toPublicJwk,
   KeyPairError,
 } from "@/crypt/services";
 
@@ -40,7 +40,7 @@ export function useCryptoKeys() {
   useEffect(() => {
     const update = async () => {
       if (state.publicJwk) {
-        const fp = await getJwkThumbPrint(state.publicJwk);
+        const fp = await getJwkThumbprint(state.publicJwk);
         setPubFinger(fp);
       } else {
         setPubFinger("");
@@ -52,7 +52,7 @@ export function useCryptoKeys() {
   useEffect(() => {
     const update = async () => {
       if (state.privateJwk) {
-        const tp = await getJwkThumbPrint(state.privateJwk);
+        const tp = await getJwkThumbprint(state.privateJwk);
         setPrivFinger(tp);
       } else {
         setPrivFinger("");
@@ -76,8 +76,8 @@ export function useCryptoKeys() {
       const date = new Date();
       const [publicJwk, privateJwk]: [LockBoxJwk, LockBoxJwk] =
         await Promise.all([
-          exportKey(keyPair.publicKey, date),
-          exportKey(keyPair.privateKey, date),
+          exportAsJwk(keyPair.publicKey, date),
+          exportAsJwk(keyPair.privateKey, date),
         ]);
       setState((current) => ({ ...current, isGenerating: false, error: null }));
       return { publicJwk: publicJwk, privateJwk: privateJwk };
@@ -131,7 +131,7 @@ export function useCryptoKeys() {
   async function importBothJwk(privateJwk: LockBoxJwk) {
     importPrivateJwk(privateJwk);
     try {
-      const publicJwk = derivePublicKey(privateJwk);
+      const publicJwk = toPublicJwk(privateJwk);
       importPublicJwk(publicJwk);
     } catch (error) {
       if (error instanceof KeyPairError) {
@@ -167,7 +167,7 @@ export function useCryptoKeys() {
     matchKeys,
     publicKeyThumbprint,
     privateKeyThumbprint,
-    getThumbPrint: getJwkThumbPrint,
+    getThumbPrint: getJwkThumbprint,
     clearPublicKey,
     clearPrivateKey,
     generateKeys,

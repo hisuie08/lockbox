@@ -1,4 +1,4 @@
-import { base64ToArrayBuffer } from "./encoding";
+import { base64UrlToArrayBuffer } from "./encoding";
 import { FILE_SIGNATURE, FORMAT_VERSION } from "./constants";
 import type { ChunkHeader, EncryptedFileHeader } from "./types";
 import {
@@ -6,6 +6,9 @@ import {
   OutputWriteError,
   UnexpectedCryptoError,
 } from "./errors";
+import { deriveContentEncryptionKey } from "./kdf";
+import { getJwkThumbprint } from "./validate";
+
 export abstract class DecryptionError extends Error {
   override cause?: unknown;
 
@@ -52,59 +55,22 @@ export class InvalidHeaderError extends DecryptionError {
   }
 }
 
-async function importAesKey(
-  encryptedKey: string,
-  privateKey: CryptoKey,
-): Promise<CryptoKey> {
-  let rawKey: ArrayBuffer;
-
-  try {
-    rawKey = await crypto.subtle.decrypt(
-      {
-        name: "RSA-OAEP",
-      },
-      privateKey,
-      base64ToArrayBuffer(encryptedKey),
-    );
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "OperationError") {
-      throw new InvalidPrivateKeyError(error);
-    }
-
-    throw new UnexpectedCryptoError(error);
-  }
-
-  try {
-    return await crypto.subtle.importKey(
-      "raw",
-      rawKey,
-      {
-        name: "AES-GCM",
-      },
-      false,
-      ["decrypt"],
-    );
-  } catch (error) {
-    throw new CorruptedFileError(error);
-  }
-}
-
 async function decryptChunk(input: {
   iv: Uint8Array;
-  ciphertext: Uint8Array;
+  ciphercontent: Uint8Array;
   aesKey: CryptoKey;
 }): Promise<Uint8Array> {
   try {
-    const plaintext = await crypto.subtle.decrypt(
+    const content = await crypto.subtle.decrypt(
       {
         name: "AES-GCM",
         iv: input.iv as BufferSource,
       },
       input.aesKey,
-      input.ciphertext as BufferSource,
+      input.ciphercontent as BufferSource,
     );
 
-    return new Uint8Array(plaintext);
+    return new Uint8Array(content);
   } catch (error) {
     if (error instanceof DOMException && error.name === "OperationError") {
       throw new CorruptedFileError(error);
@@ -241,7 +207,6 @@ export async function getEncryptedFileHeader(input: {
   try {
     const streamReader = input.source.getReader();
     const reader = new BufferedReader(streamReader);
-
     return await readHeader(reader);
   } catch (error) {
     if (error instanceof DecryptionError) {
@@ -265,8 +230,25 @@ export async function decryptFileToStream(input: {
     const header = await readHeader(reader);
 
     let writtenBytes = 0;
-
-    const aesKey = await importAesKey(header.encryptedKey, input.privateKey);
+    const ephemeralPubKey = await crypto.subtle.importKey(
+      "raw",
+      base64UrlToArrayBuffer(header.ephemeralPublicKey),
+      { name: "X25519" },
+      true,
+      [],
+    );
+    const myThumbprint = await getJwkThumbprint(
+      await crypto.subtle.exportKey("jwk", input.privateKey),
+    );
+    if (myThumbprint !== header.recipientThumbprint) {
+      throw new InvalidPrivateKeyError();
+    }
+    const aesKey = await deriveContentEncryptionKey(
+      ephemeralPubKey,
+      input.privateKey,
+      new Uint8Array(base64UrlToArrayBuffer(header.hkdfSalt)),
+      "decrypt",
+    );
 
     while (true) {
       const chunkHeader = await readChunkHeader(reader);
@@ -281,7 +263,7 @@ export async function decryptFileToStream(input: {
 
       const plaintext = await decryptChunk({
         iv,
-        ciphertext,
+        ciphercontent: ciphertext,
         aesKey,
       });
 

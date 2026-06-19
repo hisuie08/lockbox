@@ -1,6 +1,6 @@
+import { arrayBufferToBase64Url, isBase64Url } from "./encoding";
 import type { LockBoxJwk } from "./types";
-
-export type RsaJwkValidationResult =
+export type X25519JwkValidationResult =
   | {
       valid: true;
       keyType: "public" | "private";
@@ -12,49 +12,34 @@ export type RsaJwkValidationResult =
       errors: string[];
     };
 
-const BASE64URL_REGEX = /^[A-Za-z0-9_-]+$/;
-
-function isBase64Url(value: unknown): value is string {
-  return (
-    typeof value === "string" && value.length > 0 && BASE64URL_REGEX.test(value)
-  );
-}
-
-export function validateRsaJwk(input: unknown): RsaJwkValidationResult {
+export function validateX25519Jwk(input: unknown): X25519JwkValidationResult {
   const errors: string[] = [];
-  if (typeof input != "object") {
+
+  if (typeof input !== "object" || input === null) {
     return {
       valid: false,
       keyType: null,
-      errors: ["JWK must be an object", `type ${typeof input}`],
+      errors: ["JWK must be an object"],
     };
   }
 
   const jwk = input as LockBoxJwk;
 
-  if (jwk.kty !== "RSA") {
-    errors.push("kty must be RSA");
+  if (jwk.kty !== "OKP") {
+    errors.push("kty must be OKP");
   }
 
-  const publicFields = ["n", "e"] as const;
-
-  for (const field of publicFields) {
-    if (!isBase64Url(jwk[field])) {
-      errors.push(`${field} is missing or invalid`);
-    }
+  if (jwk.crv !== "X25519") {
+    errors.push("crv must be X25519");
   }
 
-  const privateFields = ["d", "p", "q", "dp", "dq", "qi"] as const;
+  if (!isBase64Url(jwk.x)) {
+    errors.push("x is missing or invalid");
+  }
 
-  const hasPrivateMaterial = privateFields.some(
-    (field) => jwk[field] !== undefined,
-  );
-
-  const isPrivateKey = privateFields.every((field) => isBase64Url(jwk[field]));
-
-  const isPublicKey =
-    publicFields.every((field) => isBase64Url(jwk[field])) &&
-    !hasPrivateMaterial;
+  const hasPrivateMaterial = jwk.d !== undefined;
+  const isPrivateKey = isBase64Url(jwk.d);
+  const isPublicKey = !hasPrivateMaterial;
 
   if (errors.length > 0) {
     return {
@@ -83,54 +68,34 @@ export function validateRsaJwk(input: unknown): RsaJwkValidationResult {
   return {
     valid: false,
     keyType: null,
-    errors: [
-      "Invalid RSA JWK. Required RSA public/private parameters are missing.",
-    ],
+    errors: ["Invalid X25519 JWK"],
   };
 }
 
-export function canonicalizeRsaJwk(jwk: JsonWebKey): string {
-  if (
-    jwk.kty !== "RSA" ||
-    typeof jwk.e !== "string" ||
-    typeof jwk.n !== "string"
-  ) {
-    throw new Error("Invalid RSA JWK");
+export function canonicalizeX25519Jwk(jwk: JsonWebKey): string {
+  if (jwk.kty !== "OKP" || jwk.crv !== "X25519" || typeof jwk.x !== "string") {
+    throw new Error("Invalid X25519 JWK");
   }
 
   return JSON.stringify({
-    e: jwk.e,
+    crv: jwk.crv,
     kty: jwk.kty,
-    n: jwk.n,
+    x: jwk.x,
   });
 }
 
-export async function getJwkThumbPrint(
+export async function getJwkThumbprint(
   jwk: JsonWebKey | null,
 ): Promise<string> {
   if (!jwk) {
     return "";
   }
-  const canonicalJwk = canonicalizeRsaJwk(jwk);
+
+  const canonicalJwk = canonicalizeX25519Jwk(jwk);
 
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(canonicalJwk),
   );
-
-  return toBase64Url(digest);
-}
-
-function toBase64Url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  return arrayBufferToBase64Url(digest);
 }

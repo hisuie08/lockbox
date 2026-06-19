@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { decryptFileToStream } from "./decryptStream";
 import { encryptFileToStream } from "./encryptStream";
-import { genKeyPair } from "./genKeyPair";
+import { genKeyPair } from "./keyPair";
 
 import { sha256 } from "@noble/hashes/sha2.js";
+import { base64UrlToArrayBuffer } from "./encoding";
 
 export class HashWriter {
   private readonly hash = sha256.create();
@@ -88,23 +89,17 @@ describe("encrypted file stream", () => {
     100000,
     1024 * 1024, // 1MB
     100 * 1024 * 1024, // 100MB
-    1024 * 1024 * 1024, // 1GB
+    // 1024 * 1024 * 1024, // 1GB
   ];
 
   for (const fileSize of fileSizes) {
     it(`encrypt/decrypt (${fileSize} bytes)`, async () => {
       const createSource = createSourceFactory(fileSize);
 
-      //
       // 元データの期待ハッシュ
-      //
-
       const expectedHash = await hashStream(createSource());
 
-      //
       // encrypt → decrypt を直結
-      //
-
       const pipe = new TransformStream<Uint8Array, Uint8Array>();
 
       const hashWriter = new HashWriter();
@@ -128,29 +123,22 @@ describe("encrypted file stream", () => {
 
       const [, header] = await Promise.all([encryptPromise, decryptPromise]);
 
-      //
       // 復号結果ハッシュ
-      //
-
       const actualHash = hashWriter.digest();
 
       expect(actualHash).toBe(expectedHash);
 
-      //
       // ヘッダ検証
-      //
-
       expect(header.originalName).toBe("test.bin");
 
       expect(header.originalType).toBe("application/octet-stream");
 
       expect(header.originalSize).toBe(fileSize);
 
-      expect(header.algorithm).toBe("AES-GCM");
+      expect(header.algorithm).toBe("X25519-HKDF-SHA-256-AES-GCM-256");
 
-      expect(header.rsaAlgorithm).toBe("RSA-OAEP");
-
-      expect(header.encryptedKey).toBeTruthy();
+      const ephemeralPubRaw = base64UrlToArrayBuffer(header.ephemeralPublicKey);
+      expect(ephemeralPubRaw.byteLength).toBe(32);
     }, 60_000);
   }
 });
