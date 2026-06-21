@@ -46,7 +46,7 @@ function KeyInputField(props: {
       ) : null}
       {props.method == "paste" ? (
         <Textarea
-          className="max-h-30"
+          className="max-h-30 max-w-100"
           placeholder="paste key"
           onChange={loadKeyString}
         ></Textarea>
