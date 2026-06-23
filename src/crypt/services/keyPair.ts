@@ -87,6 +87,6 @@ export function parseJwk(value: string): LockBoxJwk {
 }
 
 export function toPublicJwk(privateJwk: LockBoxJwk) {
-  delete privateJwk.d;
-  return privateJwk;
+  const { d, ...publicJwk } = privateJwk;
+  return publicJwk;
 }
