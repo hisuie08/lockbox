@@ -87,6 +87,6 @@ export function parseJwk(value: string): LockBoxJwk {
 }
 
 export function toPublicJwk(privateJwk: LockBoxJwk) {
-  const { d, ...publicJwk } = privateJwk;
+  const { d, ...publicJwk } = privateJwk; // eslint-disable-line
   return publicJwk;
 }
