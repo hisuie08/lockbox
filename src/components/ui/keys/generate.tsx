@@ -51,7 +51,7 @@ function CopyableKeyView(props: {
       <span className="text-sm font-medium">{props.keyLabel}</span>
       <InputGroup>
         <InputGroupInput
-          className="overflow-ellipsis"
+          className="text-ellipsis"
           readOnly
           value={value}
           type={inputType}
@@ -131,8 +131,12 @@ export function GenerateKeyAction(props: {
                   setPrivSaved(true);
                 }}
               />
-              <span className="text-destructive">秘密鍵は決して他人に共有しないでください</span>
-              <span className="text-destructive">これらの鍵ペアは今しか表示されません。確実に保存してください</span>
+              <span className="text-destructive">
+                秘密鍵は決して他人に共有しないでください
+              </span>
+              <span className="text-destructive">
+                これらの鍵ペアは今しか表示されません。確実に保存してください
+              </span>
             </div>
           </div>
 
@@ -156,7 +160,9 @@ export function GenerateKeyAction(props: {
               setOpen(false);
             }}
           >
-            {closable ? "鍵ペアを使用する" : "2つの鍵を 保存 または コピー してください"}
+            {closable
+              ? "鍵ペアを使用する"
+              : "2つの鍵を 保存 または コピー してください"}
           </Button>
           <Button variant={"outline"} onClick={() => setOpen(false)}>
             キャンセル

@@ -1,5 +1,13 @@
 import { ShieldCheck } from "lucide-react";
+import { GithubIcon } from "../base/github";
 
+function GithubLink() {
+  return (
+    <a href="https://github.com/hisuie08/lockbox" target="_blank">
+      <GithubIcon aria-hidden="true" />
+    </a>
+  );
+}
 export function Header(props: {
   publicKey: CryptoKey | null;
   privateKey: CryptoKey | null;
@@ -21,6 +29,7 @@ export function Header(props: {
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:items-center">
+        <GithubLink />
         <div className="rounded-md border border-border bg-card px-3 py-2">
           <span className="text-muted-foreground">Public</span>{" "}
           <span
