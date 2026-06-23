@@ -28,7 +28,7 @@ const encoder = new TextEncoder();
 // X25519-HKDF: 鍵暗号化鍵
 //AES-GCM: ファイル本体暗号化鍵
 
-async function createHeader(input: {
+export async function createHeader(input: {
   filename: string;
   filetype: string;
   fileSize: number;
@@ -68,7 +68,7 @@ async function createHeader(input: {
   };
 }
 
-async function encryptChunk(
+export async function encryptChunk(
   content: Uint8Array,
   aesKey: CryptoKey,
 ): Promise<{

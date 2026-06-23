@@ -61,8 +61,11 @@ export function useCryptoKeys() {
     update();
   }, [state.privateJwk]);
 
-  const matchKeys = useMemo(
-    () => publicKeyThumbprint === privateKeyThumbprint,
+  const mismatchKeys = useMemo(
+    () =>
+      publicKeyThumbprint !== privateKeyThumbprint &&
+      publicKeyThumbprint != "" &&
+      privateKeyThumbprint != "",
     [privateKeyThumbprint, publicKeyThumbprint],
   );
 
@@ -164,7 +167,7 @@ export function useCryptoKeys() {
 
   return {
     ...state,
-    matchKeys,
+    mismatchKeys,
     publicKeyThumbprint,
     privateKeyThumbprint,
     getThumbPrint: getJwkThumbprint,

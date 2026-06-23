@@ -147,7 +147,7 @@ export function KeyControlCard(props: {
         </CardAction>
       </CardHeader>
       <CardContent className="grid gap-5">
-        {props.keys.matchKeys ? null : <AlertKeyPairMismatch />}
+        {props.keys.mismatchKeys ? <AlertKeyPairMismatch /> : null}
         <div className="grid">
           <label className="grid gap-2">
             <span className="text-sm font-medium">
