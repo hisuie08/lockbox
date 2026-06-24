@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/base/card";
-import { Check, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { useCryptoKeys } from "@/hooks/useCryptoKeys";
 import { formatBytes } from "@/lib/unit";
 import type { useFileEncrypt } from "@/hooks/useFileCryptoStream";
@@ -28,9 +28,10 @@ export function EncryptFileCard(props: {
           </div>
         ) : null}
         <FileInput
-          maxFileSize={props.files.maxFileSize}
+          files={props.files}
+          cryptoKey={props.keys.publicKey}
           callback={(_, event) => {
-            props.files.setFileToEncrypt(event);
+            props.files.setFileToProcess(event);
             event.target.value = "";
           }}
         />
@@ -48,27 +49,10 @@ export function EncryptFileCard(props: {
           </Progress>
         ) : null}
         <ActionButton
-          disabled={
-            !props.files.fileToProcess ||
-            !props.keys.publicKey ||
-            props.files.isProcessing ||
-            props.files.isDone
-          }
-          icon={
-            props.files.isDone ? (
-              <Check aria-hidden="true" />
-            ) : (
-              <LockKeyhole aria-hidden="true" />
-            )
-          }
+          files={props.files}
+          cryptoKey={props.keys.publicKey}
           onClick={() => props.files.encryptSelectedFile(props.keys.publicKey)}
-          label={
-            props.files.isProcessing
-              ? "処理中"
-              : props.files.isDone
-                ? "完了"
-                : "暗号化開始"
-          }
+          label={"暗号化"}
         />
       </CardContent>
     </Card>

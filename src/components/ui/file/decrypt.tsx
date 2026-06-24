@@ -1,10 +1,10 @@
 import { Card, CardContent } from "@/components/base/card";
-import { Check, LockKeyhole, UnlockKeyhole } from "lucide-react";
 import { useCryptoKeys } from "@/hooks/useCryptoKeys";
 import { formatBytes } from "@/lib/unit";
 import type { useFileDecrypt } from "@/hooks/useFileCryptoStream";
 import { Progress, ProgressValue } from "@/components/base/progress";
 import { ActionButton, FileInput, Header } from "./common";
+import { UnlockKeyhole } from "lucide-react";
 
 export function DecryptFileCard(props: {
   files: ReturnType<typeof useFileDecrypt>;
@@ -28,7 +28,9 @@ export function DecryptFileCard(props: {
           </div>
         ) : null}
         <FileInput
-          maxFileSize={props.files.maxFileSize}
+          files={props.files}
+          cryptoKey={props.keys.privateKey}
+
           callback={(_, event) => {
             props.files.setFileToDecrypt(event);
             event.target.value = "";
@@ -50,27 +52,10 @@ export function DecryptFileCard(props: {
           </Progress>
         ) : null}
         <ActionButton
-          disabled={
-            !props.files.fileToProcess ||
-            !props.keys.privateKey ||
-            props.files.isProcessing ||
-            props.files.isDone
-          }
-          icon={
-            props.files.isDone ? (
-              <Check aria-hidden="true" />
-            ) : (
-              <LockKeyhole aria-hidden="true" />
-            )
-          }
+          files={props.files}
+          cryptoKey={props.keys.privateKey}
           onClick={() => props.files.decryptSelectedFile(props.keys.privateKey)}
-          label={
-            props.files.isProcessing
-              ? "処理中"
-              : props.files.isDone
-                ? "完了"
-                : "復号化開始"
-          }
+          label={"復号化"}
         />
       </CardContent>
     </Card>

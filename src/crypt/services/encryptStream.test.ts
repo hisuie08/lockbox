@@ -162,6 +162,7 @@ describe("encryptFileToStream", () => {
       onProgress(value) {
         progress = value;
       },
+      onSaved: () => {},
     });
 
     expect(progress).toBe(1);
@@ -200,6 +201,7 @@ test("encrypts empty file", async () => {
     onProgress(value) {
       progress = value;
     },
+    onSaved:()=>{},
   });
 
   expect(progress).toBe(1);
@@ -226,6 +228,7 @@ test("throws when source read fails", async () => {
       publicKey,
       writer: buffer.stream.getWriter(),
       onProgress() {},
+      onSaved:()=>{},
     }),
   ).rejects.toThrow();
 });

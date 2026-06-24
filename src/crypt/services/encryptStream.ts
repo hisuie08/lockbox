@@ -145,6 +145,7 @@ export async function encryptFileToStream(input: {
   publicKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;
   onProgress: (progress: number) => void;
+  onSaved: (saved: boolean) => void;
   createdAt?: string;
 }): Promise<void> {
   try {
@@ -207,14 +208,13 @@ export async function encryptFileToStream(input: {
       const encrypted = await encryptChunk(pending, aesKey);
       await writeChunk(input.writer, encrypted);
     }
-
+    input.onProgress(1);
     try {
       await input.writer.close();
+      input.onSaved(true);
     } catch (error) {
       throw new OutputWriteError("Failed to write encrypted output.", error);
     }
-
-    input.onProgress(1);
   } catch (error) {
     if (error instanceof EncryptionError) {
       throw error;

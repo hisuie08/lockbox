@@ -39,7 +39,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
     warning: null,
   });
   const isProcessing = state.progress > 0 && state.progress < 1;
-  const isDone = state.progress === 1;
+  const [saved, setSaved] = useState<boolean>(false);
   const setError = useCallback((message: string | null) => {
     setState((current) => ({
       ...current,
@@ -68,6 +68,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
           error: null,
           warning: null,
         });
+        setSaved(false);
         return;
       }
       if (!option.streamSupported) {
@@ -122,9 +123,10 @@ function useFileCrypt(option: UseFileCryptoOption) {
   );
   return {
     state,
+    saved,
     setProgress,
     isProcessing,
-    isDone,
+    setSaved,
     setError,
     setWarning,
     createOutputWriter,
@@ -135,10 +137,11 @@ function useFileCrypt(option: UseFileCryptoOption) {
 export function useFileEncrypt(option: UseFileCryptoOption) {
   const {
     state,
+    saved,
     isProcessing,
     setProgress,
-    isDone,
     createOutputWriter,
+    setSaved,
     setError,
     setWarning,
     setFileToProcess,
@@ -159,6 +162,7 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
         filetype: file.type,
         publicKey: publicKey,
         onProgress: setProgress,
+        onSaved: setSaved,
       };
       const filename = `${file.name}.enc`;
       const { writer, buffer } = await createOutputWriter(filename);
@@ -179,10 +183,10 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
   return {
     ...option,
     ...state,
+    saved,
     isProcessing,
-    isDone,
     encryptSelectedFile,
-    setFileToEncrypt: setFileToProcess,
+    setFileToProcess,
     setError,
     setWarning,
   };
@@ -191,10 +195,11 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
 export function useFileDecrypt(option: UseFileCryptoOption) {
   const {
     state,
+    saved,
     setProgress,
     isProcessing,
     createOutputWriter,
-    isDone,
+    setSaved,
     setError,
     setWarning,
     setFileToProcess,
@@ -255,6 +260,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
         filetype: file.type,
         privateKey: privateKey,
         onProgress: setProgress,
+        onSaved: setSaved,
       };
       const filename = originFile?.originalName;
       const { writer, buffer } = await createOutputWriter(filename);
@@ -281,8 +287,8 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
   return {
     ...option,
     ...state,
+    saved,
     isProcessing,
-    isDone,
     originFile,
     decryptSelectedFile,
     setFileToDecrypt,

@@ -158,6 +158,7 @@ describe("decryptFileToStream", () => {
       publicKey: recipient.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
+      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
@@ -169,6 +170,7 @@ describe("decryptFileToStream", () => {
       privateKey: recipient.privateKey,
       writer: decryptedBuffer.stream.getWriter(),
       onProgress() {},
+      onSaved: () => {},
     });
 
     const decryptedText = await decryptedBuffer.toFile("result.txt").text();
@@ -193,6 +195,7 @@ describe("decryptFileToStream", () => {
       publicKey: recipientA.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
+      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
@@ -203,6 +206,7 @@ describe("decryptFileToStream", () => {
         privateKey: recipientB.privateKey,
         writer: new BufferWriter().stream.getWriter(),
         onProgress() {},
+        onSaved: () => {},
       }),
     ).rejects.toThrow(InvalidPrivateKeyError);
   });
@@ -220,6 +224,7 @@ describe("decryptFileToStream", () => {
       publicKey: recipient.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
+      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
@@ -232,6 +237,7 @@ describe("decryptFileToStream", () => {
         privateKey: recipient.privateKey,
         writer: new BufferWriter().stream.getWriter(),
         onProgress() {},
+        onSaved: () => {},
       }),
     ).rejects.toThrow(CorruptedFileError);
   });
@@ -249,6 +255,7 @@ describe("decryptFileToStream", () => {
       publicKey: recipient.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
+      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
@@ -260,6 +267,7 @@ describe("decryptFileToStream", () => {
       privateKey: recipient.privateKey,
       writer: decryptedBuffer.stream.getWriter(),
       onProgress() {},
+      onSaved: () => {},
     });
 
     expect(decryptedBuffer.size).toBe(0);

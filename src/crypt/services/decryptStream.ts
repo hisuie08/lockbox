@@ -222,6 +222,7 @@ export async function decryptFileToStream(input: {
   privateKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;
   onProgress: (progress: number) => void;
+  onSaved: (saved: boolean) => void;
 }): Promise<EncryptedFileHeader> {
   try {
     const streamReader = input.source.getReader();
@@ -277,14 +278,13 @@ export async function decryptFileToStream(input: {
 
       input.onProgress(writtenBytes / header.originalSize);
     }
-
+    input.onProgress(1);
     try {
       await input.writer.close();
+      input.onSaved(true);
     } catch (error) {
       throw new OutputWriteError("Failed to write decrypted output.", error);
     }
-
-    input.onProgress(1);
 
     return header;
   } catch (error) {
