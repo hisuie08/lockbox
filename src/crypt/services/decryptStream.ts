@@ -82,7 +82,7 @@ async function decryptChunk(input: {
 
 const decoder = new TextDecoder();
 
-class BufferedReader {
+export class BufferedReader {
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
 
   private buffer = new Uint8Array(0);

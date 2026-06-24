@@ -199,10 +199,9 @@ export async function encryptFileToStream(input: {
 
       pending = merged.slice(offset);
     }
-
-    if (pending.length > 0) {
+    // 空ファイルでも完全性保護のため空チャンクを1つ保存する
+    if (pending.length > 0 || processedBytes === 0) {
       const encrypted = await encryptChunk(pending, aesKey);
-
       await writeChunk(input.writer, encrypted);
     }
 
