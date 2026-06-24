@@ -1,3 +1,5 @@
+import { ENCRYPTED_FILE_MIMETYPE } from "./constants";
+
 // Firefox等 stream非対応ブラウザ用
 export class BufferWriter {
   private readonly chunks: Uint8Array[] = [];
@@ -12,13 +14,13 @@ export class BufferWriter {
     return this.chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
   }
 
-  toBlob(type = "application/octet-stream"): Blob {
+  toBlob(type = ENCRYPTED_FILE_MIMETYPE): Blob {
     return new Blob(this.chunks as BlobPart[], { type });
   }
 
   toFile(filename: string): File {
     return new File(this.chunks as BlobPart[], filename, {
-      type: "application/octet-stream",
+      type: ENCRYPTED_FILE_MIMETYPE,
     });
   }
 

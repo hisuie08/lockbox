@@ -1,5 +1,6 @@
 import { bytesToBase64Url, uint32ToBytes } from "./encoding";
 import {
+  ALGORITHMS,
   DEFAULT_CHUNK_SIZE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
@@ -25,13 +26,14 @@ export abstract class EncryptionError extends Error {
 }
 
 const encoder = new TextEncoder();
-// X25519-HKDF: 鍵暗号化鍵
+// X25519-HKDF: 鍵交換
 //AES-GCM: ファイル本体暗号化鍵
 
 export async function createHeader(input: {
   filename: string;
   filetype: string;
   fileSize: number;
+  algorithm: string;
   recipientPublicKey: CryptoKey;
   recipientThumbprint: string;
   createdAt?: string;
@@ -55,7 +57,7 @@ export async function createHeader(input: {
   return {
     aesKey,
     header: {
-      algorithm: "X25519-HKDF-SHA-256-AES-GCM-256",
+      algorithm: input.algorithm,
       chunkSize: input.chunkSize,
       ephemeralPublicKey: bytesToBase64Url(ephemeralPubRaw),
       recipientThumbprint: input.recipientThumbprint,
@@ -153,6 +155,7 @@ export async function encryptFileToStream(input: {
       ...input,
       recipientPublicKey: input.publicKey,
       recipientThumbprint: await getJwkThumbprint(publicJwk),
+      algorithm: ALGORITHMS,
       chunkSize,
     });
 
