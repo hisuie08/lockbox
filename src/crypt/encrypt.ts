@@ -11,9 +11,10 @@ import {
   OutputWriteError,
   UnexpectedCryptoError,
 } from "./errors";
-import { genKeyPair } from "./keyPair";
-import { deriveContentEncryptionKey } from "./kdf";
-import { getJwkThumbprint } from "./validate";
+import { genKeyPair } from "./key/keyPair";
+import { deriveContentEncryptionKey } from "./key/kdf";
+import { getJwkThumbprint } from "./key/validate";
+import { genIv, genSalt } from "./random";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;
@@ -46,12 +47,11 @@ export async function createHeader(input: {
   const ephemeralPubRaw = new Uint8Array(
     await crypto.subtle.exportKey("raw", ephemeral.publicKey),
   );
-  const salt = crypto.getRandomValues(new Uint8Array(32));
+  const salt = genSalt();
   const aesKey = await deriveContentEncryptionKey(
     input.recipientPublicKey,
     ephemeral.privateKey,
     salt,
-    "encrypt",
   );
 
   return {
@@ -77,7 +77,7 @@ export async function encryptChunk(
   iv: Uint8Array;
   ciphertext: Uint8Array;
 }> {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const iv = genIv();
 
   try {
     const encrypted = await crypto.subtle.encrypt(

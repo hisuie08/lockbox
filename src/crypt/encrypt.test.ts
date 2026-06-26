@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { genKeyPair } from "./keyPair";
+import { genKeyPair } from "./key/keyPair";
 import {
   createHeader,
   encryptChunk,
   encryptFileToStream,
   writeChunk,
   writeHeader,
-} from "./encryptStream";
-import { getJwkThumbprint } from "./validate";
+} from "./encrypt";
+import { getJwkThumbprint } from "./key/validate";
 import {
   ALGORITHMS,
   DEFAULT_CHUNK_SIZE,
@@ -201,7 +201,7 @@ test("encrypts empty file", async () => {
     onProgress(value) {
       progress = value;
     },
-    onSaved:()=>{},
+    onSaved: () => {},
   });
 
   expect(progress).toBe(1);
@@ -228,7 +228,7 @@ test("throws when source read fails", async () => {
       publicKey,
       writer: buffer.stream.getWriter(),
       onProgress() {},
-      onSaved:()=>{},
+      onSaved: () => {},
     }),
   ).rejects.toThrow();
 });

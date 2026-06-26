@@ -2,7 +2,7 @@ import {
   parseJwk,
   validateX25519Jwk,
   type X25519JwkValidationResult,
-} from "@/crypt/services";
+} from "@/crypt";
 import React, { useState } from "react";
 
 export type TypeKeyFor = "public" | "private";

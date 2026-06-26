@@ -1,12 +1,8 @@
-export type LockBoxJwk = JsonWebKey & {
-  created_at: Date|null;
-};
-
 export type EncryptedFileHeader = {
   algorithm: string;
   chunkSize: number;
   ephemeralPublicKey: string;
-  recipientThumbprint:string;
+  recipientThumbprint: string;
   hkdfSalt: string;
   originalName: string;
   originalType: string;

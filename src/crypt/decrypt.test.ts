@@ -8,10 +8,10 @@ import {
   getEncryptedFileHeader,
   decryptFileToStream,
   UnexpectedEofError,
-} from "./decryptStream";
+} from "./decrypt";
 import { BufferWriter } from "./bufferWriter";
-import { genKeyPair } from "./keyPair";
-import { encryptFileToStream, writeHeader } from "./encryptStream";
+import { genKeyPair } from "./key/keyPair";
+import { encryptFileToStream, writeHeader } from "./encrypt";
 import { FILE_SIGNATURE, FORMAT_VERSION } from "./constants";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {

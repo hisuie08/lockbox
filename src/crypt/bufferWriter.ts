@@ -28,18 +28,3 @@ export class BufferWriter {
     this.chunks.length = 0;
   }
 }
-
-export function downloadFile(file: File): void {
-  const url = URL.createObjectURL(file);
-
-  const a = document.createElement("a");
-
-  a.href = url;
-  a.download = file.name;
-
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  URL.revokeObjectURL(url);
-}

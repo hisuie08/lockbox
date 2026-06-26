@@ -1,5 +1,6 @@
-import { arrayBufferToBase64Url, isBase64Url } from "./encoding";
+import { arrayBufferToBase64Url, isBase64Url } from "../encoding";
 import type { LockBoxJwk } from "./types";
+import { KeyParseError } from "./errors";
 export type X25519JwkValidationResult =
   | {
       valid: true;
@@ -12,6 +13,13 @@ export type X25519JwkValidationResult =
       errors: string[];
     };
 
+export function parseJwk(value: string): LockBoxJwk {
+  try {
+    return JSON.parse(value) as LockBoxJwk;
+  } catch (err) {
+    throw new KeyParseError("JWK must be valid JSON.", err);
+  }
+}
 export function validateX25519Jwk(input: unknown): X25519JwkValidationResult {
   const errors: string[] = [];
 

@@ -7,10 +7,10 @@ import {
   EncryptionError,
   getEncryptedFileHeader,
   type EncryptedFileHeader,
-} from "@/crypt/services";
-import { BufferWriter } from "@/crypt/services/bufferWriter";
+} from "@/crypt";
+import { BufferWriter } from "@/crypt/bufferWriter";
 import { downloadBlob } from "@/lib/download";
-import { FileCryptoError } from "@/crypt/services/errors";
+import { FileCryptoError } from "@/crypt/errors";
 
 type UseFileCryptoOption = {
   maxFileSize: number;
@@ -85,6 +85,13 @@ function useFileCrypt(option: UseFileCryptoOption) {
             progress: 0,
             warning: "large file was selected",
             error: null,
+          });
+        } else {
+          setState({
+            fileToProcess: file,
+            progress: 0,
+            error: null,
+            warning: null,
           });
         }
       } else {

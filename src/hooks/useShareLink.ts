@@ -1,4 +1,4 @@
-import type { LockBoxJwk } from "@/crypt/services";
+import type { LockBoxJwk } from "@/crypt";
 
 export function useShareLink() {
   function genLink(publicJwk: LockBoxJwk | null): string {

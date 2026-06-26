@@ -1,11 +1,12 @@
-export function downloadBlob(blob: Blob, filename: string) {
+export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
 
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function downloadText(contents: string, filename: string) {

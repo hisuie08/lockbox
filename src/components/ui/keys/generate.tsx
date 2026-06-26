@@ -12,7 +12,7 @@ import {
 } from "../../base/input-group";
 import { useMemo, useState } from "react";
 import { DownloadPrivKey, DownloadPubKey } from "./save";
-import type { LockBoxJwk } from "@/crypt/services";
+import type { LockBoxJwk } from "@/crypt";
 import { useDialog } from "@/hooks/useDialog";
 
 function useSafeSave() {

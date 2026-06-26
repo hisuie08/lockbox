@@ -1,14 +1,8 @@
 import { describe, expect, test } from "vitest";
-import {
-  exportAsJwk,
-  genKeyPair,
-  importPublicKey,
-  KeyImportError,
-  KeyParseError,
-  parseJwk,
-  toPublicJwk,
-} from "./keyPair";
+import { exportAsJwk, genKeyPair, importJwk, toPublicJwk } from "./keyPair";
 import type { LockBoxJwk } from "./types";
+import { KeyParseError, KeyImportError } from "./errors";
+import { parseJwk } from "./validate";
 
 describe("key pair test", () => {
   test("generate keypair", async () => {
@@ -38,7 +32,7 @@ describe("key pair test", () => {
     expect(() => parseJwk("{")).toThrow(KeyParseError);
   });
   test("invalid public key", async () => {
-    await expect(importPublicKey({} as JsonWebKey)).rejects.toThrow(
+    await expect(importJwk({} as JsonWebKey, "public")).rejects.toThrow(
       KeyImportError,
     );
   });

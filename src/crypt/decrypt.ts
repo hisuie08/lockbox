@@ -6,8 +6,8 @@ import {
   OutputWriteError,
   UnexpectedCryptoError,
 } from "./errors";
-import { deriveContentEncryptionKey } from "./kdf";
-import { getJwkThumbprint } from "./validate";
+import { deriveContentEncryptionKey } from "./key/kdf";
+import { getJwkThumbprint } from "./key/validate";
 
 export abstract class DecryptionError extends Error {
   override cause?: unknown;
@@ -248,7 +248,6 @@ export async function decryptFileToStream(input: {
       ephemeralPubKey,
       input.privateKey,
       new Uint8Array(base64UrlToArrayBuffer(header.hkdfSalt)),
-      "decrypt",
     );
 
     while (true) {

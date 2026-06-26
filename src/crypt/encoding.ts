@@ -16,6 +16,8 @@ export function uint32ToBytes(value: number): Uint8Array {
 }
 
 export function bytesToBase64Url(bytes: Uint8Array<ArrayBufferLike>): string {
+  // btoa用のバイナリ文字列へ変換。
+  // fromCharCodeの引数数制限回避のためチャンク化。
   const chunkSize = 0x8000;
   let binary = "";
 
