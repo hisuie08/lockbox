@@ -5,7 +5,6 @@ import {
   genKeyPair,
   importJwk,
   getJwkThumbprint,
-  type LockBoxJwk,
   toPublicJwk,
   KeyPairError,
 } from "@/crypt";
@@ -13,8 +12,8 @@ import {
 type CryptoKeyState = {
   publicKey: CryptoKey | null;
   privateKey: CryptoKey | null;
-  publicJwk: LockBoxJwk | null;
-  privateJwk: LockBoxJwk | null;
+  publicJwk: JsonWebKey | null;
+  privateJwk: JsonWebKey | null;
   isGenerating: boolean;
   error: string | null;
 };
@@ -69,17 +68,16 @@ export function useCryptoKeys() {
   );
 
   async function generateKeys(): Promise<{
-    publicJwk: LockBoxJwk | null;
-    privateJwk: LockBoxJwk | null;
+    publicJwk: JsonWebKey | null;
+    privateJwk: JsonWebKey | null;
   }> {
     setState((current) => ({ ...current, isGenerating: true, error: null }));
     try {
       const keyPair = await genKeyPair();
-      const date = new Date();
-      const [publicJwk, privateJwk]: [LockBoxJwk, LockBoxJwk] =
+      const [publicJwk, privateJwk]: [JsonWebKey, JsonWebKey] =
         await Promise.all([
-          exportAsJwk(keyPair.publicKey, date),
-          exportAsJwk(keyPair.privateKey, date),
+          exportAsJwk(keyPair.publicKey),
+          exportAsJwk(keyPair.privateKey),
         ]);
       setState((current) => ({ ...current, isGenerating: false, error: null }));
       return { publicJwk: publicJwk, privateJwk: privateJwk };
@@ -96,7 +94,7 @@ export function useCryptoKeys() {
     }
   }
 
-  async function importPublicJwk(jwk: LockBoxJwk) {
+  async function importPublicJwk(jwk: JsonWebKey) {
     try {
       const publicKey = await importJwk(jwk, "public");
       setState((current) => ({
@@ -113,7 +111,7 @@ export function useCryptoKeys() {
     }
   }
 
-  async function importPrivateJwk(jwk: LockBoxJwk) {
+  async function importPrivateJwk(jwk: JsonWebKey) {
     try {
       const privateKey = await importJwk(jwk, "private");
       setState((current) => ({
@@ -130,7 +128,7 @@ export function useCryptoKeys() {
     }
   }
 
-  async function importBothJwk(privateJwk: LockBoxJwk) {
+  async function importBothJwk(privateJwk: JsonWebKey) {
     importPrivateJwk(privateJwk);
     try {
       const publicJwk = toPublicJwk(privateJwk);

@@ -12,7 +12,6 @@ import {
 } from "../../base/input-group";
 import { useMemo, useState } from "react";
 import { DownloadPrivKey, DownloadPubKey } from "./save";
-import type { LockBoxJwk } from "@/crypt";
 import { useDialog } from "@/hooks/useDialog";
 
 function useSafeSave() {
@@ -87,8 +86,8 @@ export function GenerateKeyAction(props: {
   keys: ReturnType<typeof useCryptoKeys>;
 }) {
   const { isOpen, setOpen } = useDialog();
-  const [pubKey, setPubKey] = useState<LockBoxJwk | null>(null);
-  const [privKey, setPrivKey] = useState<LockBoxJwk | null>(null);
+  const [pubKey, setPubKey] = useState<JsonWebKey | null>(null);
+  const [privKey, setPrivKey] = useState<JsonWebKey | null>(null);
   const { setPubSaved, setPrivSaved, closable, init } = useSafeSave();
   async function generate() {
     const { publicJwk, privateJwk } = await props.keys.generateKeys();

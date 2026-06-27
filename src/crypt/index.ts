@@ -7,4 +7,3 @@ export * from "./decrypt";
 export * from "./encrypt";
 export * from "./key/kdf";
 export * from "./key/errors";
-export * from "./key/types";

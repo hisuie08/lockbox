@@ -1,7 +1,5 @@
-import type { LockBoxJwk } from "@/crypt";
-
 export function useShareLink() {
-  function genLink(publicJwk: LockBoxJwk | null): string {
+  function genLink(publicJwk: JsonWebKey | null): string {
     const url = new URL(document.baseURI);
     if (publicJwk == null) {
       return url.toString();
@@ -12,7 +10,7 @@ export function useShareLink() {
     return url.toString();
   }
 
-  function loadLink(): LockBoxJwk | null {
+  function loadLink(): JsonWebKey | null {
     const url = new URL(document.URL);
     const keyData = {
       kty: url.searchParams.get("kty"),
@@ -20,11 +18,10 @@ export function useShareLink() {
       x: url.searchParams.get("x"),
     };
     if (keyData.crv != null && keyData.kty != null && keyData.x != null) {
-      const publicJwk: LockBoxJwk = {
+      const publicJwk: JsonWebKey = {
         crv: keyData.crv,
         kty: keyData.kty,
         x: keyData.x,
-        created_at: null,
       };
       return publicJwk;
     } else {

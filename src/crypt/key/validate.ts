@@ -1,11 +1,10 @@
 import { arrayBufferToBase64Url, isBase64Url } from "../encoding";
-import type { LockBoxJwk } from "./types";
 import { KeyParseError } from "./errors";
 export type X25519JwkValidationResult =
   | {
       valid: true;
       keyType: "public" | "private";
-      jwk: LockBoxJwk;
+      jwk: JsonWebKey;
     }
   | {
       valid: false;
@@ -13,9 +12,9 @@ export type X25519JwkValidationResult =
       errors: string[];
     };
 
-export function parseJwk(value: string): LockBoxJwk {
+export function parseJwk(value: string): JsonWebKey {
   try {
-    return JSON.parse(value) as LockBoxJwk;
+    return JSON.parse(value) as JsonWebKey;
   } catch (err) {
     throw new KeyParseError("JWK must be valid JSON.", err);
   }
@@ -31,7 +30,7 @@ export function validateX25519Jwk(input: unknown): X25519JwkValidationResult {
     };
   }
 
-  const jwk = input as LockBoxJwk;
+  const jwk = input as JsonWebKey;
 
   if (jwk.kty !== "OKP") {
     errors.push("kty must be OKP");

@@ -1,4 +1,3 @@
-import type { LockBoxJwk } from "./types";
 import { KeyExportError, KeyGenerationError, KeyImportError } from "./errors";
 
 export async function genKeyPair(): Promise<CryptoKeyPair> {
@@ -9,16 +8,9 @@ export async function genKeyPair(): Promise<CryptoKeyPair> {
   }
 }
 
-
-export async function exportAsJwk(
-  key: CryptoKey,
-  date: Date,
-): Promise<LockBoxJwk> {
+export async function exportAsJwk(key: CryptoKey): Promise<JsonWebKey> {
   try {
-    return {
-      ...(await crypto.subtle.exportKey("jwk", key)),
-      created_at: date,
-    };
+    return crypto.subtle.exportKey("jwk", key);
   } catch (err) {
     throw new KeyExportError(err);
   }
@@ -42,7 +34,7 @@ export async function importJwk(
   }
 }
 
-export function toPublicJwk(privateJwk: LockBoxJwk) {
+export function toPublicJwk(privateJwk: JsonWebKey) {
   const { d, ...publicJwk } = privateJwk; // eslint-disable-line
   return publicJwk;
 }
