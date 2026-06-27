@@ -1,5 +1,4 @@
 export * from "./types";
-export * from "./encoding";
 export * from "./key/keyPair";
 export * from "./constants";
 export * from "./key/validate";

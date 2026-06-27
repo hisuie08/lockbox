@@ -1,4 +1,4 @@
-import { bytesToBase64Url, uint32ToBytes } from "../encoding";
+import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
 import {
   ALGORITHMS,
   DEFAULT_CHUNK_SIZE,
@@ -14,7 +14,7 @@ import {
 import { genKeyPair } from "../key/keyPair";
 import { deriveContentEncryptionKey } from "../key/kdf";
 import { getJwkThumbprint } from "../key/validate";
-import { genIv, genSalt } from "../random";
+import { genIv, genSalt } from "../utils/random";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;

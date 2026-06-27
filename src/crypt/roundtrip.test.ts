@@ -4,7 +4,7 @@ import { encryptFileToStream } from "./encrypt/encrypt";
 import { genKeyPair } from "./key/keyPair";
 import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { base64UrlToArrayBuffer } from "./encoding";
+import { base64UrlToArrayBuffer } from "./utils/encoding";
 import { ALGORITHMS, ENCRYPTED_FILE_MIMETYPE } from "./constants";
 import { BufferedWriter } from "./bufferio/bufferWriter";
 

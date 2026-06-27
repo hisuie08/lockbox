@@ -1,4 +1,4 @@
-import { base64UrlToArrayBuffer } from "../encoding";
+import { base64UrlToArrayBuffer } from "../utils/encoding";
 import { FILE_SIGNATURE, FORMAT_VERSION } from "../constants";
 import type { ChunkHeader, EncryptedFileHeader } from "../types";
 import {
