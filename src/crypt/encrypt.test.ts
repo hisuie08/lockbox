@@ -14,7 +14,7 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "./constants";
-import { BufferWriter } from "./bufferWriter";
+import { BufferWriter } from "../lib/bufferWriter";
 import type { EncryptedFileHeader } from "./types";
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {

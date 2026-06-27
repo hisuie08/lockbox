@@ -3,12 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
   decryptFileToStream,
   DecryptionError,
+  ENCRYPTED_FILE_MIMETYPE,
   encryptFileToStream,
   EncryptionError,
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
-import { BufferWriter } from "@/crypt/bufferWriter";
+import { BufferWriter } from "@/lib/bufferWriter";
 import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
 
@@ -175,7 +176,7 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
       const { writer, buffer } = await createOutputWriter(filename);
       await encryptFileToStream({ ...input, writer });
       if (buffer) {
-        downloadBlob(buffer.toBlob(), filename);
+        downloadBlob(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE), filename);
       }
       setError(null);
       setWarning(null);
@@ -273,7 +274,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       const { writer, buffer } = await createOutputWriter(filename);
       await decryptFileToStream({ ...input, writer });
       if (buffer) {
-        downloadBlob(buffer.toBlob(), filename);
+        downloadBlob(buffer.toBlob(originFile.originalType), filename);
       }
       setError(null);
       setWarning(null);

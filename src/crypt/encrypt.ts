@@ -77,9 +77,8 @@ export async function encryptChunk(
   iv: Uint8Array;
   ciphertext: Uint8Array;
 }> {
-  const iv = genIv();
-
   try {
+    const iv = genIv();
     const encrypted = await crypto.subtle.encrypt(
       {
         name: "AES-GCM",

@@ -10,7 +10,7 @@ import { genKeyPair } from "./key/keyPair";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { base64UrlToArrayBuffer } from "./encoding";
 import { ALGORITHMS, ENCRYPTED_FILE_MIMETYPE } from "./constants";
-import { BufferWriter } from "./bufferWriter";
+import { BufferWriter } from "../lib/bufferWriter";
 
 export class HashWriter {
   private readonly hash = sha256.create();
@@ -190,7 +190,7 @@ describe("encrypt file stream round trip", () => {
       onSaved: () => {},
     });
 
-    const encryptedFile = encrypted.toFile("enc.bin");
+    const encryptedFile = encrypted.toFile("enc.bin", ENCRYPTED_FILE_MIMETYPE);
 
     await expect(
       decryptFileToStream({
@@ -217,7 +217,9 @@ describe("encrypt file stream round trip", () => {
       onSaved: () => {},
     });
 
-    const bytes = new Uint8Array(await encrypted.toBlob().arrayBuffer());
+    const bytes = new Uint8Array(
+      await encrypted.toBlob(ENCRYPTED_FILE_MIMETYPE).arrayBuffer(),
+    );
 
     bytes[bytes.length - 1] ^= 1;
 
@@ -247,7 +249,9 @@ describe("encrypt file stream round trip", () => {
       onSaved: () => {},
     });
 
-    const bytes = new Uint8Array(await encrypted.toBlob().arrayBuffer());
+    const bytes = new Uint8Array(
+      await encrypted.toBlob(ENCRYPTED_FILE_MIMETYPE).arrayBuffer(),
+    );
 
     bytes[bytes.length - 1] ^= 1;
 

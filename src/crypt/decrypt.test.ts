@@ -9,10 +9,14 @@ import {
   decryptFileToStream,
   UnexpectedEofError,
 } from "./decrypt";
-import { BufferWriter } from "./bufferWriter";
+import { BufferWriter } from "../lib/bufferWriter";
 import { genKeyPair } from "./key/keyPair";
 import { encryptFileToStream, writeHeader } from "./encrypt";
-import { FILE_SIGNATURE, FORMAT_VERSION } from "./constants";
+import {
+  ENCRYPTED_FILE_MIMETYPE,
+  FILE_SIGNATURE,
+  FORMAT_VERSION,
+} from "./constants";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -101,7 +105,7 @@ describe("getEncryptedFileHeader", () => {
     await writeHeader(writer, header);
     await writer.close();
 
-    const bytes = await blobToBytes(buffer.toBlob());
+    const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
 
     const parsed = await getEncryptedFileHeader({
       source: streamFromChunks([bytes]),
@@ -161,7 +165,9 @@ describe("decryptFileToStream", () => {
       onSaved: () => {},
     });
 
-    const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
+    const encryptedBytes = await blobToBytes(
+      encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
+    );
 
     const decryptedBuffer = new BufferWriter();
 
@@ -173,7 +179,9 @@ describe("decryptFileToStream", () => {
       onSaved: () => {},
     });
 
-    const decryptedText = await decryptedBuffer.toFile("result.txt").text();
+    const decryptedText = await decryptedBuffer
+      .toFile("result.txt", "text/plain")
+      .text();
 
     expect(decryptedText).toBe(plaintext);
 
@@ -198,7 +206,9 @@ describe("decryptFileToStream", () => {
       onSaved: () => {},
     });
 
-    const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
+    const encryptedBytes = await blobToBytes(
+      encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
+    );
 
     await expect(
       decryptFileToStream({
@@ -227,7 +237,9 @@ describe("decryptFileToStream", () => {
       onSaved: () => {},
     });
 
-    const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
+    const encryptedBytes = await blobToBytes(
+      encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
+    );
 
     encryptedBytes[encryptedBytes.length - 1] ^= 1;
 
@@ -258,7 +270,9 @@ describe("decryptFileToStream", () => {
       onSaved: () => {},
     });
 
-    const encryptedBytes = await blobToBytes(encryptedBuffer.toBlob());
+    const encryptedBytes = await blobToBytes(
+      encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
+    );
 
     const decryptedBuffer = new BufferWriter();
 

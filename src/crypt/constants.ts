@@ -1,3 +1,4 @@
+// FILE_SIGNATURE は必ず8バイト
 export const FILE_SIGNATURE = "ENCFILE2";
 export const FORMAT_VERSION = 2;
 export const ALGORITHMS = "X25519-HKDF-SHA-256-AES-GCM-256";

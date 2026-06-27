@@ -1,5 +1,3 @@
-import { ENCRYPTED_FILE_MIMETYPE } from "./constants";
-
 // Firefox等 stream非対応ブラウザ用
 export class BufferWriter {
   private readonly chunks: Uint8Array[] = [];
@@ -14,13 +12,13 @@ export class BufferWriter {
     return this.chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
   }
 
-  toBlob(type = ENCRYPTED_FILE_MIMETYPE): Blob {
+  toBlob(type: string): Blob {
     return new Blob(this.chunks as BlobPart[], { type });
   }
 
-  toFile(filename: string): File {
+  toFile(filename: string, filetype: string): File {
     return new File(this.chunks as BlobPart[], filename, {
-      type: ENCRYPTED_FILE_MIMETYPE,
+      type: filetype,
     });
   }
 

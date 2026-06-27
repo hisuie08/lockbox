@@ -38,7 +38,7 @@ describe("BufferWriter", () => {
 
     await streamWriter.close();
 
-    const file = writer.toFile("hello.txt");
+    const file = writer.toFile("hello.txt", "text/plain");
 
     expect(file.name).toBe("hello.txt");
     expect(await file.text()).toBe("Hello");
