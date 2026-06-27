@@ -20,7 +20,9 @@ export function Header(props: {
         </div>
         <a href="/">
           <div>
-            <h1 className="text-2xl font-semibold tracking-normal">Lockbox</h1>
+            <h1 className="text-2xl font-semibold tracking-normal">
+              Lockbox(α版)
+            </h1>
             <p className="text-sm text-muted-foreground">
               X25519-HKDF + AES-GCM
             </p>
