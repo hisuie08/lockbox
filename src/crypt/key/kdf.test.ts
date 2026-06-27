@@ -18,7 +18,6 @@ describe("derive key", () => {
       recipientKeyPair.publicKey,
       ephemeralKeyPair.privateKey,
       salt,
-      "encrypt",
     );
     expect(derivedAES.algorithm.name).toBe("AES-GCM");
     expect(derivedAES.extractable).toBeFalsy();
@@ -30,7 +29,6 @@ describe("derive key", () => {
       ephemeralKeyPair.publicKey,
       recipientKeyPair.privateKey,
       salt,
-      "decrypt",
     );
     expect(derivedAES.algorithm.name).toBe("AES-GCM");
     expect(derivedAES.extractable).toBeFalsy();
@@ -45,12 +43,7 @@ describe("derive key", () => {
       ["encrypt"],
     );
     await expect(
-      deriveContentEncryptionKey(
-        ephemeralKeyPair.publicKey,
-        aesKey,
-        salt,
-        "decrypt",
-      ),
+      deriveContentEncryptionKey(ephemeralKeyPair.publicKey, aesKey, salt),
     ).rejects.toThrow(KeyDerivationError);
   });
 
@@ -60,14 +53,12 @@ describe("derive key", () => {
       recipientKeyPair.publicKey,
       ephemeralKeyPair.privateKey,
       salt,
-      "encrypt",
     );
 
     const decKey = await deriveContentEncryptionKey(
       ephemeralKeyPair.publicKey,
       recipientKeyPair.privateKey,
       salt,
-      "decrypt",
     );
 
     const iv = crypto.getRandomValues(new Uint8Array(12));
