@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import {
-  CorruptedFileError,
-  decryptFileToStream,
-  InvalidPrivateKeyError,
-} from "./decrypt/decrypt";
+import { decryptFileToStream } from "./decrypt/decrypt";
 import { encryptFileToStream } from "./encrypt/encrypt";
 import { genKeyPair } from "./key/keyPair";
-
+import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { base64UrlToArrayBuffer } from "./encoding";
 import { ALGORITHMS, ENCRYPTED_FILE_MIMETYPE } from "./constants";
