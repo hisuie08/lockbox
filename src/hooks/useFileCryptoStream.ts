@@ -9,14 +9,14 @@ import {
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
-import { BufferedWriter } from "@/crypt/bufferio/bufferWriter";
 import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
+import { useStreamSupport } from "./useStreamSupport";
 
 type UseFileCryptoOption = {
   maxFileSize: number;
   warnFileSize: number;
-  streamSupported: boolean;
+  streamSupport: ReturnType<typeof useStreamSupport>;
 };
 type FileCryptoState = {
   fileToProcess: File | null;
@@ -72,7 +72,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
         setSaved(false);
         return;
       }
-      if (!option.streamSupported) {
+      if (!option.streamSupport.isSupported) {
         if (file.size > option.maxFileSize) {
           setState({
             fileToProcess: null,
@@ -104,29 +104,10 @@ function useFileCrypt(option: UseFileCryptoOption) {
         });
       }
     },
-    [option.maxFileSize, option.warnFileSize, option.streamSupported],
+    [option.maxFileSize, option.warnFileSize, option.streamSupport.isSupported],
   );
   const createOutputWriter = useCallback(
-    async (
-      filename: string,
-    ): Promise<{
-      writer: WritableStreamDefaultWriter<Uint8Array>;
-      buffer?: BufferedWriter;
-    }> => {
-      if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
-        const writer = (
-          await (
-            await window.showSaveFilePicker({
-              suggestedName: filename,
-            })
-          ).createWritable()
-        ).getWriter();
-        return { writer: writer };
-      } else {
-        const writer = new BufferedWriter();
-        return { writer: writer.stream.getWriter(), buffer: writer };
-      }
-    },
+    option.streamSupport.getStreamWriter,
     [],
   );
   return {
