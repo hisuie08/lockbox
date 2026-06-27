@@ -1,22 +1,24 @@
 import { describe, expect, test } from "vitest";
 import {
   BufferedReader,
+  getEncryptedFileHeader,
+  decryptFileToStream,
+} from "./decrypt";
+import {
+  UnexpectedEofError,
   CorruptedFileError,
   InvalidFileSignatureError,
   InvalidPrivateKeyError,
   UnsupportedVersionError,
-  getEncryptedFileHeader,
-  decryptFileToStream,
-  UnexpectedEofError,
-} from "./decrypt";
-import { BufferWriter } from "../lib/bufferWriter";
-import { genKeyPair } from "./key/keyPair";
-import { encryptFileToStream, writeHeader } from "./encrypt";
+} from "./errors";
+import { BufferWriter } from "../../lib/bufferWriter";
+import { genKeyPair } from "../key/keyPair";
+import { encryptFileToStream, writeHeader } from "../encrypt/encrypt";
 import {
   ENCRYPTED_FILE_MIMETYPE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
-} from "./constants";
+} from "../constants";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({

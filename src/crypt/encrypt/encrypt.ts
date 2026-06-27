@@ -1,20 +1,20 @@
-import { bytesToBase64Url, uint32ToBytes } from "./encoding";
+import { bytesToBase64Url, uint32ToBytes } from "../encoding";
 import {
   ALGORITHMS,
   DEFAULT_CHUNK_SIZE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
-} from "./constants";
-import type { EncryptedFileHeader } from "./types";
+} from "../constants";
+import type { EncryptedFileHeader } from "../types";
 import {
   InputReadError,
   OutputWriteError,
   UnexpectedCryptoError,
-} from "./errors";
-import { genKeyPair } from "./key/keyPair";
-import { deriveContentEncryptionKey } from "./key/kdf";
-import { getJwkThumbprint } from "./key/validate";
-import { genIv, genSalt } from "./random";
+} from "../errors";
+import { genKeyPair } from "../key/keyPair";
+import { deriveContentEncryptionKey } from "../key/kdf";
+import { getJwkThumbprint } from "../key/validate";
+import { genIv, genSalt } from "../random";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;

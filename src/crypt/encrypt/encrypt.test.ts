@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { genKeyPair } from "./key/keyPair";
+import { genKeyPair } from "../key/keyPair";
 import {
   createHeader,
   encryptChunk,
@@ -7,15 +7,16 @@ import {
   writeChunk,
   writeHeader,
 } from "./encrypt";
-import { getJwkThumbprint } from "./key/validate";
+import { getJwkThumbprint } from "../key/validate";
 import {
   ALGORITHMS,
   DEFAULT_CHUNK_SIZE,
+  ENCRYPTED_FILE_MIMETYPE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
-} from "./constants";
-import { BufferWriter } from "../lib/bufferWriter";
-import type { EncryptedFileHeader } from "./types";
+} from "../constants";
+import { BufferWriter } from "../../lib/bufferWriter";
+import type { EncryptedFileHeader } from "../types";
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
@@ -80,7 +81,7 @@ describe("encryptStream", () => {
       await writeHeader(writer, header);
       await writer.close();
 
-      const bytes = await blobToBytes(buffer.toBlob());
+      const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
 
       const signatureBytes = new TextEncoder().encode(FILE_SIGNATURE);
 
@@ -121,7 +122,7 @@ describe("writeChunk", () => {
 
     await writer.close();
 
-    const bytes = await blobToBytes(buffer.toBlob());
+    const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
 
     const view = new DataView(bytes.buffer);
 
@@ -168,7 +169,7 @@ describe("encryptFileToStream", () => {
     expect(progress).toBe(1);
     expect(buffer.size).toBeGreaterThan(0);
 
-    const bytes = await blobToBytes(buffer.toBlob());
+    const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
 
     const signature = new TextEncoder().encode(FILE_SIGNATURE);
 

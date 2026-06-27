@@ -3,8 +3,8 @@ import {
   CorruptedFileError,
   decryptFileToStream,
   InvalidPrivateKeyError,
-} from "./decrypt";
-import { encryptFileToStream } from "./encrypt";
+} from "./decrypt/decrypt";
+import { encryptFileToStream } from "./encrypt/encrypt";
 import { genKeyPair } from "./key/keyPair";
 
 import { sha256 } from "@noble/hashes/sha2.js";

@@ -1,59 +1,22 @@
-import { base64UrlToArrayBuffer } from "./encoding";
-import { FILE_SIGNATURE, FORMAT_VERSION } from "./constants";
-import type { ChunkHeader, EncryptedFileHeader } from "./types";
+import { base64UrlToArrayBuffer } from "../encoding";
+import { FILE_SIGNATURE, FORMAT_VERSION } from "../constants";
+import type { ChunkHeader, EncryptedFileHeader } from "../types";
+import {
+  DecryptionError,
+  UnexpectedEofError,
+  CorruptedFileError,
+  InvalidHeaderError,
+  InvalidPrivateKeyError,
+  UnsupportedVersionError,
+  InvalidFileSignatureError,
+} from "./errors";
 import {
   InputReadError,
   OutputWriteError,
   UnexpectedCryptoError,
-} from "./errors";
-import { deriveContentEncryptionKey } from "./key/kdf";
-import { getJwkThumbprint } from "./key/validate";
-
-export abstract class DecryptionError extends Error {
-  override cause?: unknown;
-
-  constructor(message: string, cause?: unknown) {
-    super(message);
-    this.name = new.target.name;
-    this.cause = cause;
-  }
-}
-
-export class InvalidPrivateKeyError extends DecryptionError {
-  constructor(cause?: unknown) {
-    super("The private key does not match this file.", cause);
-  }
-}
-
-export class CorruptedFileError extends DecryptionError {
-  constructor(cause?: unknown) {
-    super("The encrypted file is corrupted or has been modified.", cause);
-  }
-}
-
-export class InvalidFileSignatureError extends DecryptionError {
-  constructor() {
-    super("The file is not a supported encrypted file.");
-  }
-}
-
-export class UnsupportedVersionError extends DecryptionError {
-  constructor(version: number) {
-    super(`Unsupported file format version: ${version}`);
-  }
-}
-
-export class UnexpectedEofError extends DecryptionError {
-  constructor() {
-    super("Unexpected end of file.");
-  }
-}
-
-export class InvalidHeaderError extends DecryptionError {
-  constructor(cause?: unknown) {
-    super("The file header is invalid.", cause);
-  }
-}
+} from "../errors";
+import { deriveContentEncryptionKey } from "../key/kdf";
+import { getJwkThumbprint } from "../key/validate";
 
 async function decryptChunk(input: {
   iv: Uint8Array;
