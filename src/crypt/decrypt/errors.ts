@@ -32,11 +32,7 @@ export class UnsupportedVersionError extends DecryptionError {
   }
 }
 
-export class UnexpectedEofError extends DecryptionError {
-  constructor() {
-    super("Unexpected end of file.");
-  }
-}
+
 
 export class InvalidHeaderError extends DecryptionError {
   constructor(cause?: unknown) {

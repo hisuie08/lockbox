@@ -3,13 +3,13 @@ import { FILE_SIGNATURE, FORMAT_VERSION } from "../constants";
 import type { ChunkHeader, EncryptedFileHeader } from "../types";
 import {
   DecryptionError,
-  UnexpectedEofError,
   CorruptedFileError,
   InvalidHeaderError,
   InvalidPrivateKeyError,
   UnsupportedVersionError,
   InvalidFileSignatureError,
 } from "./errors";
+import { BufferedReader } from "../bufferio/bufferReader";
 import {
   InputReadError,
   OutputWriteError,
@@ -44,78 +44,6 @@ async function decryptChunk(input: {
 }
 
 const decoder = new TextDecoder();
-
-export class BufferedReader {
-  private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
-
-  private buffer = new Uint8Array(0);
-
-  constructor(reader: ReadableStreamDefaultReader<Uint8Array>) {
-    this.reader = reader;
-  }
-  async readBytes(length: number): Promise<Uint8Array> {
-    while (this.buffer.length < length) {
-      let result;
-
-      try {
-        result = await this.reader.read();
-      } catch (error) {
-        throw new InputReadError("Failed to read encrypted file.", error);
-      }
-
-      const { done, value } = result;
-
-      if (done) {
-        throw new UnexpectedEofError();
-      }
-
-      const merged = new Uint8Array(this.buffer.length + value.length);
-
-      merged.set(this.buffer);
-      merged.set(value, this.buffer.length);
-
-      this.buffer = merged;
-    }
-
-    const result = this.buffer.slice(0, length);
-    this.buffer = this.buffer.slice(length);
-
-    return result;
-  }
-  async tryReadBytes(length: number): Promise<Uint8Array | null> {
-    while (this.buffer.length < length) {
-      let result;
-
-      try {
-        result = await this.reader.read();
-      } catch (error) {
-        throw new InputReadError("Failed to read input file.", error);
-      }
-
-      const { done, value } = result;
-
-      if (done) {
-        if (this.buffer.length === 0) {
-          return null;
-        }
-
-        throw new UnexpectedEofError();
-      }
-
-      const merged = new Uint8Array(this.buffer.length + value.length);
-
-      merged.set(this.buffer);
-      merged.set(value, this.buffer.length);
-
-      this.buffer = merged;
-    }
-
-    const result = this.buffer.slice(0, length);
-    this.buffer = this.buffer.slice(length);
-
-    return result;
-  }
-}
 
 async function readHeader(
   reader: BufferedReader,
@@ -172,7 +100,7 @@ export async function getEncryptedFileHeader(input: {
     const reader = new BufferedReader(streamReader);
     return await readHeader(reader);
   } catch (error) {
-    if (error instanceof DecryptionError) {
+    if (error instanceof DecryptionError || InputReadError) {
       throw error;
     }
 
@@ -250,7 +178,7 @@ export async function decryptFileToStream(input: {
 
     return header;
   } catch (error) {
-    if (error instanceof DecryptionError) {
+    if (error instanceof DecryptionError || InputReadError) {
       throw error;
     }
 

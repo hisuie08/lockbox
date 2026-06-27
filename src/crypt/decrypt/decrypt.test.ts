@@ -1,17 +1,13 @@
 import { describe, expect, test } from "vitest";
+import { getEncryptedFileHeader, decryptFileToStream } from "./decrypt";
+import { UnexpectedEofError } from "../bufferio/bufferReader";
 import {
-  BufferedReader,
-  getEncryptedFileHeader,
-  decryptFileToStream,
-} from "./decrypt";
-import {
-  UnexpectedEofError,
   CorruptedFileError,
   InvalidFileSignatureError,
   InvalidPrivateKeyError,
   UnsupportedVersionError,
 } from "./errors";
-import { BufferWriter } from "../../lib/bufferWriter";
+import { BufferedWriter } from "../bufferio/bufferWriter";
 import { genKeyPair } from "../key/keyPair";
 import { encryptFileToStream, writeHeader } from "../encrypt/encrypt";
 import {
@@ -35,60 +31,9 @@ async function blobToBytes(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-describe("BufferedReader", () => {
-  test("reads exact length", async () => {
-    const source = streamFromChunks([new Uint8Array([1, 2, 3, 4])]);
-
-    const reader = new BufferedReader(source.getReader());
-
-    const bytes = await reader.readBytes(4);
-
-    expect(Array.from(bytes)).toEqual([1, 2, 3, 4]);
-  });
-
-  test("reads across multiple chunks", async () => {
-    const source = streamFromChunks([
-      new Uint8Array([1, 2]),
-      new Uint8Array([3, 4]),
-    ]);
-
-    const reader = new BufferedReader(source.getReader());
-
-    const bytes = await reader.readBytes(4);
-
-    expect(Array.from(bytes)).toEqual([1, 2, 3, 4]);
-  });
-
-  test("preserves remaining buffer", async () => {
-    const source = streamFromChunks([new Uint8Array([1, 2, 3, 4])]);
-
-    const reader = new BufferedReader(source.getReader());
-
-    expect(Array.from(await reader.readBytes(2))).toEqual([1, 2]);
-
-    expect(Array.from(await reader.readBytes(2))).toEqual([3, 4]);
-  });
-
-  test("tryReadBytes returns null at eof", async () => {
-    const source = streamFromChunks([]);
-
-    const reader = new BufferedReader(source.getReader());
-
-    await expect(reader.tryReadBytes(8)).resolves.toBeNull();
-  });
-
-  test("throws on unexpected eof", async () => {
-    const source = streamFromChunks([new Uint8Array([1, 2])]);
-
-    const reader = new BufferedReader(source.getReader());
-
-    await expect(reader.readBytes(8)).rejects.toThrow();
-  });
-});
-
 describe("getEncryptedFileHeader", () => {
   test("reads valid header", async () => {
-    const buffer = new BufferWriter();
+    const buffer = new BufferedWriter();
 
     const header = {
       algorithm: "X25519-HKDF-SHA-256-AES-GCM-256",
@@ -154,7 +99,7 @@ describe("decryptFileToStream", () => {
 
     const plaintext = "Hello LockBox!";
 
-    const encryptedBuffer = new BufferWriter();
+    const encryptedBuffer = new BufferedWriter();
 
     await encryptFileToStream({
       filename: "test.txt",
@@ -171,7 +116,7 @@ describe("decryptFileToStream", () => {
       encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
     );
 
-    const decryptedBuffer = new BufferWriter();
+    const decryptedBuffer = new BufferedWriter();
 
     const header = await decryptFileToStream({
       source: streamFromChunks([encryptedBytes]),
@@ -195,7 +140,7 @@ describe("decryptFileToStream", () => {
 
     const recipientB = await genKeyPair();
 
-    const encryptedBuffer = new BufferWriter();
+    const encryptedBuffer = new BufferedWriter();
 
     await encryptFileToStream({
       filename: "test.txt",
@@ -216,7 +161,7 @@ describe("decryptFileToStream", () => {
       decryptFileToStream({
         source: streamFromChunks([encryptedBytes]),
         privateKey: recipientB.privateKey,
-        writer: new BufferWriter().stream.getWriter(),
+        writer: new BufferedWriter().stream.getWriter(),
         onProgress() {},
         onSaved: () => {},
       }),
@@ -226,7 +171,7 @@ describe("decryptFileToStream", () => {
   test("detects tampered ciphertext", async () => {
     const recipient = await genKeyPair();
 
-    const encryptedBuffer = new BufferWriter();
+    const encryptedBuffer = new BufferedWriter();
 
     await encryptFileToStream({
       filename: "test.txt",
@@ -249,7 +194,7 @@ describe("decryptFileToStream", () => {
       decryptFileToStream({
         source: streamFromChunks([encryptedBytes]),
         privateKey: recipient.privateKey,
-        writer: new BufferWriter().stream.getWriter(),
+        writer: new BufferedWriter().stream.getWriter(),
         onProgress() {},
         onSaved: () => {},
       }),
@@ -259,7 +204,7 @@ describe("decryptFileToStream", () => {
   test("decrypts empty file", async () => {
     const recipient = await genKeyPair();
 
-    const encryptedBuffer = new BufferWriter();
+    const encryptedBuffer = new BufferedWriter();
 
     await encryptFileToStream({
       filename: "empty.txt",
@@ -276,7 +221,7 @@ describe("decryptFileToStream", () => {
       encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
     );
 
-    const decryptedBuffer = new BufferWriter();
+    const decryptedBuffer = new BufferedWriter();
 
     await decryptFileToStream({
       source: streamFromChunks([encryptedBytes]),

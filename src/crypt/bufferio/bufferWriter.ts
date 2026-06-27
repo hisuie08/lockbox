@@ -1,5 +1,5 @@
 // Firefox等 stream非対応ブラウザ用
-export class BufferWriter {
+export class BufferedWriter {
   private readonly chunks: Uint8Array[] = [];
 
   readonly stream = new WritableStream<Uint8Array>({

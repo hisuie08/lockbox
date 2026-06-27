@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { BufferWriter } from "./bufferWriter";
+import { BufferedWriter } from "./bufferWriter";
 
 describe("BufferWriter", () => {
   test("collects chunks", async () => {
-    const writer = new BufferWriter();
+    const writer = new BufferedWriter();
 
     const streamWriter = writer.stream.getWriter();
 
@@ -16,7 +16,7 @@ describe("BufferWriter", () => {
     expect(writer.size).toBe(11);
   });
   test("creates blob", async () => {
-    const writer = new BufferWriter();
+    const writer = new BufferedWriter();
 
     const streamWriter = writer.stream.getWriter();
 
@@ -30,7 +30,7 @@ describe("BufferWriter", () => {
     expect(await blob.text()).toBe("Hello");
   });
   test("creates file", async () => {
-    const writer = new BufferWriter();
+    const writer = new BufferedWriter();
 
     const streamWriter = writer.stream.getWriter();
 
@@ -44,7 +44,7 @@ describe("BufferWriter", () => {
     expect(await file.text()).toBe("Hello");
   });
   test("clears buffer", async () => {
-    const writer = new BufferWriter();
+    const writer = new BufferedWriter();
 
     const streamWriter = writer.stream.getWriter();
 

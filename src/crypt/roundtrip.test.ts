@@ -6,7 +6,7 @@ import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { base64UrlToArrayBuffer } from "./encoding";
 import { ALGORITHMS, ENCRYPTED_FILE_MIMETYPE } from "./constants";
-import { BufferWriter } from "../lib/bufferWriter";
+import { BufferedWriter } from "./bufferio/bufferWriter";
 
 export class HashWriter {
   private readonly hash = sha256.create();
@@ -173,7 +173,7 @@ describe("encrypt file stream round trip", () => {
   test("rejects wrong private key", async () => {
     const otherKeyPair = await genKeyPair();
 
-    const encrypted = new BufferWriter();
+    const encrypted = new BufferedWriter();
 
     await encryptFileToStream({
       source: createLargeStream(100),
@@ -200,7 +200,7 @@ describe("encrypt file stream round trip", () => {
   });
 
   test("detects tampered ciphertext", async () => {
-    const encrypted = new BufferWriter();
+    const encrypted = new BufferedWriter();
 
     await encryptFileToStream({
       source: createLargeStream(1000),
@@ -232,7 +232,7 @@ describe("encrypt file stream round trip", () => {
     ).rejects.toThrow(CorruptedFileError);
   });
   test("detects tampered empty file", async () => {
-    const encrypted = new BufferWriter();
+    const encrypted = new BufferedWriter();
 
     await encryptFileToStream({
       source: createLargeStream(0),

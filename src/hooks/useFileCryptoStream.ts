@@ -9,7 +9,7 @@ import {
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
-import { BufferWriter } from "@/lib/bufferWriter";
+import { BufferedWriter } from "@/crypt/bufferio/bufferWriter";
 import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
 
@@ -111,7 +111,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
       filename: string,
     ): Promise<{
       writer: WritableStreamDefaultWriter<Uint8Array>;
-      buffer?: BufferWriter;
+      buffer?: BufferedWriter;
     }> => {
       if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
         const writer = (
@@ -123,7 +123,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
         ).getWriter();
         return { writer: writer };
       } else {
-        const writer = new BufferWriter();
+        const writer = new BufferedWriter();
         return { writer: writer.stream.getWriter(), buffer: writer };
       }
     },

@@ -15,7 +15,7 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
-import { BufferWriter } from "../../lib/bufferWriter";
+import { BufferedWriter } from "../bufferio/bufferWriter";
 import type { EncryptedFileHeader } from "../types";
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {
@@ -63,7 +63,7 @@ describe("encryptStream", () => {
   });
   describe("writeHeader", () => {
     test("writes header format", async () => {
-      const buffer = new BufferWriter();
+      const buffer = new BufferedWriter();
       const writer = buffer.stream.getWriter();
 
       const header: EncryptedFileHeader = {
@@ -109,7 +109,7 @@ describe("encryptStream", () => {
 
 describe("writeChunk", () => {
   test("writes chunk format", async () => {
-    const buffer = new BufferWriter();
+    const buffer = new BufferedWriter();
     const writer = buffer.stream.getWriter();
 
     const iv = new Uint8Array([1, 2, 3]);
@@ -139,7 +139,7 @@ describe("encryptFileToStream", () => {
   test("encrypts file stream", async () => {
     const { publicKey } = await genKeyPair();
 
-    const buffer = new BufferWriter();
+    const buffer = new BufferedWriter();
     const writer = buffer.stream.getWriter();
 
     const inputBytes = new TextEncoder().encode("hello world");
@@ -182,7 +182,7 @@ describe("encryptFileToStream", () => {
 test("encrypts empty file", async () => {
   const { publicKey } = await genKeyPair();
 
-  const buffer = new BufferWriter();
+  const buffer = new BufferedWriter();
 
   const source = new ReadableStream<Uint8Array>({
     start(controller) {
@@ -218,7 +218,7 @@ test("throws when source read fails", async () => {
     },
   });
 
-  const buffer = new BufferWriter();
+  const buffer = new BufferedWriter();
 
   await expect(
     encryptFileToStream({
