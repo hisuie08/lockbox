@@ -9,9 +9,9 @@ import {
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
-import { BufferedWriter } from "@/crypt/bufferio/bufferWriter";
 import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
+import { getSupportedStreamWriter } from "./useStreamSupport";
 
 type UseFileCryptoOption = {
   maxFileSize: number;
@@ -106,29 +106,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
     },
     [option.maxFileSize, option.warnFileSize, option.streamSupported],
   );
-  const createOutputWriter = useCallback(
-    async (
-      filename: string,
-    ): Promise<{
-      writer: WritableStreamDefaultWriter<Uint8Array>;
-      buffer?: BufferedWriter;
-    }> => {
-      if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
-        const writer = (
-          await (
-            await window.showSaveFilePicker({
-              suggestedName: filename,
-            })
-          ).createWritable()
-        ).getWriter();
-        return { writer: writer };
-      } else {
-        const writer = new BufferedWriter();
-        return { writer: writer.stream.getWriter(), buffer: writer };
-      }
-    },
-    [],
-  );
+  const createOutputWriter = useCallback(getSupportedStreamWriter, []);
   return {
     state,
     saved,
