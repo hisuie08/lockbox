@@ -11,12 +11,12 @@ import {
 } from "@/crypt";
 import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
-import { getSupportedStreamWriter } from "./useStreamSupport";
+import { useStreamSupport } from "./useStreamSupport";
 
 type UseFileCryptoOption = {
   maxFileSize: number;
   warnFileSize: number;
-  streamSupported: boolean;
+  streamSupport: ReturnType<typeof useStreamSupport>;
 };
 type FileCryptoState = {
   fileToProcess: File | null;
@@ -72,7 +72,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
         setSaved(false);
         return;
       }
-      if (!option.streamSupported) {
+      if (!option.streamSupport.isSupported) {
         if (file.size > option.maxFileSize) {
           setState({
             fileToProcess: null,
@@ -104,9 +104,12 @@ function useFileCrypt(option: UseFileCryptoOption) {
         });
       }
     },
-    [option.maxFileSize, option.warnFileSize, option.streamSupported],
+    [option.maxFileSize, option.warnFileSize, option.streamSupport.isSupported],
   );
-  const createOutputWriter = useCallback(getSupportedStreamWriter, []);
+  const createOutputWriter = useCallback(
+    option.streamSupport.getStreamWriter,
+    [],
+  );
   return {
     state,
     saved,

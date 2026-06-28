@@ -18,7 +18,7 @@ function App() {
 
   const streamSupported = useStreamSupport();
   const option = {
-    streamSupported: streamSupported,
+    streamSupport: streamSupported,
     maxFileSize: MAX_FILE_SIZE,
     warnFileSize: WARNING_FILE_SIZE,
   };
@@ -37,7 +37,7 @@ function App() {
     <main className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <Header privateKey={keys.privateKey} publicKey={keys.publicKey} />
-        {streamSupported ? null : <AlertStreamNotSupported />}
+        {streamSupported.isSupported ? null : <AlertStreamNotSupported />}
         <section className="grid gap-6 lg:grid-cols-[0.3fr_0.9fr]">
           <KeyControlCard keys={keys} />
 
