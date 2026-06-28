@@ -92,12 +92,14 @@ export function canonicalizeX25519Jwk(jwk: JsonWebKey): string {
 }
 
 export async function getJwkThumbprint(
-  jwk: JsonWebKey | null,
+  jwk: JsonWebKey | CryptoKey | null,
 ): Promise<string> {
   if (!jwk) {
     return "";
   }
-
+  if (jwk instanceof CryptoKey) {
+    jwk = await crypto.subtle.exportKey("jwk", jwk);
+  }
   const canonicalJwk = canonicalizeX25519Jwk(jwk);
 
   const digest = await crypto.subtle.digest(

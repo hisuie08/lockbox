@@ -129,9 +129,7 @@ export async function decryptFileToStream(input: {
       true,
       [],
     );
-    const myThumbprint = await getJwkThumbprint(
-      await crypto.subtle.exportKey("jwk", input.privateKey),
-    );
+    const myThumbprint = await getJwkThumbprint(input.privateKey);
     if (myThumbprint !== header.recipientThumbprint) {
       throw new InvalidPrivateKeyError();
     }
