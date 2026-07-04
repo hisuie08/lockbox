@@ -1,4 +1,4 @@
-import { reactive, ref, computed, watchEffect } from "vue";
+import { reactive, ref, computed, watchEffect, toRefs } from "vue";
 import {
   exportAsJwk,
   genKeyPair,
@@ -97,24 +97,17 @@ export function useCryptoKeys() {
     }
   }
 
-  async function importPrivateJwk(jwk: JsonWebKey) {
+  async function importPrivateJwk(
+    jwk: JsonWebKey,
+    withPublic: boolean = false,
+  ) {
     try {
       state.privateKey = await importJwk(jwk, "private");
       state.privateJwk = jwk;
       state.error = null;
-    } catch (error) {
-      if (error instanceof KeyPairError) {
-        state.error = getErrorMessage(error);
+      if (withPublic) {
+        await importPublicJwk(toPublicJwk(jwk));
       }
-      throw error;
-    }
-  }
-
-  async function importBothJwk(privateJwk: JsonWebKey) {
-    await importPrivateJwk(privateJwk);
-
-    try {
-      await importPublicJwk(toPublicJwk(privateJwk));
     } catch (error) {
       if (error instanceof KeyPairError) {
         state.error = getErrorMessage(error);
@@ -140,7 +133,8 @@ export function useCryptoKeys() {
   }
 
   return {
-    ...state,
+    ...toRefs(state),
+    state,
     mismatchKeys,
     publicKeyThumbprint,
     privateKeyThumbprint,
@@ -150,7 +144,6 @@ export function useCryptoKeys() {
     generateKeys,
     importPrivateJwk,
     importPublicJwk,
-    importBothJwk,
     setError,
   };
 }

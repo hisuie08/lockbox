@@ -1,39 +1,39 @@
 import { BufferedWriter } from "@/crypt/bufferio/bufferWriter";
 
-export type SupportedStreamWriter = {
-    writer: WritableStreamDefaultWriter<Uint8Array>;
-    buffer?: BufferedWriter;
+type SupportedStreamWriter = {
+  writer: WritableStreamDefaultWriter<Uint8Array>;
+  buffer?: BufferedWriter;
 };
 
 const isSupported =
-    typeof window !== "undefined" && "showSaveFilePicker" in window;
+  typeof window !== "undefined" && "showSaveFilePicker" in window;
 
 async function getStreamWriter(
-    filename: string,
+  filename: string,
 ): Promise<SupportedStreamWriter> {
-    if (isSupported) {
-        const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-        });
+  if (isSupported) {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: filename,
+    });
 
-        const writable = await handle.createWritable();
-
-        return {
-            writer: writable.getWriter(),
-        };
-    }
-
-    const buffer = new BufferedWriter();
+    const writable = await handle.createWritable();
 
     return {
-        writer: buffer.stream.getWriter(),
-        buffer,
+      writer: writable.getWriter(),
     };
+  }
+
+  const buffer = new BufferedWriter();
+
+  return {
+    writer: buffer.stream.getWriter(),
+    buffer,
+  };
 }
 
 export function useStreamSupport() {
-    return {
-        isSupported,
-        getStreamWriter,
-    };
+  return {
+    isSupported,
+    getStreamWriter,
+  };
 }

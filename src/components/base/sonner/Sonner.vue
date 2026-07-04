@@ -6,14 +6,25 @@ import {
   OctagonXIcon,
   Loader2Icon,
   XIcon,
-} from '@lucide/vue';
+} from "@lucide/vue";
 
+import type { ToasterProps } from "vue-sonner";
+import { Toaster as Sonner } from "vue-sonner";
+import { cn } from "@/lib/utils";
+import { computed } from "vue";
 
-import type { ToasterProps } from "vue-sonner"
-import { Toaster as Sonner } from "vue-sonner"
-import { cn } from "@/lib/utils"
-
-const props = defineProps<ToasterProps>()
+const props = defineProps<ToasterProps>();
+const delegatedProps = computed(() => {
+  const { toastOptions, ...rest } = props;
+  return rest;
+});
+const toastOptions = computed(() => ({
+  ...delegatedProps,
+  classes: {
+    toast: "rounded-2xl",
+    ...props.toastOptions?.classes,
+  },
+}));
 </script>
 
 <template>
@@ -30,12 +41,8 @@ const props = defineProps<ToasterProps>()
       '--gray5': 'var(--border)',
       '--gray12': 'var(--popover-foreground)',
     }"
-    :toast-options="{
-      classes: {
-        toast: 'rounded-2xl',
-      },
-    }"
-    v-bind="props"
+    :toast-options="toastOptions"
+    v-bind="delegatedProps"
   >
     <template #success-icon>
       <CircleCheckIcon class="size-4" />

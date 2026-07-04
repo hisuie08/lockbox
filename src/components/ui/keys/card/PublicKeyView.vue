@@ -1,0 +1,115 @@
+<script setup lang="ts">
+import { ref } from "vue";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/base/dropdown-menu";
+
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/base/input-group";
+
+import {
+  Edit2Icon,
+  MoreHorizontal,
+  Share2Icon,
+  TrashIcon,
+} from "lucide-vue-next";
+
+import { Dialog, DialogContent, DialogTrigger } from "@/components/base/dialog";
+import type { useCryptoKeys } from "@/composables/useCryptoKeys";
+import { useShareLink } from "@/composables/useShareLink";
+import { useClipboard } from "@vueuse/core";
+import { toast } from "vue-sonner";
+import EditDialog from "./EditDialog.vue";
+const props = defineProps<{
+  keys: ReturnType<typeof useCryptoKeys>;
+}>();
+const isOpen = ref(false);
+
+const { genLink } = useShareLink();
+const { copy } = useClipboard();
+
+function sharePublicKey() {
+  if (!props.keys.publicJwk.value) return;
+  const link = genLink(props.keys.publicJwk.value);
+  copy(link);
+  toast.info("share link was copied");
+}
+</script>
+<template>
+  <div class="grid">
+    <label class="grid gap-2">
+      <span class="text-sm font-medium">
+        公開鍵
+
+        <span v-if="keys.publicKey.value" class="ml-1 text-green-700">
+          Loaded
+        </span>
+      </span>
+
+      <InputGroup>
+        <InputGroupInput :model-value="keys.publicKeyThumbprint" readonly />
+        <InputGroupAddon align="inline-end">
+          <Dialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <InputGroupButton
+                  variant="ghost"
+                  size="icon-xs"
+                  class="border-0"
+                >
+                  <MoreHorizontal />
+                </InputGroupButton>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                :side-offset="8"
+                :align-offset="-4"
+              >
+                <DialogTrigger as-child>
+                  <DropdownMenuItem @select="isOpen = true">
+                    <Edit2Icon />
+                    Edit
+                  </DropdownMenuItem>
+                </DialogTrigger>
+
+                <DropdownMenuItem
+                  :disabled="!keys.publicKey.value"
+                  @select="sharePublicKey"
+                >
+                  <Share2Icon />
+                  Share Link
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  variant="destructive"
+                  @select="keys.clearPublicKey"
+                >
+                  <TrashIcon />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DialogContent>
+              <EditDialog
+                :keyType="'public'"
+                :callback="keys.importPublicJwk"
+              />
+            </DialogContent>
+          </Dialog>
+        </InputGroupAddon>
+      </InputGroup>
+    </label>
+  </div>
+</template>

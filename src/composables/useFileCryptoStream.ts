@@ -1,6 +1,14 @@
 import { reactive, computed, toRefs, ref, watchEffect } from "vue";
 import type { useStreamSupport } from "./useStreamSupport";
-import { decryptFileToStream, DecryptionError, ENCRYPTED_FILE_MIMETYPE, encryptFileToStream, EncryptionError, getEncryptedFileHeader, type EncryptedFileHeader } from "@/crypt";
+import {
+  decryptFileToStream,
+  DecryptionError,
+  ENCRYPTED_FILE_MIMETYPE,
+  encryptFileToStream,
+  EncryptionError,
+  getEncryptedFileHeader,
+  type EncryptedFileHeader,
+} from "@/crypt";
 import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
 type UseFileCryptoOption = {
@@ -21,7 +29,7 @@ function getErrorMessage(error: unknown): string {
   throw error;
 }
 
-export function useFileCrypt(option: UseFileCryptoOption) {
+function useFileCrypt(option: UseFileCryptoOption) {
   const state = reactive<FileCryptoState & { saved: boolean }>({
     fileToProcess: null,
     progress: 0,
@@ -30,9 +38,7 @@ export function useFileCrypt(option: UseFileCryptoOption) {
     saved: false,
   });
 
-  const isProcessing = computed(
-    () => state.progress > 0 && state.progress < 1,
-  );
+  const isProcessing = computed(() => state.progress > 0 && state.progress < 1);
 
   function setError(message: string | null) {
     state.error = message;
@@ -76,6 +82,7 @@ export function useFileCrypt(option: UseFileCryptoOption) {
     state.fileToProcess = file;
   }
   return {
+    ...option,
     ...toRefs(state),
     state,
     isProcessing,
@@ -86,7 +93,6 @@ export function useFileCrypt(option: UseFileCryptoOption) {
     setFile,
     createOutputWriter: option.streamSupport.getStreamWriter,
   };
-
 }
 
 export function useFileEncrypt(option: UseFileCryptoOption) {
@@ -170,9 +176,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
     const file = fileCrypt.state.fileToProcess;
 
     if (!file || !privateKey) {
-      fileCrypt.setError(
-        "Choose a file and load a private key first.",
-      );
+      fileCrypt.setError("Choose a file and load a private key first.");
       return;
     }
 
@@ -194,8 +198,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
 
       const filename = originFile.value.originalName;
 
-      const { writer, buffer } =
-        await fileCrypt.createOutputWriter(filename);
+      const { writer, buffer } = await fileCrypt.createOutputWriter(filename);
 
       await decryptFileToStream({
         ...input,
@@ -203,10 +206,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       });
 
       if (buffer) {
-        downloadBlob(
-          buffer.toBlob(originFile.value.originalType),
-          filename,
-        );
+        downloadBlob(buffer.toBlob(originFile.value.originalType), filename);
       }
 
       fileCrypt.setError(null);
@@ -218,9 +218,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       ) {
         switch (error.name) {
           case "InvalidPrivateKeyError":
-            fileCrypt.setError(
-              "秘密鍵がファイルに対応していません",
-            );
+            fileCrypt.setError("秘密鍵がファイルに対応していません");
             break;
 
           case "AbortError":
