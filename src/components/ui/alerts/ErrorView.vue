@@ -1,3 +1,9 @@
+<script setup lang="ts">
+defineProps<{
+  errors: Array<string>;
+}>();
+</script>
+
 <template>
   <div>
     <div v-if="errors.length > 0" class="grid gap-2">
@@ -11,9 +17,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-defineProps<{
-  errors: Array<string>;
-}>();
-</script>
