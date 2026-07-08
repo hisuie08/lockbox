@@ -81,7 +81,7 @@ export function validateX25519Jwk(input: unknown): X25519JwkValidationResult {
 
 export function canonicalizeX25519Jwk(jwk: JsonWebKey): string {
   if (jwk.kty !== "OKP" || jwk.crv !== "X25519" || typeof jwk.x !== "string") {
-    throw new Error("Invalid X25519 JWK");
+    throw new KeyParseError("Invalid X25519 JWK");
   }
 
   return JSON.stringify({
