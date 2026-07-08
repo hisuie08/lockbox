@@ -24,7 +24,7 @@ export function useKeyGeneration(keyType: "public" | "private") {
       keyType == "public"
         ? "lockbox-public-key.jwk.json"
         : "lockbox-private-key.jwk.json";
-    downloadText(JSON.stringify(jwk), fileName);
+    downloadText(JSON.stringify(jwk.value), fileName);
     isSaved.value = true;
   }
   return {
