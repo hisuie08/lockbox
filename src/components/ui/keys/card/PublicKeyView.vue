@@ -23,10 +23,10 @@ import {
   TrashIcon,
 } from "lucide-vue-next";
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/base/dialog";
+import { Dialog, DialogContent } from "@/components/base/dialog";
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import { useShareLink } from "@/composables/useShareLink";
-import { useClipboard, useShare } from "@vueuse/core";
+import { useClipboard } from "@vueuse/core";
 import { toast } from "vue-sonner";
 import EditDialog from "./EditDialog.vue";
 const props = defineProps<{
@@ -43,8 +43,6 @@ function sharePublicKey() {
   copy(link);
   toast.info("share link was copied");
 }
-
-const share = useShare();
 </script>
 <template>
   <div class="grid">
