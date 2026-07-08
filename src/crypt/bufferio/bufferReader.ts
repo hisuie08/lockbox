@@ -12,7 +12,13 @@ export class BufferedReader {
   constructor(reader: ReadableStreamDefaultReader<Uint8Array>) {
     this.reader = reader;
   }
-  async readBytes(length: number): Promise<Uint8Array> {
+  private async read(length: number, asTry: false): Promise<Uint8Array>;
+  private async read(length: number, asTry: true): Promise<Uint8Array | null>;
+
+  private async read(
+    length: number,
+    asTry: boolean,
+  ): Promise<Uint8Array | null> {
     while (this.buffer.length < length) {
       let result;
 
@@ -25,36 +31,7 @@ export class BufferedReader {
       const { done, value } = result;
 
       if (done) {
-        throw new UnexpectedEofError();
-      }
-
-      const merged = new Uint8Array(this.buffer.length + value.length);
-
-      merged.set(this.buffer);
-      merged.set(value, this.buffer.length);
-
-      this.buffer = merged;
-    }
-
-    const result = this.buffer.slice(0, length);
-    this.buffer = this.buffer.slice(length);
-
-    return result;
-  }
-  async tryReadBytes(length: number): Promise<Uint8Array | null> {
-    while (this.buffer.length < length) {
-      let result;
-
-      try {
-        result = await this.reader.read();
-      } catch (error) {
-        throw new InputReadError("Failed to read input file.", error);
-      }
-
-      const { done, value } = result;
-
-      if (done) {
-        if (this.buffer.length === 0) {
+        if (asTry && this.buffer.length === 0) {
           return null;
         }
 
@@ -73,5 +50,13 @@ export class BufferedReader {
     this.buffer = this.buffer.slice(length);
 
     return result;
+  }
+
+  async readBytes(length: number): Promise<Uint8Array> {
+    return this.read(length, false);
+  }
+
+  async tryReadBytes(length: number): Promise<Uint8Array | null> {
+    return this.read(length, true);
   }
 }
