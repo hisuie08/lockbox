@@ -4,14 +4,16 @@ import { encryptFileToStream } from "./encrypt";
 import { getJwkThumbprint } from "../key/validate";
 import {
   ALGORITHMS,
+  CHUNK_HEADER_LAYOUT,
   DEFAULT_CHUNK_SIZE,
   ENCRYPTED_FILE_MIMETYPE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
+  PREAMBLE_LAYOUT,
 } from "../constants";
 import { BufferedWriter } from "../bufferio/bufferWriter";
 import type { EncryptedFileHeader } from "../types";
-import { createHeader, writeHeader } from "./header";
+import { createEncryptedFileHeader, writeFileHeader } from "./header";
 import { encryptChunk, writeChunk } from "./chunk";
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {
@@ -26,7 +28,7 @@ describe("encryptStream", () => {
       await crypto.subtle.exportKey("jwk", recipient.publicKey),
     );
 
-    const result = await createHeader({
+    const result = await createEncryptedFileHeader({
       filename: file.name,
       filetype: file.type,
       fileSize: file.size,
@@ -74,7 +76,7 @@ describe("encryptStream", () => {
         createdAt: "2025-01-01T00:00:00.000Z",
       };
 
-      await writeHeader(writer, header);
+      await writeFileHeader(writer, header);
       await writer.close();
 
       const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
@@ -87,14 +89,14 @@ describe("encryptStream", () => {
 
       expect(bytes[signatureBytes.length]).toBe(FORMAT_VERSION);
 
-      const view = new DataView(bytes.buffer, signatureBytes.length + 1, 4);
+      const view = new DataView(bytes.buffer, PREAMBLE_LAYOUT.HEADER_OFFSET);
 
       const headerLength = view.getUint32(0);
 
       const headerJson = new TextDecoder().decode(
         bytes.slice(
-          signatureBytes.length + 5,
-          signatureBytes.length + 5 + headerLength,
+          PREAMBLE_LAYOUT.HEADER_OFFSET,
+          PREAMBLE_LAYOUT.HEADER_OFFSET + headerLength,
         ),
       );
 
@@ -122,8 +124,8 @@ describe("writeChunk", () => {
 
     const view = new DataView(bytes.buffer);
 
-    expect(view.getUint32(0)).toBe(ciphertext.length);
-    expect(view.getUint32(4)).toBe(iv.length);
+    expect(view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET)).toBe(ciphertext.length);
+    expect(view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET)).toBe(iv.length);
 
     expect(Array.from(bytes.slice(8, 11))).toEqual([1, 2, 3]);
 

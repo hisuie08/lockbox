@@ -5,20 +5,8 @@ import { genKeyPair } from "../key/keyPair";
 import type { EncryptedFileHeader } from "../types";
 import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
 import { genSalt } from "../utils/random";
-/** 
- * EncryptedFileHeaderの例
-{
-    "algorithm":"X25519-HKDF-SHA256-AES-256-GCM",
-    "chunkSize":4194304,"ephemeralPublicKey":"lC-0Gly3MYuZp3kkV-ASUkIbILLMiLJ41LKIIKhUCWY",
-    "recipientThumbprint":"mxnMrq3aT8VXivoKr-ofKDzDfDOYGM0nQ6hRz3AnWVA",
-    "originalName":"test.txt",
-    "hkdfSalt":"FjjzJUJzL29IVwbnOVWMoigAguCIaIz5i3H4zSTmhIM",
-    "originalType":"",
-    "originalSize":0,
-    "createdAt":"2026-07-08T10:37:10.686Z"
-}
-*/
-export async function createHeader(input: {
+
+export async function createEncryptedFileHeader(input: {
   filename: string;
   filetype: string;
   fileSize: number;
@@ -60,7 +48,7 @@ export async function createHeader(input: {
 
 const encoder = new TextEncoder();
 
-export async function writeHeader(
+export async function writeFileHeader(
   writer: WritableStreamDefaultWriter<Uint8Array>,
   header: EncryptedFileHeader,
 ): Promise<void> {

@@ -5,7 +5,7 @@ import {
   UnexpectedCryptoError,
 } from "../errors";
 import { getJwkThumbprint } from "../key/validate";
-import { createHeader, writeHeader } from "./header";
+import { createEncryptedFileHeader, writeFileHeader } from "./header";
 import { encryptChunk, writeChunk } from "./chunk";
 
 export abstract class EncryptionError extends Error {
@@ -38,7 +38,7 @@ export async function encryptFileToStream(input: {
 
     // 暗号化ヘッダーを生成して先頭へ書き込む
     const publicJwk = await crypto.subtle.exportKey("jwk", input.publicKey);
-    const { aesKey, header } = await createHeader({
+    const { aesKey, header } = await createEncryptedFileHeader({
       ...input,
       recipientPublicKey: input.publicKey,
       recipientThumbprint: await getJwkThumbprint(publicJwk),
@@ -46,7 +46,7 @@ export async function encryptFileToStream(input: {
       chunkSize,
     });
 
-    await writeHeader(input.writer, header);
+    await writeFileHeader(input.writer, header);
 
     const reader = input.source.getReader();
 

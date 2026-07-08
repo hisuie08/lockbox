@@ -1,3 +1,4 @@
+import { CHUNK_HEADER_LAYOUT, CHUNK_HEADER_LENGTHS } from "../constants";
 import { OutputWriteError, UnexpectedCryptoError } from "../errors";
 import { genIv } from "../utils/random";
 
@@ -36,11 +37,11 @@ export async function writeChunk(
   },
 ): Promise<void> {
   try {
-    const header = new Uint8Array(8);
+    const header = new Uint8Array(CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH+CHUNK_HEADER_LENGTHS.IV_LENGTH);
     const view = new DataView(header.buffer);
 
-    view.setUint32(0, chunk.ciphertext.length);
-    view.setUint32(4, chunk.iv.length);
+    view.setUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET, chunk.ciphertext.length);
+    view.setUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET, chunk.iv.length);
 
     await writer.write(header);
     await writer.write(chunk.iv);

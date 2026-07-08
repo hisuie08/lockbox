@@ -1,5 +1,5 @@
 import { BufferedReader } from "../bufferio/bufferReader";
-import { BYTE_LENGTHS, FILE_SIGNATURE, FORMAT_VERSION } from "../constants";
+import { PREAMBLE_LENGTHS, FILE_SIGNATURE, FORMAT_VERSION } from "../constants";
 import type { EncryptedFileHeader } from "../types";
 import {
   InvalidFileSignatureError,
@@ -13,20 +13,22 @@ export async function readHeader(
   reader: BufferedReader,
 ): Promise<EncryptedFileHeader> {
   const signature = decoder.decode(
-    await reader.readBytes(BYTE_LENGTHS.FILE_SIGNATURE),
+    await reader.readBytes(PREAMBLE_LENGTHS.FILE_SIGNATURE),
   );
 
   if (signature !== FILE_SIGNATURE) {
     throw new InvalidFileSignatureError();
   }
 
-  const version = (await reader.readBytes(BYTE_LENGTHS.FORMAT_VERSION))[0];
+  const version = (await reader.readBytes(PREAMBLE_LENGTHS.FORMAT_VERSION))[0];
 
   if (version !== FORMAT_VERSION) {
     throw new UnsupportedVersionError(version);
   }
 
-  const headerLengthBytes = await reader.readBytes(BYTE_LENGTHS.HEADER_LENGTH);
+  const headerLengthBytes = await reader.readBytes(
+    PREAMBLE_LENGTHS.HEADER_LENGTH,
+  );
 
   const headerLength = new DataView(headerLengthBytes.buffer).getUint32(0);
 

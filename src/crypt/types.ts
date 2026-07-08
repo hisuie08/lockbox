@@ -1,3 +1,16 @@
+/** 
+ * EncryptedFileHeaderの例
+{
+    "algorithm":"X25519-HKDF-SHA256-AES-256-GCM",
+    "chunkSize":4194304,"ephemeralPublicKey":"lC-0Gly3MYuZp3kkV-ASUkIbILLMiLJ41LKIIKhUCWY",
+    "recipientThumbprint":"mxnMrq3aT8VXivoKr-ofKDzDfDOYGM0nQ6hRz3AnWVA",
+    "originalName":"test.txt",
+    "hkdfSalt":"FjjzJUJzL29IVwbnOVWMoigAguCIaIz5i3H4zSTmhIM",
+    "originalType":"",
+    "originalSize":0,
+    "createdAt":"2026-07-08T10:37:10.686Z"
+}
+*/
 export type EncryptedFileHeader = {
   algorithm: string;
   chunkSize: number;

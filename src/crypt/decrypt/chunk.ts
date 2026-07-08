@@ -1,4 +1,5 @@
 import type { BufferedReader } from "../bufferio/bufferReader";
+import { CHUNK_HEADER_LAYOUT, CHUNK_HEADER_LENGTHS } from "../constants";
 import { UnexpectedCryptoError } from "../errors";
 import type { ChunkHeader } from "../types";
 import { CorruptedFileError } from "./errors";
@@ -31,7 +32,9 @@ export async function decryptChunk(input: {
 export async function readChunkHeader(
   reader: BufferedReader,
 ): Promise<ChunkHeader | null> {
-  const bytes = await reader.tryReadBytes(8);
+  const bytes = await reader.tryReadBytes(
+    CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH + CHUNK_HEADER_LENGTHS.IV_LENGTH,
+  );
 
   if (!bytes) {
     return null;
@@ -40,7 +43,7 @@ export async function readChunkHeader(
   const view = new DataView(bytes.buffer);
 
   return {
-    length: view.getUint32(0),
-    ivLength: view.getUint32(4),
+    length: view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET),
+    ivLength: view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET),
   };
 }

@@ -16,7 +16,7 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
-import { writeHeader } from "../encrypt/header";
+import { writeFileHeader } from "../encrypt/header";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -51,7 +51,7 @@ describe("getEncryptedFileHeader", () => {
 
     const writer = buffer.stream.getWriter();
 
-    await writeHeader(writer, header);
+    await writeFileHeader(writer, header);
     await writer.close();
 
     const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
