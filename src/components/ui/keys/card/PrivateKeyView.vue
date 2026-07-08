@@ -18,13 +18,13 @@ import {
 
 import { Edit2Icon, MoreHorizontal, TrashIcon } from "lucide-vue-next";
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/base/dialog";
+import { Dialog, DialogContent } from "@/components/base/dialog";
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import EditDialog from "./EditDialog.vue";
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
 }>();
-const isOpen = ref(false);
+const editDialog = ref(false);
 </script>
 <template>
   <div class="grid">
@@ -40,49 +40,40 @@ const isOpen = ref(false);
         <InputGroupInput :model-value="keys.privateKeyThumbprint" readonly />
 
         <InputGroupAddon align="inline-end">
-          <Dialog>
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <InputGroupButton
-                  variant="ghost"
-                  size="icon-xs"
-                  class="border-0"
-                >
-                  <MoreHorizontal />
-                </InputGroupButton>
-              </DropdownMenuTrigger>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <InputGroupButton variant="ghost" size="icon-xs" class="border-0">
+                <MoreHorizontal />
+              </InputGroupButton>
+            </DropdownMenuTrigger>
 
-              <DropdownMenuContent
-                align="end"
-                :side-offset="8"
-                :align-offset="-4"
+            <DropdownMenuContent
+              align="end"
+              :side-offset="8"
+              :align-offset="-4"
+            >
+              <DropdownMenuItem @select="editDialog = true">
+                <Edit2Icon />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                variant="destructive"
+                @select="keys.clearPrivateKey"
               >
-                <DialogTrigger as-child>
-                  <DropdownMenuItem @select="isOpen = true">
-                    <Edit2Icon />
-                    Edit
-                  </DropdownMenuItem>
-                </DialogTrigger>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  variant="destructive"
-                  @select="keys.clearPrivateKey"
-                >
-                  <TrashIcon />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DialogContent>
-              <EditDialog
-                :keyType="'private'"
-                :callback="keys.importPrivateJwk"
-              />
-            </DialogContent>
-          </Dialog>
+                <TrashIcon />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </InputGroupAddon>
       </InputGroup>
     </label>
+    <Dialog v-model:open="editDialog">
+      <DialogContent>
+        <EditDialog :keyType="'private'" :callback="keys.importPrivateJwk"
+      /></DialogContent>
+    </Dialog>
   </div>
 </template>

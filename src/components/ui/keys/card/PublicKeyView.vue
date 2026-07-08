@@ -26,7 +26,7 @@ import {
 import { Dialog, DialogContent, DialogTrigger } from "@/components/base/dialog";
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import { useShareLink } from "@/composables/useShareLink";
-import { useClipboard } from "@vueuse/core";
+import { useClipboard, useShare } from "@vueuse/core";
 import { toast } from "vue-sonner";
 import EditDialog from "./EditDialog.vue";
 const props = defineProps<{
@@ -43,6 +43,8 @@ function sharePublicKey() {
   copy(link);
   toast.info("share link was copied");
 }
+
+const share = useShare();
 </script>
 <template>
   <div class="grid">
@@ -58,58 +60,48 @@ function sharePublicKey() {
       <InputGroup>
         <InputGroupInput :model-value="keys.publicKeyThumbprint" readonly />
         <InputGroupAddon align="inline-end">
-          <Dialog>
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <InputGroupButton
-                  variant="ghost"
-                  size="icon-xs"
-                  class="border-0"
-                >
-                  <MoreHorizontal />
-                </InputGroupButton>
-              </DropdownMenuTrigger>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <InputGroupButton variant="ghost" size="icon-xs" class="border-0">
+                <MoreHorizontal />
+              </InputGroupButton>
+            </DropdownMenuTrigger>
 
-              <DropdownMenuContent
-                align="end"
-                :side-offset="8"
-                :align-offset="-4"
+            <DropdownMenuContent
+              align="end"
+              :side-offset="8"
+              :align-offset="-4"
+            >
+              <DropdownMenuItem @select="isOpen = true">
+                <Edit2Icon />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                :disabled="!keys.publicKey.value"
+                @select="sharePublicKey"
               >
-                <DialogTrigger as-child>
-                  <DropdownMenuItem @select="isOpen = true">
-                    <Edit2Icon />
-                    Edit
-                  </DropdownMenuItem>
-                </DialogTrigger>
+                <Share2Icon />
+                Share Link
+              </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  :disabled="!keys.publicKey.value"
-                  @select="sharePublicKey"
-                >
-                  <Share2Icon />
-                  Share Link
-                </DropdownMenuItem>
+              <DropdownMenuSeparator />
 
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  variant="destructive"
-                  @select="keys.clearPublicKey"
-                >
-                  <TrashIcon />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DialogContent>
-              <EditDialog
-                :keyType="'public'"
-                :callback="keys.importPublicJwk"
-              />
-            </DialogContent>
-          </Dialog>
+              <DropdownMenuItem
+                variant="destructive"
+                @select="keys.clearPublicKey"
+              >
+                <TrashIcon />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </InputGroupAddon>
       </InputGroup>
     </label>
+    <Dialog v-model:open="isOpen" modal>
+      <DialogContent>
+        <EditDialog :keyType="'public'" :callback="keys.importPublicJwk" />
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

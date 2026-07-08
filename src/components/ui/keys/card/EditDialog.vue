@@ -9,7 +9,7 @@ import ErrorView from "../../alerts/ErrorView.vue";
 import { Input } from "@/components/base/input";
 import { Textarea } from "@/components/base/textarea";
 import { Button } from "@/components/base/button";
-import { DialogClose } from "@/components/base/dialog/index.ts";
+import { DialogClose } from "@/components/base/dialog";
 const props = defineProps<{
   keyType: "public" | "private";
   callback: (jwk: JsonWebKey, withPub?: boolean) => Promise<void>;
