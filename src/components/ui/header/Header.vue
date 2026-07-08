@@ -3,19 +3,20 @@ import { MoonIcon, ShieldCheck, SunIcon } from "@lucide/vue";
 import Github from "./Github.vue";
 import { useColorMode } from "@vueuse/core";
 
-import { ref } from "vue";
-import { Separator } from "@/components/base/separator/index.ts";
+import { Separator } from "@/components/base/separator";
+import {
+  ENCRYPTION_ALGORITHM,
+  KEY_DERIVATION_ALGORITHM,
+  KEY_EXCHANGE_ALGORITHM,
+} from "@/crypt/constants.ts";
 
 defineProps<{
   publicKey: CryptoKey | null;
   privateKey: CryptoKey | null;
 }>();
 const mode = useColorMode({ initialValue: "auto" });
-const current = ref(0);
-const modes: Array<typeof mode.value> = ["light", "dark"];
 function changeColorMode() {
-  current.value += 1;
-  mode.value = modes[current.value % modes.length];
+  mode.value = mode.value == "light" ? "dark" : "light";
 }
 </script>
 
@@ -33,7 +34,10 @@ function changeColorMode() {
         <a href="/">
           <div>
             <h1 class="text-2xl font-semibold tracking-normal">Lockbox(α版)</h1>
-            <p class="text-sm text-muted-foreground">X25519-HKDF + AES-GCM</p>
+            <p class="text-sm text-muted-foreground">
+              {{ KEY_EXCHANGE_ALGORITHM }}-{{ KEY_DERIVATION_ALGORITHM }} +
+              {{ ENCRYPTION_ALGORITHM }}
+            </p>
           </div>
         </a>
       </div>

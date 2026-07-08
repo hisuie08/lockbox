@@ -77,19 +77,11 @@ function cancel() {
         </div>
 
         <div class="grid gap-2">
-          <DownloadKeyBtn
-            :gen-key="pubKey"
-            :key-text="JSON.stringify(pubKey.jwk.value)"
-            file-name="lockbox-public-key.jwk.json"
-            :callback-saved="pubKey.setSaved"
+          <DownloadKeyBtn :gen-key="pubKey"
             >公開鍵をダウンロード</DownloadKeyBtn
           >
 
-          <DownloadKeyBtn
-            :gen-key="privKey"
-            :key-text="JSON.stringify(privKey.jwk.value)"
-            file-name="lockbox-private-key.jwk.json"
-            :callback-saved="privKey.setSaved"
+          <DownloadKeyBtn :gen-key="privKey"
             >秘密鍵をダウンロード</DownloadKeyBtn
           >
         </div>

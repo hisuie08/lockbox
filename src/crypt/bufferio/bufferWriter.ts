@@ -15,7 +15,7 @@ export class BufferedWriter {
   toBlob(type: string): Blob {
     return new Blob(this.chunks as BlobPart[], { type });
   }
-
+  // テスト用
   toFile(filename: string, filetype: string): File {
     return new File(this.chunks as BlobPart[], filename, {
       type: filetype,
