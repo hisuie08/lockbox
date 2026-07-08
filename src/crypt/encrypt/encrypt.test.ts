@@ -1,12 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { genKeyPair } from "../key/keyPair";
-import {
-  createHeader,
-  encryptChunk,
-  encryptFileToStream,
-  writeChunk,
-  writeHeader,
-} from "./encrypt";
+import { encryptFileToStream } from "./encrypt";
 import { getJwkThumbprint } from "../key/validate";
 import {
   ALGORITHMS,
@@ -17,6 +11,8 @@ import {
 } from "../constants";
 import { BufferedWriter } from "../bufferio/bufferWriter";
 import type { EncryptedFileHeader } from "../types";
+import { createHeader, writeHeader } from "./header";
+import { encryptChunk, writeChunk } from "./chunk";
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
@@ -177,59 +173,58 @@ describe("encryptFileToStream", () => {
       Array.from(signature),
     );
   });
-});
+  test("encrypts empty file", async () => {
+    const { publicKey } = await genKeyPair();
 
-test("encrypts empty file", async () => {
-  const { publicKey } = await genKeyPair();
+    const buffer = new BufferedWriter();
 
-  const buffer = new BufferedWriter();
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.close();
+      },
+    });
 
-  const source = new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.close();
-    },
-  });
+    let progress = 0;
 
-  let progress = 0;
-
-  await encryptFileToStream({
-    filename: "empty.txt",
-    filetype: "text/plain",
-    fileSize: 0,
-    source,
-    publicKey,
-    writer: buffer.stream.getWriter(),
-    onProgress(value) {
-      progress = value;
-    },
-    onSaved: () => {},
-  });
-
-  expect(progress).toBe(1);
-  expect(buffer.size).toBeGreaterThan(0);
-});
-
-test("throws when source read fails", async () => {
-  const { publicKey } = await genKeyPair();
-
-  const source = new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.error(new Error("boom"));
-    },
-  });
-
-  const buffer = new BufferedWriter();
-
-  await expect(
-    encryptFileToStream({
-      filename: "test.txt",
+    await encryptFileToStream({
+      filename: "empty.txt",
       filetype: "text/plain",
-      fileSize: 1,
+      fileSize: 0,
       source,
       publicKey,
       writer: buffer.stream.getWriter(),
-      onProgress() {},
+      onProgress(value) {
+        progress = value;
+      },
       onSaved: () => {},
-    }),
-  ).rejects.toThrow();
+    });
+
+    expect(progress).toBe(1);
+    expect(buffer.size).toBeGreaterThan(0);
+  });
+
+  test("throws when source read fails", async () => {
+    const { publicKey } = await genKeyPair();
+
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(new Error("boom"));
+      },
+    });
+
+    const buffer = new BufferedWriter();
+
+    await expect(
+      encryptFileToStream({
+        filename: "test.txt",
+        filetype: "text/plain",
+        fileSize: 1,
+        source,
+        publicKey,
+        writer: buffer.stream.getWriter(),
+        onProgress() {},
+        onSaved: () => {},
+      }),
+    ).rejects.toThrow();
+  });
 });

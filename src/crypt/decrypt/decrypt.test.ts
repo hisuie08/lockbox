@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { getEncryptedFileHeader, decryptFileToStream } from "./decrypt";
+import { decryptFileToStream, getEncryptedFileHeader } from "./decrypt";
 import { UnexpectedEofError } from "../bufferio/bufferReader";
 import {
   CorruptedFileError,
@@ -9,12 +9,14 @@ import {
 } from "./errors";
 import { BufferedWriter } from "../bufferio/bufferWriter";
 import { genKeyPair } from "../key/keyPair";
-import { encryptFileToStream, writeHeader } from "../encrypt/encrypt";
+import { encryptFileToStream } from "../encrypt/encrypt";
 import {
+  ALGORITHMS,
   ENCRYPTED_FILE_MIMETYPE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
+import { writeHeader } from "../encrypt/header";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -36,7 +38,7 @@ describe("getEncryptedFileHeader", () => {
     const buffer = new BufferedWriter();
 
     const header = {
-      algorithm: "X25519-HKDF-SHA-256-AES-GCM-256",
+      algorithm: ALGORITHMS,
       chunkSize: 65536,
       ephemeralPublicKey: "pub",
       recipientThumbprint: "thumb",

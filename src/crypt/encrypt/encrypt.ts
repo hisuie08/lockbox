@@ -1,20 +1,12 @@
-import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
-import {
-  ALGORITHMS,
-  DEFAULT_CHUNK_SIZE,
-  FILE_SIGNATURE,
-  FORMAT_VERSION,
-} from "../constants";
-import type { EncryptedFileHeader } from "../types";
+import { ALGORITHMS, DEFAULT_CHUNK_SIZE } from "../constants";
 import {
   InputReadError,
   OutputWriteError,
   UnexpectedCryptoError,
 } from "../errors";
-import { genKeyPair } from "../key/keyPair";
-import { deriveContentEncryptionKey } from "../key/kdf";
 import { getJwkThumbprint } from "../key/validate";
-import { genIv, genSalt } from "../utils/random";
+import { createHeader, writeHeader } from "./header";
+import { encryptChunk, writeChunk } from "./chunk";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;
@@ -26,115 +18,8 @@ export abstract class EncryptionError extends Error {
   }
 }
 
-const encoder = new TextEncoder();
 // X25519-HKDF: 鍵交換
 //AES-GCM: ファイル本体暗号化鍵
-
-export async function createHeader(input: {
-  filename: string;
-  filetype: string;
-  fileSize: number;
-  algorithm: string;
-  recipientPublicKey: CryptoKey;
-  recipientThumbprint: string;
-  createdAt?: string;
-  chunkSize: number;
-}): Promise<{
-  header: EncryptedFileHeader;
-  aesKey: CryptoKey;
-}> {
-  const ephemeral = await genKeyPair();
-  const ephemeralPubRaw = new Uint8Array(
-    await crypto.subtle.exportKey("raw", ephemeral.publicKey),
-  );
-  const salt = genSalt();
-  const aesKey = await deriveContentEncryptionKey(
-    input.recipientPublicKey,
-    ephemeral.privateKey,
-    salt,
-  );
-
-  return {
-    aesKey,
-    header: {
-      algorithm: input.algorithm,
-      chunkSize: input.chunkSize,
-      ephemeralPublicKey: bytesToBase64Url(ephemeralPubRaw),
-      recipientThumbprint: input.recipientThumbprint,
-      originalName: input.filename,
-      hkdfSalt: bytesToBase64Url(salt),
-      originalType: input.filetype,
-      originalSize: input.fileSize,
-      createdAt: input.createdAt ?? new Date().toISOString(),
-    },
-  };
-}
-
-export async function encryptChunk(
-  content: Uint8Array,
-  aesKey: CryptoKey,
-): Promise<{
-  iv: Uint8Array;
-  ciphertext: Uint8Array;
-}> {
-  try {
-    const iv = genIv();
-    const encrypted = await crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv,
-      },
-      aesKey,
-      content as BufferSource,
-    );
-
-    return {
-      iv,
-      ciphertext: new Uint8Array(encrypted),
-    };
-  } catch (error) {
-    throw new UnexpectedCryptoError(error);
-  }
-}
-
-export async function writeHeader(
-  writer: WritableStreamDefaultWriter<Uint8Array>,
-  header: EncryptedFileHeader,
-): Promise<void> {
-  try {
-    const headerJson = JSON.stringify(header);
-    const headerBytes = encoder.encode(headerJson);
-
-    await writer.write(encoder.encode(FILE_SIGNATURE));
-    await writer.write(Uint8Array.of(FORMAT_VERSION));
-    await writer.write(uint32ToBytes(headerBytes.length));
-    await writer.write(headerBytes);
-  } catch (error) {
-    throw new OutputWriteError("Failed to write encrypted output.", error);
-  }
-}
-
-export async function writeChunk(
-  writer: WritableStreamDefaultWriter<Uint8Array>,
-  chunk: {
-    iv: Uint8Array;
-    ciphertext: Uint8Array;
-  },
-): Promise<void> {
-  try {
-    const header = new Uint8Array(8);
-    const view = new DataView(header.buffer);
-
-    view.setUint32(0, chunk.ciphertext.length);
-    view.setUint32(4, chunk.iv.length);
-
-    await writer.write(header);
-    await writer.write(chunk.iv);
-    await writer.write(chunk.ciphertext);
-  } catch (error) {
-    throw new OutputWriteError("Failed to write encrypted output.", error);
-  }
-}
 
 export async function encryptFileToStream(input: {
   filename: string;
@@ -150,6 +35,8 @@ export async function encryptFileToStream(input: {
   try {
     const chunkSize = DEFAULT_CHUNK_SIZE;
     let processedBytes = 0;
+
+    // 暗号化ヘッダーを生成して先頭へ書き込む
     const publicJwk = await crypto.subtle.exportKey("jwk", input.publicKey);
     const { aesKey, header } = await createHeader({
       ...input,
@@ -163,8 +50,12 @@ export async function encryptFileToStream(input: {
 
     const reader = input.source.getReader();
 
+    // reader.read()は勝手なサイズで返してくる
+    // そこでストリームをチャンクサイズに合わせて自分で切りそろえる
+    // チャンク境界をまたぐ端数データを保持する
     let pending = new Uint8Array(0);
 
+    // 入力ストリームを順次読み込みながら暗号化する
     while (true) {
       let result;
 
@@ -183,6 +74,7 @@ export async function encryptFileToStream(input: {
       processedBytes += value.length;
       input.onProgress(processedBytes / input.fileSize);
 
+      // 前回の端数と今回読み込んだデータを結合する
       const merged = new Uint8Array(pending.length + value.length);
 
       merged.set(pending);
@@ -190,6 +82,7 @@ export async function encryptFileToStream(input: {
 
       let offset = 0;
 
+      // 完全なチャンク単位で暗号化して出力する
       while (merged.length - offset >= chunkSize) {
         const chunk = merged.slice(offset, offset + chunkSize);
 
@@ -200,20 +93,26 @@ export async function encryptFileToStream(input: {
         offset += chunkSize;
       }
 
+      // 次回処理する端数を保持する
       pending = merged.slice(offset);
     }
-    // 空ファイルでも完全性保護のため空チャンクを1つ保存する
+
+    // 最後に残った端数を暗号化する。
+    // 空ファイルでも完全性保護のため空チャンクを1つ保存する。
     if (pending.length > 0 || processedBytes === 0) {
       const encrypted = await encryptChunk(pending, aesKey);
       await writeChunk(input.writer, encrypted);
     }
+
+    // 出力ストリームを正常終了する
     input.onProgress(1);
     try {
       await input.writer.close();
-      input.onSaved(true);
     } catch (error) {
+      await input.writer.abort(error);
       throw new OutputWriteError("Failed to write encrypted output.", error);
     }
+    input.onSaved(true);
   } catch (error) {
     if (error instanceof EncryptionError) {
       throw error;
