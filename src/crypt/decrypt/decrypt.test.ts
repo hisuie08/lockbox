@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { decryptFileToStream, getEncryptedFileHeader } from "./decrypt";
+import { decryptFile, getEncryptedFileHeader } from "./decrypt";
 import { UnexpectedEofError } from "./byteReader";
 import {
   CorruptedFileError,
@@ -120,7 +120,7 @@ describe("decryptFileToStream", () => {
 
     const decryptedBuffer = new BufferedWriter();
 
-    const header = await decryptFileToStream({
+    const header = await decryptFile({
       source: streamFromChunks([encryptedBytes]),
       privateKey: recipient.privateKey,
       writer: decryptedBuffer.stream.getWriter(),
@@ -160,7 +160,7 @@ describe("decryptFileToStream", () => {
     );
 
     await expect(
-      decryptFileToStream({
+      decryptFile({
         source: streamFromChunks([encryptedBytes]),
         privateKey: recipientB.privateKey,
         writer: new BufferedWriter().stream.getWriter(),
@@ -193,7 +193,7 @@ describe("decryptFileToStream", () => {
     encryptedBytes[encryptedBytes.length - 1] ^= 1;
 
     await expect(
-      decryptFileToStream({
+      decryptFile({
         source: streamFromChunks([encryptedBytes]),
         privateKey: recipient.privateKey,
         writer: new BufferedWriter().stream.getWriter(),
@@ -225,7 +225,7 @@ describe("decryptFileToStream", () => {
 
     const decryptedBuffer = new BufferedWriter();
 
-    await decryptFileToStream({
+    await decryptFile({
       source: streamFromChunks([encryptedBytes]),
       privateKey: recipient.privateKey,
       writer: decryptedBuffer.stream.getWriter(),

@@ -107,10 +107,15 @@ export async function readChunkHeader(
 }
 
 export async function getEncryptedFileHeader(input: {
-  source: ReadableStream<Uint8Array>;
+  source: Uint8Array | ReadableStream<Uint8Array>;
 }): Promise<EncryptedFileHeader> {
+  let reader: ByteReader;
   try {
-    const reader = new StreamBufferedReader(input.source);
+    if (input.source instanceof ReadableStream) {
+      reader = new StreamBufferedReader(input.source);
+    } else {
+      reader = new ArrayBufferByteReader(input.source);
+    }
     return await readHeader(reader);
   } catch (error) {
     if (error instanceof DecryptionError || InputReadError) {
@@ -121,7 +126,7 @@ export async function getEncryptedFileHeader(input: {
   }
 }
 
-export async function decryptFileToStream(input: {
+export async function decryptFile(input: {
   source: Uint8Array | ReadableStream<Uint8Array>;
   privateKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;

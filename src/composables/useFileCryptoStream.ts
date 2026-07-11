@@ -1,7 +1,7 @@
 import { reactive, computed, toRefs, ref, watchEffect } from "vue";
 import type { useStreamSupport } from "./useStreamSupport";
 import {
-  decryptFileToStream,
+  decryptFile,
   DecryptionError,
   ENCRYPTED_FILE_MIMETYPE,
   encryptFile,
@@ -200,7 +200,7 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
 
       const { writer, buffer } = await fileCrypt.createOutputWriter(filename);
 
-      await decryptFileToStream({
+      await decryptFile({
         ...input,
         writer,
       });

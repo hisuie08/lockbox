@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { decryptFileToStream } from "./decrypt/decrypt";
+import { decryptFile } from "./decrypt/decrypt";
 import { encryptFile } from "./encrypt/encrypt";
 import { genKeyPair } from "./key/keyPair";
 import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
@@ -116,7 +116,7 @@ describe("encrypt file stream round trip", () => {
         onSaved: () => {},
       });
 
-      const decryptPromise = decryptFileToStream({
+      const decryptPromise = decryptFile({
         source: pipe.readable,
         privateKey: keyPair.privateKey,
         writer: hashWriter.stream.getWriter(),
@@ -155,7 +155,7 @@ describe("encrypt file stream round trip", () => {
       onSaved: () => {},
     });
 
-    const decryptPromise = decryptFileToStream({
+    const decryptPromise = decryptFile({
       source: pipe.readable,
       privateKey: keyPair.privateKey,
       writer: hashWriter.stream.getWriter(),
@@ -189,7 +189,7 @@ describe("encrypt file stream round trip", () => {
     const encryptedFile = encrypted.toFile("enc.bin", ENCRYPTED_FILE_MIMETYPE);
 
     await expect(
-      decryptFileToStream({
+      decryptFile({
         source: encryptedFile.stream(),
         privateKey: otherKeyPair.privateKey,
         writer: new HashWriter().stream.getWriter(),
@@ -222,7 +222,7 @@ describe("encrypt file stream round trip", () => {
     const tamperedFile = new File([bytes], "tampered.bin");
 
     await expect(
-      decryptFileToStream({
+      decryptFile({
         source: tamperedFile.stream(),
         privateKey: keyPair.privateKey,
         writer: new HashWriter().stream.getWriter(),
@@ -254,7 +254,7 @@ describe("encrypt file stream round trip", () => {
     const tamperedFile = new File([bytes], "tampered.bin");
 
     await expect(
-      decryptFileToStream({
+      decryptFile({
         source: tamperedFile.stream(),
         privateKey: keyPair.privateKey,
         writer: new HashWriter().stream.getWriter(),
