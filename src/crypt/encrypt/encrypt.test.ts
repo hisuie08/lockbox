@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { genKeyPair } from "../key/keyPair";
 import { encryptFileToStream } from "./encrypt";
-import { getJwkThumbprint } from "../key/validate";
 import {
   ALGORITHMS,
   CHUNK_HEADER_LAYOUT,
@@ -13,8 +12,12 @@ import {
 } from "../constants";
 import { BufferedWriter } from "../bufferio/bufferWriter";
 import type { EncryptedFileHeader } from "../types";
-import { createEncryptedFileHeader, writeFileHeader } from "./header";
-import { encryptChunk, writeChunk } from "./chunk";
+import {
+  createEncryptedFileHeader,
+  writeFileHeader,
+  encryptChunk,
+  writeChunk,
+} from "./encrypt";
 
 async function blobToBytes(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
@@ -24,18 +27,13 @@ describe("encryptStream", () => {
   const file = new File([] as BlobPart[], "test.txt");
   test("creates valid header", async () => {
     const recipient = await genKeyPair();
-    const thumbprint = await getJwkThumbprint(
-      await crypto.subtle.exportKey("jwk", recipient.publicKey),
-    );
 
     const result = await createEncryptedFileHeader({
       filename: file.name,
       filetype: file.type,
       fileSize: file.size,
       recipientPublicKey: recipient.publicKey,
-      recipientThumbprint: thumbprint,
       algorithm: ALGORITHMS,
-      chunkSize: DEFAULT_CHUNK_SIZE,
     });
 
     expect(result.header.algorithm).toBe(ALGORITHMS);

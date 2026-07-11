@@ -16,7 +16,7 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
-import { writeFileHeader } from "../encrypt/header";
+import { writeFileHeader } from "../encrypt/encrypt";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({

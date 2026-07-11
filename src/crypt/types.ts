@@ -23,6 +23,13 @@ export type EncryptedFileHeader = {
   createdAt: string;
 };
 
+export type EncodedFileHeader = {
+  signature: Uint8Array;
+  version: Uint8Array;
+  headerLength: Uint8Array;
+  headerBytes: Uint8Array;
+};
+
 // 8バイト整数
 // 最初の4バイト: コンテンツ本文の長さ
 // 後半の4バイト: Ivの長さ
