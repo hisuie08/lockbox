@@ -21,6 +21,8 @@ export abstract class EncryptionError extends Error {
 // X25519-HKDF: 鍵交換
 //AES-GCM: ファイル本体暗号化鍵
 
+export async function encryptFile(){}
+
 export async function encryptFileToStream(input: {
   filename: string;
   filetype: string;

@@ -110,10 +110,11 @@ describe("writeChunk", () => {
     const buffer = new BufferedWriter();
     const writer = buffer.stream.getWriter();
 
-    const iv = new Uint8Array([1, 2, 3]);
     const ciphertext = new Uint8Array([4, 5, 6, 7]);
+    const iv = new Uint8Array([1, 2, 3]);
 
     await writeChunk(writer, {
+      header: new Uint8Array([0, 0, 0, 4, 0, 0, 0, 3]),
       iv,
       ciphertext,
     });
@@ -124,7 +125,9 @@ describe("writeChunk", () => {
 
     const view = new DataView(bytes.buffer);
 
-    expect(view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET)).toBe(ciphertext.length);
+    expect(view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET)).toBe(
+      ciphertext.length,
+    );
     expect(view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET)).toBe(iv.length);
 
     expect(Array.from(bytes.slice(8, 11))).toEqual([1, 2, 3]);

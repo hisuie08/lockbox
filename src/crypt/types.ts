@@ -30,3 +30,9 @@ export interface ChunkHeader {
   length: number;
   ivLength: number;
 }
+
+export type EncryptedChunk = {
+  header: Uint8Array;
+  iv: Uint8Array;
+  ciphertext: Uint8Array;
+};
