@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { decryptFileToStream, getEncryptedFileHeader } from "./decrypt";
-import { UnexpectedEofError } from "../bufferio/bufferReader";
+import { UnexpectedEofError } from "./byteReader";
 import {
   CorruptedFileError,
   InvalidFileSignatureError,

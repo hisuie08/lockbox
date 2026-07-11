@@ -1,7 +1,18 @@
 import { base64UrlToArrayBuffer } from "../utils/encoding";
-import type { EncryptedFileHeader } from "../types";
-import { DecryptionError, InvalidPrivateKeyError } from "./errors";
-import { BufferedReader } from "../bufferio/bufferReader";
+import type { ChunkHeader, EncryptedFileHeader } from "../types";
+import {
+  CorruptedFileError,
+  DecryptionError,
+  InvalidFileSignatureError,
+  InvalidHeaderError,
+  InvalidPrivateKeyError,
+  UnsupportedVersionError,
+} from "./errors";
+import {
+  ArrayBufferByteReader,
+  StreamBufferedReader,
+  type ByteReader,
+} from "./byteReader";
 import {
   InputReadError,
   OutputWriteError,
@@ -9,15 +20,97 @@ import {
 } from "../errors";
 import { deriveContentEncryptionKey } from "../key/kdf";
 import { getJwkThumbprint } from "../key/validate";
-import { readHeader } from "./header";
-import { decryptChunk, readChunkHeader } from "./chunk";
+import {
+  CHUNK_HEADER_LAYOUT,
+  CHUNK_HEADER_LENGTHS,
+  FILE_SIGNATURE,
+  FORMAT_VERSION,
+  PREAMBLE_LENGTHS,
+} from "../constants";
+import { _SHA224 } from "@noble/hashes/sha2.js";
+const decoder = new TextDecoder();
+
+export async function readHeader(
+  reader: ByteReader,
+): Promise<EncryptedFileHeader> {
+  const signature = decoder.decode(
+    await reader.readBytes(PREAMBLE_LENGTHS.FILE_SIGNATURE),
+  );
+
+  if (signature !== FILE_SIGNATURE) {
+    throw new InvalidFileSignatureError();
+  }
+
+  const version = (await reader.readBytes(PREAMBLE_LENGTHS.FORMAT_VERSION))[0];
+
+  if (version !== FORMAT_VERSION) {
+    throw new UnsupportedVersionError(version);
+  }
+
+  const headerLengthBytes = await reader.readBytes(
+    PREAMBLE_LENGTHS.HEADER_LENGTH,
+  );
+
+  const headerLength = new DataView(headerLengthBytes.buffer).getUint32(0);
+
+  const headerBytes = await reader.readBytes(headerLength);
+
+  try {
+    return JSON.parse(decoder.decode(headerBytes)) as EncryptedFileHeader;
+  } catch (error) {
+    throw new InvalidHeaderError(error);
+  }
+}
+
+export async function decryptChunk(input: {
+  iv: Uint8Array;
+  ciphercontent: Uint8Array;
+  aesKey: CryptoKey;
+}): Promise<Uint8Array> {
+  try {
+    const content = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: input.iv as BufferSource,
+      },
+      input.aesKey,
+      input.ciphercontent as BufferSource,
+    );
+
+    return new Uint8Array(content);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "OperationError") {
+      throw new CorruptedFileError(error);
+    }
+
+    throw new UnexpectedCryptoError(error);
+  }
+}
+
+export async function readChunkHeader(
+  reader: ByteReader,
+): Promise<ChunkHeader | null> {
+  const bytes = await reader.tryReadBytes(
+    CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH + CHUNK_HEADER_LENGTHS.IV_LENGTH,
+  );
+
+  if (!bytes) {
+    return null;
+  }
+
+  const view = new DataView(bytes.buffer);
+
+  return {
+    length: view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET),
+    ivLength: view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET),
+  };
+}
 
 export async function getEncryptedFileHeader(input: {
   source: ReadableStream<Uint8Array>;
 }): Promise<EncryptedFileHeader> {
   try {
-    const streamReader = input.source.getReader();
-    const reader = new BufferedReader(streamReader);
+    const reader = new StreamBufferedReader(input.source);
     return await readHeader(reader);
   } catch (error) {
     if (error instanceof DecryptionError || InputReadError) {
@@ -29,15 +122,19 @@ export async function getEncryptedFileHeader(input: {
 }
 
 export async function decryptFileToStream(input: {
-  source: ReadableStream<Uint8Array>;
+  source: Uint8Array | ReadableStream<Uint8Array>;
   privateKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;
   onProgress: (progress: number) => void;
   onSaved: (saved: boolean) => void;
 }): Promise<EncryptedFileHeader> {
+  let reader: ByteReader;
   try {
-    const streamReader = input.source.getReader();
-    const reader = new BufferedReader(streamReader);
+    if (input.source instanceof ReadableStream) {
+      reader = new StreamBufferedReader(input.source);
+    } else {
+      reader = new ArrayBufferByteReader(input.source);
+    }
 
     const header = await readHeader(reader);
 
