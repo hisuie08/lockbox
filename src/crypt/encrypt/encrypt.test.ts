@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { genKeyPair } from "../key/keyPair";
-import { encryptFileToStream } from "./encrypt";
+import { encryptFile } from "./encrypt";
 import {
   ALGORITHMS,
   CHUNK_HEADER_LAYOUT,
@@ -152,7 +152,7 @@ describe("encryptFileToStream", () => {
 
     let progress = 0;
 
-    await encryptFileToStream({
+    await encryptFile({
       filename: "hello.txt",
       filetype: "text/plain",
       fileSize: inputBytes.length,
@@ -189,7 +189,7 @@ describe("encryptFileToStream", () => {
 
     let progress = 0;
 
-    await encryptFileToStream({
+    await encryptFile({
       filename: "empty.txt",
       filetype: "text/plain",
       fileSize: 0,
@@ -218,7 +218,7 @@ describe("encryptFileToStream", () => {
     const buffer = new BufferedWriter();
 
     await expect(
-      encryptFileToStream({
+      encryptFile({
         filename: "test.txt",
         filetype: "text/plain",
         fileSize: 1,

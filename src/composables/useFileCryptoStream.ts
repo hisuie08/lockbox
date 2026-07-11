@@ -4,7 +4,7 @@ import {
   decryptFileToStream,
   DecryptionError,
   ENCRYPTED_FILE_MIMETYPE,
-  encryptFileToStream,
+  encryptFile,
   EncryptionError,
   getEncryptedFileHeader,
   type EncryptedFileHeader,
@@ -117,7 +117,7 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
       };
       const filename = `${file.name}.enc`;
       const { writer, buffer } = await fileCrypt.createOutputWriter(filename);
-      await encryptFileToStream({ ...input, writer });
+      await encryptFile({ ...input, writer });
       if (buffer) {
         downloadBlob(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE), filename);
       }

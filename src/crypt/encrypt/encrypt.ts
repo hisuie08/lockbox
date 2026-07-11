@@ -6,11 +6,7 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
-import {
-  InputReadError,
-  OutputWriteError,
-  UnexpectedCryptoError,
-} from "../errors";
+import { OutputWriteError, UnexpectedCryptoError } from "../errors";
 import type {
   EncodedFileHeader,
   EncryptedChunk,
@@ -21,7 +17,11 @@ import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
 import { deriveContentEncryptionKey } from "../key/kdf";
 import { genKeyPair } from "../key/keyPair";
 import { getJwkThumbprint } from "../key/validate";
-import { StreamChunkReader } from "./chunkReader";
+import {
+  ArrayBufferChunkReader,
+  StreamChunkReader,
+  type ChunkReader,
+} from "./chunkReader";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;
@@ -153,17 +153,18 @@ export async function writeChunk(
   }
 }
 
-export async function encryptFileToStream(input: {
+export async function encryptFile(input: {
   filename: string;
   filetype: string;
   fileSize: number;
-  source: ReadableStream<Uint8Array>;
+  source: Uint8Array | ReadableStream<Uint8Array>;
   publicKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;
   onProgress: (progress: number) => void;
   onSaved: (saved: boolean) => void;
   createdAt?: string;
 }): Promise<void> {
+  let reader: ChunkReader;
   try {
     let processedBytes = 0;
 
@@ -176,7 +177,11 @@ export async function encryptFileToStream(input: {
 
     await writeFileHeader(input.writer, header);
 
-    const reader = new StreamChunkReader(input.source);
+    if (input.source instanceof ReadableStream) {
+      reader = new StreamChunkReader(input.source);
+    } else {
+      reader = new ArrayBufferChunkReader(input.source);
+    }
 
     while (true) {
       const chunk = await reader.readChunk();

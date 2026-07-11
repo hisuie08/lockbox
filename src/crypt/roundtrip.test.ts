@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { decryptFileToStream } from "./decrypt/decrypt";
-import { encryptFileToStream } from "./encrypt/encrypt";
+import { encryptFile } from "./encrypt/encrypt";
 import { genKeyPair } from "./key/keyPair";
 import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -105,7 +105,7 @@ describe("encrypt file stream round trip", () => {
 
       const hashWriter = new HashWriter();
 
-      const encryptPromise = encryptFileToStream({
+      const encryptPromise = encryptFile({
         source: createSource(),
         filename: "test.bin",
         filetype: ENCRYPTED_FILE_MIMETYPE,
@@ -144,7 +144,7 @@ describe("encrypt file stream round trip", () => {
   test("empty file roundtrip", async () => {
     const hashWriter = new HashWriter();
 
-    const encryptPromise = encryptFileToStream({
+    const encryptPromise = encryptFile({
       source: createLargeStream(0),
       filename: "empty.bin",
       filetype: ENCRYPTED_FILE_MIMETYPE,
@@ -175,7 +175,7 @@ describe("encrypt file stream round trip", () => {
 
     const encrypted = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       source: createLargeStream(100),
       filename: "test.bin",
       filetype: ENCRYPTED_FILE_MIMETYPE,
@@ -202,7 +202,7 @@ describe("encrypt file stream round trip", () => {
   test("detects tampered ciphertext", async () => {
     const encrypted = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       source: createLargeStream(1000),
       filename: "test.bin",
       filetype: ENCRYPTED_FILE_MIMETYPE,
@@ -234,7 +234,7 @@ describe("encrypt file stream round trip", () => {
   test("detects tampered empty file", async () => {
     const encrypted = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       source: createLargeStream(0),
       filename: "test.bin",
       filetype: ENCRYPTED_FILE_MIMETYPE,

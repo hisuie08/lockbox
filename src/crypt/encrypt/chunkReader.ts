@@ -1,6 +1,7 @@
 import { DEFAULT_CHUNK_SIZE } from "../constants";
 import { InputReadError } from "../errors";
 
+// チャンク単位で読み込む
 export interface ChunkReader {
   readChunk(): Promise<Uint8Array | null>;
 }

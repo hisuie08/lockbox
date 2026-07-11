@@ -9,7 +9,7 @@ import {
 } from "./errors";
 import { BufferedWriter } from "../bufferio/bufferWriter";
 import { genKeyPair } from "../key/keyPair";
-import { encryptFileToStream } from "../encrypt/encrypt";
+import { encryptFile } from "../encrypt/encrypt";
 import {
   ALGORITHMS,
   ENCRYPTED_FILE_MIMETYPE,
@@ -103,7 +103,7 @@ describe("decryptFileToStream", () => {
 
     const encryptedBuffer = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       filename: "test.txt",
       filetype: "text/plain",
       fileSize: plaintext.length,
@@ -144,7 +144,7 @@ describe("decryptFileToStream", () => {
 
     const encryptedBuffer = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       filename: "test.txt",
       filetype: "text/plain",
       fileSize: 4,
@@ -175,7 +175,7 @@ describe("decryptFileToStream", () => {
 
     const encryptedBuffer = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       filename: "test.txt",
       filetype: "text/plain",
       fileSize: 4,
@@ -208,7 +208,7 @@ describe("decryptFileToStream", () => {
 
     const encryptedBuffer = new BufferedWriter();
 
-    await encryptFileToStream({
+    await encryptFile({
       filename: "empty.txt",
       filetype: "text/plain",
       fileSize: 0,
