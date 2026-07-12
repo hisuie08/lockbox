@@ -47,13 +47,14 @@ function onFileChange(_: number, event: Event) {
       />
       <div
         v-if="files.fileToProcess.value && files.originFile.value"
-        class="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm"
+        class="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm whitespace-nowrap overflow-hidden text-ellipsis w-full"
       >
-        <span class="truncate">{{ files.fileToProcess.value.name }}</span>
-        <span class="shrink-0 text-muted-foreground">
-          {{ formatBytes(files.originFile.value.originalSize) }}
+        <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{
+          files.fileToProcess.value.name ?? "AAAAAAAAAAAAAAAAAAAAAAAA"
+        }}</span>
+        <span class="ml-3 shrink-0 text-muted-foreground">
+          {{ formatBytes(files.fileToProcess.value.size) }}
         </span>
-        <span>{{ files.originFile.value.originalName }}</span>
       </div>
       <FileIndicator
         v-if="props.files.fileToProcess.value"
