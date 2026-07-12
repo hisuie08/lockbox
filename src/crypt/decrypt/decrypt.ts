@@ -15,7 +15,6 @@ import {
   UnexpectedCryptoError,
 } from "../errors";
 import { deriveContentEncryptionKey } from "../key/kdf";
-import { getJwkThumbprint } from "../key/validate";
 import {
   CHUNK_HEADER_LAYOUT,
   CHUNK_HEADER_LENGTHS,
@@ -24,6 +23,7 @@ import {
   PREAMBLE_LENGTHS,
 } from "../constants";
 import { _SHA224 } from "@noble/hashes/sha2.js";
+import { getJwkThumbprint } from "../key/validate";
 const decoder = new TextDecoder();
 
 export async function readHeader(
@@ -56,6 +56,29 @@ export async function readHeader(
   } catch (error) {
     throw new InvalidHeaderError(error);
   }
+}
+
+async function prepareAESKey(
+  header: EncryptedFileHeader,
+  privateKey: CryptoKey,
+) {
+  const myThumbprint = await getJwkThumbprint(privateKey);
+  if (myThumbprint !== header.recipientThumbprint) {
+    throw new InvalidPrivateKeyError();
+  }
+  const ephemeralPubKey = await crypto.subtle.importKey(
+    "raw",
+    base64UrlToArrayBuffer(header.ephemeralPublicKey),
+    { name: "X25519" },
+    true,
+    [],
+  );
+  const aesKey = await deriveContentEncryptionKey(
+    ephemeralPubKey,
+    privateKey,
+    new Uint8Array(base64UrlToArrayBuffer(header.hkdfSalt)),
+  );
+  return aesKey;
 }
 
 export async function decryptChunk(input: {
@@ -128,32 +151,13 @@ export async function decryptFile(input: {
     const reader = createByteReader(input.source);
 
     const header = await readHeader(reader);
-
+    const aesKey = await prepareAESKey(header, input.privateKey);
     let writtenBytes = 0;
-    const ephemeralPubKey = await crypto.subtle.importKey(
-      "raw",
-      base64UrlToArrayBuffer(header.ephemeralPublicKey),
-      { name: "X25519" },
-      true,
-      [],
-    );
-    const myThumbprint = await getJwkThumbprint(input.privateKey);
-    if (myThumbprint !== header.recipientThumbprint) {
-      throw new InvalidPrivateKeyError();
-    }
-    const aesKey = await deriveContentEncryptionKey(
-      ephemeralPubKey,
-      input.privateKey,
-      new Uint8Array(base64UrlToArrayBuffer(header.hkdfSalt)),
-    );
-
     while (true) {
       const chunkHeader = await readChunkHeader(reader);
-
       if (!chunkHeader) {
         break;
       }
-
       const iv = await reader.readBytes(chunkHeader.ivLength);
 
       const ciphertext = await reader.readBytes(chunkHeader.length);
@@ -174,6 +178,8 @@ export async function decryptFile(input: {
 
       input.onProgress(writtenBytes / header.originalSize);
     }
+
+    // 出力ストリーム正常終了
     input.onProgress(1);
     try {
       await input.writer.close();
@@ -181,13 +187,11 @@ export async function decryptFile(input: {
     } catch (error) {
       throw new OutputWriteError("Failed to write decrypted output.", error);
     }
-
     return header;
   } catch (error) {
     if (error instanceof DecryptionError || InputReadError) {
       throw error;
     }
-
     throw new UnexpectedCryptoError(error);
   }
 }

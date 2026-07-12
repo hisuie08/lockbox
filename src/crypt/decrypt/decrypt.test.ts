@@ -4,6 +4,7 @@ import { UnexpectedEofError } from "./byteReader";
 import {
   CorruptedFileError,
   InvalidFileSignatureError,
+  InvalidHeaderError,
   InvalidPrivateKeyError,
   UnsupportedVersionError,
 } from "./errors";
@@ -17,6 +18,7 @@ import {
   FORMAT_VERSION,
 } from "../constants";
 import { writeFileHeader } from "../encrypt/encrypt";
+import { uint32ToBytes } from "../utils/encoding";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -91,6 +93,26 @@ describe("getEncryptedFileHeader", () => {
 
     await expect(getEncryptedFileHeader({ source })).rejects.toThrow(
       UnsupportedVersionError,
+    );
+  });
+  test("rejects invalid header", async () => {
+    const buffer = new BufferedWriter();
+    const writer = buffer.stream.getWriter();
+    const encoder = new TextEncoder();
+    // valid premable
+    await writer.write(encoder.encode(FILE_SIGNATURE));
+    await writer.write(Uint8Array.of(FORMAT_VERSION));
+    // invalid header
+    const headerJson = "}" + JSON.stringify({});
+    const headerBytes = encoder.encode(headerJson);
+    await writer.write(uint32ToBytes(headerBytes.length));
+    await writer.write(headerBytes);
+    await writer.close();
+
+    const bytes = await blobToBytes(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE));
+    const source = streamFromChunks([bytes]);
+    await expect(getEncryptedFileHeader({ source })).rejects.toThrow(
+      InvalidHeaderError,
     );
   });
 });
