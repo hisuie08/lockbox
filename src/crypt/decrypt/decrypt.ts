@@ -26,7 +26,7 @@ import { _SHA224 } from "@noble/hashes/sha2.js";
 import { getJwkThumbprint } from "../key/validate";
 const decoder = new TextDecoder();
 
-export async function readHeader(
+export async function readFileHeader(
   reader: ByteReader,
 ): Promise<EncryptedFileHeader> {
   const signature = decoder.decode(
@@ -81,9 +81,25 @@ async function prepareAESKey(
   return aesKey;
 }
 
-export async function decryptChunk(input: {
+async function readChunkHeader(
+  reader: ByteReader,
+): Promise<ChunkHeader | null> {
+  const bytes = await reader.tryReadBytes(
+    CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH + CHUNK_HEADER_LENGTHS.IV_LENGTH,
+  );
+  if (!bytes) {
+    return null;
+  }
+  const view = new DataView(bytes.buffer);
+  return {
+    length: view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET),
+    ivLength: view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET),
+  };
+}
+
+async function decryptChunk(input: {
   iv: Uint8Array;
-  ciphercontent: Uint8Array;
+  ciphertext: Uint8Array;
   aesKey: CryptoKey;
 }): Promise<Uint8Array> {
   try {
@@ -93,7 +109,7 @@ export async function decryptChunk(input: {
         iv: input.iv as BufferSource,
       },
       input.aesKey,
-      input.ciphercontent as BufferSource,
+      input.ciphertext as BufferSource,
     );
 
     return new Uint8Array(content);
@@ -106,23 +122,21 @@ export async function decryptChunk(input: {
   }
 }
 
-export async function readChunkHeader(
-  reader: ByteReader,
-): Promise<ChunkHeader | null> {
-  const bytes = await reader.tryReadBytes(
-    CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH + CHUNK_HEADER_LENGTHS.IV_LENGTH,
-  );
-
-  if (!bytes) {
+type Chunk = {
+  header: ChunkHeader;
+  iv: Uint8Array;
+  ciphertext: Uint8Array;
+};
+async function readChunk(reader: ByteReader): Promise<Chunk | null> {
+  const chunkHeader = await readChunkHeader(reader);
+  if (chunkHeader == null) {
     return null;
   }
-
-  const view = new DataView(bytes.buffer);
-
-  return {
-    length: view.getUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET),
-    ivLength: view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET),
-  };
+  const [iv, ciphertext] = await Promise.all([
+    reader.readBytes(chunkHeader.ivLength),
+    reader.readBytes(chunkHeader.length),
+  ]);
+  return { header: chunkHeader, iv, ciphertext };
 }
 
 export async function getEncryptedFileHeader(input: {
@@ -130,7 +144,7 @@ export async function getEncryptedFileHeader(input: {
 }): Promise<EncryptedFileHeader> {
   try {
     const reader = createByteReader(input.source);
-    return await readHeader(reader);
+    return await readFileHeader(reader);
   } catch (error) {
     if (error instanceof DecryptionError || InputReadError) {
       throw error;
@@ -149,33 +163,21 @@ export async function decryptFile(input: {
 }): Promise<EncryptedFileHeader> {
   try {
     const reader = createByteReader(input.source);
-
-    const header = await readHeader(reader);
+    const header = await readFileHeader(reader);
     const aesKey = await prepareAESKey(header, input.privateKey);
     let writtenBytes = 0;
     while (true) {
-      const chunkHeader = await readChunkHeader(reader);
-      if (!chunkHeader) {
+      const chunk = await readChunk(reader);
+      if (!chunk) {
         break;
       }
-      const iv = await reader.readBytes(chunkHeader.ivLength);
-
-      const ciphertext = await reader.readBytes(chunkHeader.length);
-
-      const plaintext = await decryptChunk({
-        iv,
-        ciphercontent: ciphertext,
-        aesKey,
-      });
-
+      const plaintext = await decryptChunk({ ...chunk, aesKey });
       try {
         await input.writer.write(plaintext);
       } catch (error) {
         throw new OutputWriteError("Failed to write decrypted output.", error);
       }
-
       writtenBytes += plaintext.length;
-
       input.onProgress(writtenBytes / header.originalSize);
     }
 
