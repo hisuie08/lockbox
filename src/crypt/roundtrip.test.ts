@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { decryptFile } from "./decrypt/decrypt";
-import { encryptFile } from "./encrypt/encrypt";
+import { encryptFile } from "./encrypt";
 import { genKeyPair } from "./key/keyPair";
 import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
 import { sha256 } from "@noble/hashes/sha2.js";
