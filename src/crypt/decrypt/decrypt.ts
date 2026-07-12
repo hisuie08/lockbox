@@ -132,10 +132,8 @@ async function readChunk(reader: ByteReader): Promise<Chunk | null> {
   if (chunkHeader == null) {
     return null;
   }
-  const [iv, ciphertext] = await Promise.all([
-    reader.readBytes(chunkHeader.ivLength),
-    reader.readBytes(chunkHeader.length),
-  ]);
+  const iv = await reader.readBytes(chunkHeader.ivLength);
+  const ciphertext = await reader.readBytes(chunkHeader.length);
   return { header: chunkHeader, iv, ciphertext };
 }
 
@@ -162,10 +160,10 @@ export async function decryptFile(input: {
   onSaved: (saved: boolean) => void;
 }): Promise<EncryptedFileHeader> {
   try {
+    let writtenBytes = 0;
     const reader = createByteReader(input.source);
     const header = await readFileHeader(reader);
     const aesKey = await prepareAESKey(header, input.privateKey);
-    let writtenBytes = 0;
     while (true) {
       const chunk = await readChunk(reader);
       if (!chunk) {
