@@ -8,11 +8,7 @@ import {
   InvalidPrivateKeyError,
   UnsupportedVersionError,
 } from "./errors";
-import {
-  ArrayBufferByteReader,
-  StreamBufferedReader,
-  type ByteReader,
-} from "./byteReader";
+import { createByteReader, type ByteReader } from "./byteReader";
 import {
   InputReadError,
   OutputWriteError,
@@ -109,13 +105,8 @@ export async function readChunkHeader(
 export async function getEncryptedFileHeader(input: {
   source: Uint8Array | ReadableStream<Uint8Array>;
 }): Promise<EncryptedFileHeader> {
-  let reader: ByteReader;
   try {
-    if (input.source instanceof ReadableStream) {
-      reader = new StreamBufferedReader(input.source);
-    } else {
-      reader = new ArrayBufferByteReader(input.source);
-    }
+    const reader = createByteReader(input.source);
     return await readHeader(reader);
   } catch (error) {
     if (error instanceof DecryptionError || InputReadError) {
@@ -133,13 +124,8 @@ export async function decryptFile(input: {
   onProgress: (progress: number) => void;
   onSaved: (saved: boolean) => void;
 }): Promise<EncryptedFileHeader> {
-  let reader: ByteReader;
   try {
-    if (input.source instanceof ReadableStream) {
-      reader = new StreamBufferedReader(input.source);
-    } else {
-      reader = new ArrayBufferByteReader(input.source);
-    }
+    const reader = createByteReader(input.source);
 
     const header = await readHeader(reader);
 

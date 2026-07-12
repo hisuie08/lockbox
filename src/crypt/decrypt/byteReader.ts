@@ -9,7 +9,15 @@ export interface ByteReader {
   tryReadBytes(length: number): Promise<Uint8Array | null>;
 }
 
-export class StreamBufferedReader implements ByteReader {
+export function createByteReader(
+  source: Uint8Array | ReadableStream<Uint8Array>,
+): ByteReader {
+  return source instanceof ReadableStream
+    ? new StreamByteReader(source)
+    : new ArrayBufferByteReader(source);
+}
+
+export class StreamByteReader implements ByteReader {
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
 
   private buffer = new Uint8Array(0);

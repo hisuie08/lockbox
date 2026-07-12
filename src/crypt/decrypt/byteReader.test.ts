@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ArrayBufferByteReader, StreamBufferedReader } from "./byteReader";
+import { ArrayBufferByteReader, StreamByteReader } from "./byteReader";
 
 function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -13,7 +13,7 @@ function streamFromChunks(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
 }
 
 const createStreamReader = (chunks: Uint8Array[]) =>
-  new StreamBufferedReader(streamFromChunks(chunks));
+  new StreamByteReader(streamFromChunks(chunks));
 
 const createArrayBufferReader = (chunks: Uint8Array[]) => {
   const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
