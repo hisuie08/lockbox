@@ -6,6 +6,14 @@ export interface ChunkReader {
   readChunk(): Promise<Uint8Array | null>;
 }
 
+export function createChunkReader(
+  source: Uint8Array | ReadableStream<Uint8Array>,
+) {
+  return source instanceof ReadableStream
+    ? new StreamChunkReader(source)
+    : new ArrayBufferChunkReader(source);
+}
+
 export class StreamChunkReader implements ChunkReader {
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
   // reader.read()は勝手なサイズで返してくる

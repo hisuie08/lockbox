@@ -17,11 +17,7 @@ import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
 import { deriveContentEncryptionKey } from "../key/kdf";
 import { genKeyPair } from "../key/keyPair";
 import { getJwkThumbprint } from "../key/validate";
-import {
-  ArrayBufferChunkReader,
-  StreamChunkReader,
-  type ChunkReader,
-} from "./chunkReader";
+import { createChunkReader } from "./chunkReader";
 
 export abstract class EncryptionError extends Error {
   override cause?: unknown;
@@ -164,7 +160,6 @@ export async function encryptFile(input: {
   onSaved: (saved: boolean) => void;
   createdAt?: string;
 }): Promise<void> {
-  let reader: ChunkReader;
   try {
     let processedBytes = 0;
 
@@ -176,13 +171,7 @@ export async function encryptFile(input: {
     });
 
     await writeFileHeader(input.writer, header);
-
-    if (input.source instanceof ReadableStream) {
-      reader = new StreamChunkReader(input.source);
-    } else {
-      reader = new ArrayBufferChunkReader(input.source);
-    }
-
+    const reader = createChunkReader(input.source);
     while (true) {
       const chunk = await reader.readChunk();
       if (chunk === null) {
