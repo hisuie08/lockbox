@@ -35,13 +35,8 @@ onload = async () => {
 <template>
   <div>
     <main class="min-h-dvh bg-background text-foreground">
-      <div
-        class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-5 sm:px-6 lg:px-8"
-      >
-        <Header
-          :publicKey="keys.publicKey.value"
-          :privateKey="keys.privateKey.value"
-        />
+      <Header :publicKey="keys.publicKey.value" :privateKey="keys.privateKey.value" />
+      <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-5 sm:px-6 lg:px-8">
         <AlertStreamNotSupported v-if="!streamSupported.isSupported" />
         <section class="grid gap-6 lg:grid-cols-[0.3fr_0.9fr]">
           <KeyControlCard :keys="keys" />

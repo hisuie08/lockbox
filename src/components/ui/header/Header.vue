@@ -22,14 +22,10 @@ const base = document.baseURI;
 </script>
 
 <template>
-  <header
-    class="flex flex-col gap-4 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between px-2"
-  >
+  <header class="px-4 py-2 flex flex-col gap-4 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center justify-between w-full">
       <div class="flex items-center gap-3">
-        <div
-          class="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm"
-        >
+        <div class="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
           <ShieldCheck aria-hidden="true" class="size-5" />
         </div>
         <a :href="base">
@@ -43,11 +39,10 @@ const base = document.baseURI;
         </a>
       </div>
       <div class="flex space-x-2 h-7">
-        <div class="inline w-8 h-auto p-0.5" @click="changeColorMode">
+        <div class="flex items-center p-0.5" @click="changeColorMode">
           <SunIcon class="w-full h-full" v-if="mode == 'light'" />
           <MoonIcon class="w-full h-full" v-if="mode == 'dark'" />
         </div>
-
         <Separator orientation="vertical" />
         <Github class="inline w-8 h-auto" />
       </div>
@@ -56,17 +51,13 @@ const base = document.baseURI;
     <div class="grid grid-cols-2 gap-2 text-sm sm:flex sm:items-center">
       <div class="flex rounded-md border border-border bg-card px-3 py-2">
         <span class="text-muted-foreground pr-1.5">Public </span>
-        <span
-          :class="publicKey ? 'font-medium text-emerald-700' : 'font-medium'"
-        >
+        <span :class="publicKey ? 'font-medium text-emerald-700' : 'font-medium'">
           {{ publicKey ? "Loaded" : "Empty" }}
         </span>
       </div>
       <div class="flex rounded-md border border-border bg-card px-3 py-2">
         <span class="text-muted-foreground pr-1.5">Private </span>
-        <span
-          :class="privateKey ? 'font-medium text-emerald-700' : 'font-medium'"
-        >
+        <span :class="privateKey ? 'font-medium text-emerald-700' : 'font-medium'">
           {{ privateKey ? "Loaded" : "Empty" }}
         </span>
       </div>
