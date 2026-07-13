@@ -38,8 +38,8 @@ const { genLink } = useShareLink();
 const { copy } = useClipboard();
 
 function sharePublicKey() {
-  if (!props.keys.publicJwk.value) return;
-  const link = genLink(props.keys.publicJwk.value);
+  if (!props.keys.public.jwk.value) return;
+  const link = genLink(props.keys.public.jwk.value as JsonWebKey);
   copy(link);
   toast.info("share link was copied");
 }
@@ -50,13 +50,13 @@ function sharePublicKey() {
       <span class="text-sm font-medium">
         公開鍵
 
-        <span v-if="keys.publicKey.value" class="ml-1 text-green-700">
+        <span v-if="keys.public.key.value" class="ml-1 text-green-700">
           Loaded
         </span>
       </span>
 
       <InputGroup>
-        <InputGroupInput :model-value="keys.publicKeyThumbprint" readonly />
+        <InputGroupInput :model-value="keys.public.thumbprint" readonly />
         <InputGroupAddon align="inline-end">
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
@@ -75,7 +75,7 @@ function sharePublicKey() {
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                :disabled="!keys.publicKey.value"
+                :disabled="!keys.public.key.value"
                 @select="sharePublicKey"
               >
                 <Share2Icon />

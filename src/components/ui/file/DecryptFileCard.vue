@@ -42,7 +42,7 @@ function onFileChange(_: number, event: Event) {
       </div>
       <FileInput
         :files="files"
-        :crypto-key="keys.privateKey.value"
+        :crypto-key="keys.private.key.value"
         :callback="onFileChange"
       />
       <div
@@ -62,8 +62,8 @@ function onFileChange(_: number, event: Event) {
       />
       <ActionButton
         :files="files"
-        :crypto-key="keys.privateKey.value"
-        :on-click="() => files.decryptSelectedFile(keys.privateKey.value)"
+        :crypto-key="keys.private.key.value"
+        :on-click="() => files.decryptSelectedFile(keys.private.key.value)"
         label="復号化"
       />
     </CardContent>

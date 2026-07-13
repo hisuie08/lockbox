@@ -31,13 +31,13 @@ const editDialog = ref(false);
     <label class="grid gap-2">
       <span class="text-sm font-medium">
         秘密鍵
-        <span v-if="keys.privateKey.value" class="ml-1 text-green-700">
+        <span v-if="keys.private.key.value" class="ml-1 text-green-700">
           Loaded
         </span>
       </span>
 
       <InputGroup>
-        <InputGroupInput :model-value="keys.privateKeyThumbprint" readonly />
+        <InputGroupInput :model-value="keys.private.thumbprint" readonly />
 
         <InputGroupAddon align="inline-end">
           <DropdownMenu>
