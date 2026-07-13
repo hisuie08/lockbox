@@ -1,4 +1,6 @@
-export abstract class DecryptionError extends Error {
+import { FileCryptoError } from "../errors";
+
+export abstract class DecryptionError extends FileCryptoError {
   override cause?: unknown;
 
   constructor(message: string, cause?: unknown) {
