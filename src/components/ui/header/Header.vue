@@ -18,6 +18,7 @@ const mode = useColorMode({ initialValue: "auto" });
 function changeColorMode() {
   mode.value = mode.value == "light" ? "dark" : "light";
 }
+const base = document.baseURI;
 </script>
 
 <template>
@@ -31,7 +32,7 @@ function changeColorMode() {
         >
           <ShieldCheck aria-hidden="true" class="size-5" />
         </div>
-        <a href="/">
+        <a :href="base">
           <div>
             <h1 class="text-2xl font-semibold tracking-normal">Lockbox(α版)</h1>
             <p class="text-sm text-muted-foreground">
