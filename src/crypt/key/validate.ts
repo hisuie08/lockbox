@@ -1,9 +1,10 @@
+import type { KeyAgreementKeyType } from "../types";
 import { arrayBufferToBase64Url, isBase64Url } from "../utils/encoding";
 import { KeyParseError } from "./errors";
 export type X25519JwkValidationResult =
   | {
       valid: true;
-      keyType: "public" | "private";
+      keyType:KeyAgreementKeyType;
       jwk: JsonWebKey;
     }
   | {

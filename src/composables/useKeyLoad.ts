@@ -2,17 +2,16 @@ import { reactive, computed, toRefs } from "vue";
 import {
   parseJwk,
   validateX25519Jwk,
+  type KeyAgreementKeyType,
   type X25519JwkValidationResult,
 } from "@/crypt";
-
-export type TypeKeyFor = "public" | "private";
 
 type LoadKeyState = {
   jwk: X25519JwkValidationResult | null;
   error: string;
 };
 
-export function useKeyLoad(keyType: TypeKeyFor) {
+export function useKeyLoad(keyType: KeyAgreementKeyType) {
   const state = reactive<LoadKeyState>({
     jwk: null,
     error: "",

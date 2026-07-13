@@ -10,8 +10,9 @@ import { Input } from "@/components/base/input";
 import { Textarea } from "@/components/base/textarea";
 import { Button } from "@/components/base/button";
 import { DialogClose } from "@/components/base/dialog";
+import type { KeyAgreementKeyType } from "@/crypt";
 const props = defineProps<{
-  keyType: "public" | "private";
+  keyType: KeyAgreementKeyType;
   callback: (jwk: JsonWebKey, withPub?: boolean) => Promise<void>;
 }>();
 const { isValid, validJwk, loadKeyFile, loadKeyString, error } = useKeyLoad(

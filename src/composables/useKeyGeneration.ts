@@ -1,8 +1,10 @@
+import type { KeyAgreementKeyType } from "@/crypt";
 import { downloadText } from "@/lib/download";
 import { useClipboard } from "@vueuse/core";
 import { ref } from "vue";
 import { toast } from "vue-sonner";
-export function useKeyGeneration(keyType: "public" | "private") {
+
+export function useKeyGeneration(keyType:KeyAgreementKeyType) {
   const { copied, copy: _copy } = useClipboard();
   const jwk = ref<JsonWebKey | null>(null);
   const isSaved = ref(false);
