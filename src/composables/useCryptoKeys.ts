@@ -2,7 +2,6 @@ import { ref, computed } from "vue";
 import {
   exportAsJwk,
   importJwk,
-  getJwkThumbprint,
   toPublicJwk,
   type KeyAgreementKeyType,
   genKeyPair,
@@ -75,21 +74,16 @@ export function useCryptoKeys() {
   const clearPublicKey = () => clear("public");
   const clearPrivateKey = () => clear("private");
 
-  function setError(err: string) {
-    error.value = err;
-  }
 
   return {
     ...state,
     mismatchKeys,
     isGenerating,
     error,
-    getThumbPrint: getJwkThumbprint,
     clearPublicKey,
     clearPrivateKey,
     generateKeys,
     importPrivateJwk,
-    importPublicJwk,
-    setError,
+    importPublicJwk
   };
 }
