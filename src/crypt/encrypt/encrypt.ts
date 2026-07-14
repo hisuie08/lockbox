@@ -6,7 +6,7 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
-import { OutputWriteError, UnexpectedCryptoError } from "../errors";
+import { FileCryptoError, OutputWriteError, UnexpectedCryptoError } from "../errors";
 import type {
   EncodedFileHeader,
   EncryptedChunk,
@@ -19,7 +19,7 @@ import { genKeyPair } from "../key/keyPair";
 import { getJwkThumbprint } from "../key/validate";
 import { createChunkReader } from "./chunkReader";
 
-export abstract class EncryptionError extends Error {
+export abstract class EncryptionError extends FileCryptoError {
   override cause?: unknown;
 
   constructor(message: string, cause?: unknown) {

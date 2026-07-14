@@ -1,149 +1,101 @@
-import { reactive, ref, computed, watchEffect, toRefs } from "vue";
+import { ref, computed } from "vue";
 import {
   exportAsJwk,
-  genKeyPair,
   importJwk,
-  getJwkThumbprint,
   toPublicJwk,
-  KeyPairError,
+  type KeyAgreementKeyType,
+  genKeyPair,
 } from "@/crypt";
+import { useWithErrors } from "./useWithErrors";
+import { createKeyState, type KeyState } from "./useKeyState";
 
-type CryptoKeyState = {
-  publicKey: CryptoKey | null;
-  privateKey: CryptoKey | null;
-  publicJwk: JsonWebKey | null;
-  privateJwk: JsonWebKey | null;
-  isGenerating: boolean;
-  error: string | null;
+export type KeyHandle = KeyState & {
+  importJwk(jwk: JsonWebKey, withPublic?: boolean): Promise<void>;
+  clear(): void;
 };
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) {
-    return `${error.name}: ${error.message}`;
-  }
-  throw error;
-}
-
 export function useCryptoKeys() {
-  const state = reactive<CryptoKeyState>({
-    publicKey: null,
-    privateKey: null,
-    publicJwk: null,
-    privateJwk: null,
-    isGenerating: false,
-    error: null,
-  });
+  const state = {
+    public: createKeyState("public"),
+    private: createKeyState("private"),
+  };
+  const isGenerating = ref(false);
+  const { error, withKeyPairError } = useWithErrors();
 
-  const publicKeyThumbprint = ref("");
-  const privateKeyThumbprint = ref("");
-  watchEffect(async () => {
-    publicKeyThumbprint.value = state.publicJwk
-      ? await getJwkThumbprint(state.publicJwk)
-      : "";
-  });
-
-  watchEffect(async () => {
-    privateKeyThumbprint.value = state.privateJwk
-      ? await getJwkThumbprint(state.privateJwk)
-      : "";
-  });
   const mismatchKeys = computed(
     () =>
-      publicKeyThumbprint.value !== privateKeyThumbprint.value &&
-      publicKeyThumbprint.value !== "" &&
-      privateKeyThumbprint.value !== "",
+      state.public.thumbprint.value !== state.private.thumbprint.value &&
+      state.public.thumbprint.value !== "" &&
+      state.private.thumbprint.value !== "",
   );
 
+  async function genKey() {
+    isGenerating.value = true;
+    error.value = null;
+    const keyPair = await genKeyPair();
+    const [publicJwk, privateJwk] = await Promise.all([
+      exportAsJwk(keyPair.publicKey),
+      exportAsJwk(keyPair.privateKey),
+    ]);
+    isGenerating.value = false;
+    return { publicJwk, privateJwk };
+  }
+
   async function generateKeys() {
-    state.isGenerating = true;
-    state.error = null;
-
-    try {
-      const keyPair = await genKeyPair();
-
-      const [publicJwk, privateJwk] = await Promise.all([
-        exportAsJwk(keyPair.publicKey),
-        exportAsJwk(keyPair.privateKey),
-      ]);
-
-      state.isGenerating = false;
-
-      return { publicJwk, privateJwk };
-    } catch (error) {
-      state.isGenerating = false;
-
-      if (error instanceof KeyPairError) {
-        state.error = getErrorMessage(error);
+    return withKeyPairError(
+      genKey,
+      () => {
         return {
           publicJwk: null,
           privateJwk: null,
         };
-      }
-
-      throw error;
-    }
+      },
+      () => {
+        isGenerating.value = false;
+      },
+    );
   }
 
+  async function importKey(jwk: JsonWebKey, keyType: KeyAgreementKeyType) {
+    const key = await importJwk(jwk, keyType);
+    state[keyType].key.value = key;
+  }
   async function importPublicJwk(jwk: JsonWebKey) {
-    try {
-      state.publicKey = await importJwk(jwk, "public");
-      state.publicJwk = jwk;
-      state.error = null;
-    } catch (error) {
-      if (error instanceof KeyPairError) {
-        state.error = getErrorMessage(error);
-      }
-      throw error;
-    }
+    await withKeyPairError(async () => {
+      await importKey(jwk, "public");
+    });
   }
-
-  async function importPrivateJwk(
-    jwk: JsonWebKey,
-    withPublic: boolean = false,
-  ) {
-    try {
-      state.privateKey = await importJwk(jwk, "private");
-      state.privateJwk = jwk;
-      state.error = null;
+  async function importPrivateJwk(jwk: JsonWebKey, withPublic = false) {
+    await withKeyPairError(async () => {
+      await importKey(jwk, "private");
       if (withPublic) {
-        await importPublicJwk(toPublicJwk(jwk));
+        await importKey(toPublicJwk(jwk), "public");
       }
-    } catch (error) {
-      if (error instanceof KeyPairError) {
-        state.error = getErrorMessage(error);
-      }
-      throw error;
-    }
+    });
   }
 
-  function clearPublicKey() {
-    state.publicKey = null;
-    state.publicJwk = null;
-    state.error = null;
+  function clear(keyType: KeyAgreementKeyType) {
+    state[keyType].key.value = null;
+    error.value = null;
   }
 
-  function clearPrivateKey() {
-    state.privateKey = null;
-    state.privateJwk = null;
-    state.error = null;
-  }
-
-  function setError(error: string) {
-    state.error = error;
-  }
+  const publicHandle: KeyHandle = {
+    ...state.public,
+    importJwk: importPublicJwk,
+    clear: () => clear("public"),
+  };
+  const privateHandle: KeyHandle = {
+    ...state.private,
+    importJwk: importPrivateJwk,
+    clear: () => clear("private"),
+  };
 
   return {
-    ...toRefs(state),
-    state,
+    public: publicHandle,
+    private: privateHandle,
     mismatchKeys,
-    publicKeyThumbprint,
-    privateKeyThumbprint,
-    getThumbPrint: getJwkThumbprint,
-    clearPublicKey,
-    clearPrivateKey,
+    isGenerating,
+    error,
     generateKeys,
-    importPrivateJwk,
-    importPublicJwk,
-    setError,
   };
 }

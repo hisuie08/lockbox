@@ -3,10 +3,10 @@ import { Download } from "lucide-vue-next";
 import { computed, inject, type Ref } from "vue";
 import { keyIsGenerating } from "../provideKeys";
 import { Button } from "@/components/base/button";
-import type { useKeyGeneration } from "@/composables/useKeyGeneration";
+import type { GeneratedKeyHandle } from "@/composables/useKeyGeneration";
 
 const props = defineProps<{
-  genKey: ReturnType<typeof useKeyGeneration>;
+  genKey: GeneratedKeyHandle;
 }>();
 const keyText = computed(() => JSON.stringify(props.genKey.jwk.value));
 const isGenerating = inject<Ref<boolean>>(keyIsGenerating);

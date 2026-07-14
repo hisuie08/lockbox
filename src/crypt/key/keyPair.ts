@@ -1,3 +1,4 @@
+import type { KeyAgreementKeyType } from "../types";
 import { KeyExportError, KeyGenerationError, KeyImportError } from "./errors";
 
 export async function genKeyPair(): Promise<CryptoKeyPair> {
@@ -17,7 +18,7 @@ export async function exportAsJwk(key: CryptoKey): Promise<JsonWebKey> {
 }
 export async function importJwk(
   jwk: JsonWebKey,
-  keytype: "public" | "private",
+  keytype: KeyAgreementKeyType,
 ): Promise<CryptoKey> {
   const keyUsages: ReadonlyArray<KeyUsage> =
     keytype == "private" ? ["deriveBits"] : [];

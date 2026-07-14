@@ -1,15 +1,14 @@
+import type { KeyAgreementKeyType } from "@/crypt";
 import { downloadText } from "@/lib/download";
 import { useClipboard } from "@vueuse/core";
 import { ref } from "vue";
 import { toast } from "vue-sonner";
-export function useKeyGeneration(keyType: "public" | "private") {
+
+export type GeneratedKeyHandle = ReturnType<typeof createGeneratedKeyHandle>;
+function createGeneratedKeyHandle(keyType: KeyAgreementKeyType) {
   const { copied, copy: _copy } = useClipboard();
   const jwk = ref<JsonWebKey | null>(null);
   const isSaved = ref(false);
-  const isPrivate = keyType == "private";
-  function setSaved() {
-    isSaved.value = true;
-  }
   async function copy() {
     try {
       await _copy(JSON.stringify(jwk.value));
@@ -27,22 +26,20 @@ export function useKeyGeneration(keyType: "public" | "private") {
     downloadText(JSON.stringify(jwk.value), fileName);
     isSaved.value = true;
   }
-  return {
-    jwk,
-    isPrivate,
-    isSaved,
-    setSaved,
-    keyType,
-    copy,
-    copied,
-    download,
-  };
+  return { keyType, copied, jwk, isSaved, copy, download };
 }
+
 export function useKeyGenerations() {
-  const pubKey = useKeyGeneration("public");
-  const privKey = useKeyGeneration("private");
+  const pubKey = createGeneratedKeyHandle("public");
+  const privKey = createGeneratedKeyHandle("private");
+  function init() {
+    pubKey.isSaved.value = false;
+    privKey.isSaved.value = false;
+  }
+
   return {
     pubKey,
     privKey,
+    init,
   };
 }

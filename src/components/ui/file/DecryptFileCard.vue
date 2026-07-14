@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { useCryptoKeys } from "@/composables/useCryptoKeys.ts";
-import type { useFileDecrypt } from "@/composables/useFileCrypto.ts";
+import type { useFileDecrypt } from "@/composables/useFileCrypto";
 import { formatBytes } from "@/lib/unit";
 import { UnlockKeyhole } from "lucide-vue-next";
 import ActionButton from "./ActionButton.vue";
@@ -8,10 +7,11 @@ import FileHeader from "./Header.vue";
 import FileInput from "./FileInput.vue";
 import { Card, CardContent } from "@/components/base/card";
 import FileIndicator from "./FileIndicator.vue";
+import type { KeyHandle } from "@/composables/useCryptoKeys.ts";
 
 const props = defineProps<{
   files: ReturnType<typeof useFileDecrypt>;
-  keys: ReturnType<typeof useCryptoKeys>;
+  keyHandle: KeyHandle;
 }>();
 
 function onFileChange(_: number, event: Event) {
@@ -42,7 +42,7 @@ function onFileChange(_: number, event: Event) {
       </div>
       <FileInput
         :files="files"
-        :crypto-key="keys.privateKey.value"
+        :crypto-key="keyHandle.key.value"
         :callback="onFileChange"
       />
       <div
@@ -62,8 +62,8 @@ function onFileChange(_: number, event: Event) {
       />
       <ActionButton
         :files="files"
-        :crypto-key="keys.privateKey.value"
-        :on-click="() => files.decryptSelectedFile(keys.privateKey.value)"
+        :crypto-key="keyHandle.key.value"
+        :on-click="() => files.decryptSelectedFile(keyHandle.key.value)"
         label="復号化"
       />
     </CardContent>
