@@ -25,11 +25,7 @@ function onFileChange(_: number, event: Event) {
 
 <template>
   <Card class="rounded-lg">
-    <FileHeader
-      use-key="秘密鍵"
-      :max-file-size="files.maxFileSize"
-      :file-name="files.fileToProcess.value?.name ?? null"
-    >
+    <FileHeader :key-handle="keyHandle" use-key="秘密鍵" :max-file-size="files.maxFileSize">
       <UnlockKeyhole aria-hidden="true" class="size-4" />
       Decrypt
     </FileHeader>
