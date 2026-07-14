@@ -7,12 +7,19 @@ import {
   genKeyPair,
 } from "@/crypt";
 import { useWithErrors } from "./useWithErrors";
-import { createKeyState } from "./useKeyState";
+import { createKeyState, type KeyState } from "./useKeyState";
 
+export type KeyHandle = KeyState & {
+  importJwk(jwk: JsonWebKey, withPublic?: boolean): void;
+  clear(): void;
+};
 
 export function useCryptoKeys() {
-  const state = { public: createKeyState("public"), private: createKeyState("private") }
-  const isGenerating = ref(false)
+  const state = {
+    public: createKeyState("public"),
+    private: createKeyState("private"),
+  };
+  const isGenerating = ref(false);
   const { error, withKeyPairError } = useWithErrors();
 
   const mismatchKeys = computed(
@@ -35,18 +42,21 @@ export function useCryptoKeys() {
   }
 
   async function generateKeys() {
-    return withKeyPairError(genKey, () => {
-      return {
-        publicJwk: null,
-        privateJwk: null,
-      }
-    }, () => { isGenerating.value = false })
+    return withKeyPairError(
+      genKey,
+      () => {
+        return {
+          publicJwk: null,
+          privateJwk: null,
+        };
+      },
+      () => {
+        isGenerating.value = false;
+      },
+    );
   }
 
-  async function importKey(
-    jwk: JsonWebKey,
-    keyType: KeyAgreementKeyType,
-  ) {
+  async function importKey(jwk: JsonWebKey, keyType: KeyAgreementKeyType) {
     const key = await importJwk(jwk, keyType);
     state[keyType].key.value = key;
   }
@@ -55,10 +65,7 @@ export function useCryptoKeys() {
       await importKey(jwk, "public");
     });
   }
-  async function importPrivateJwk(
-    jwk: JsonWebKey,
-    withPublic = false,
-  ) {
+  async function importPrivateJwk(jwk: JsonWebKey, withPublic = false) {
     await withKeyPairError(async () => {
       await importKey(jwk, "private");
       if (withPublic) {
@@ -74,9 +81,20 @@ export function useCryptoKeys() {
   const clearPublicKey = () => clear("public");
   const clearPrivateKey = () => clear("private");
 
+  const publicHandle: KeyHandle = {
+    ...state.public,
+    importJwk: importPublicJwk,
+    clear: () => clear("public"),
+  };
+  const privateHandle: KeyHandle = {
+    ...state.private,
+    importJwk: importPrivateJwk,
+    clear: () => clear("private"),
+  };
 
   return {
-    ...state,
+    public: publicHandle,
+    private: privateHandle,
     mismatchKeys,
     isGenerating,
     error,
@@ -84,6 +102,6 @@ export function useCryptoKeys() {
     clearPrivateKey,
     generateKeys,
     importPrivateJwk,
-    importPublicJwk
+    importPublicJwk,
   };
 }
