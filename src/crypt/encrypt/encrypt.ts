@@ -6,7 +6,11 @@ import {
   FILE_SIGNATURE,
   FORMAT_VERSION,
 } from "../constants";
-import { FileCryptoError, OutputWriteError, UnexpectedCryptoError } from "../errors";
+import {
+  FileCryptoError,
+  OutputWriteError,
+  UnexpectedCryptoError,
+} from "../errors";
 import type {
   EncodedFileHeader,
   EncryptedChunk,
