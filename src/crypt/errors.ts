@@ -8,14 +8,20 @@ export abstract class FileCryptoError extends Error {
   }
 }
 
-export class InputReadError extends FileCryptoError {
-  constructor(message:string,cause?: unknown) {
+export class MemoryLoadError extends FileCryptoError {
+  constructor(message: string, cause?: unknown) {
     super(message, cause);
   }
 }
 
-export class OutputWriteError extends FileCryptoError{
-  constructor(message:string,cause?: unknown) {
+export class InputReadError extends FileCryptoError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
+  }
+}
+
+export class OutputWriteError extends FileCryptoError {
+  constructor(message: string, cause?: unknown) {
     super(message, cause);
   }
 }

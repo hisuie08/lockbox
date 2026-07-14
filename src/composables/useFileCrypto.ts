@@ -5,14 +5,12 @@ import {
   DecryptionError,
   ENCRYPTED_FILE_MIMETYPE,
   encryptFile,
-  EncryptionError,
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
 import { downloadBlob } from "@/lib/download";
-import { FileCryptoError } from "@/crypt/errors";
+import { FileCryptoError, MemoryLoadError } from "@/crypt/errors";
 type UseFileCryptoOption = {
-  maxFileSize: number;
   warnFileSize: number;
   streamSupport: ReturnType<typeof useStreamSupport>;
 };
@@ -68,24 +66,38 @@ function useFileCrypt(option: UseFileCryptoOption) {
     }
 
     if (!option.streamSupport.isSupported) {
-      if (file.size > option.maxFileSize) {
-        state.fileToProcess = null;
-        state.error = "large file was selected";
-        return;
-      }
-
       if (file.size > option.warnFileSize) {
-        state.warning = "large file was selected";
+        state.warning = "大きなファイルの操作はChromeを推奨します";
       }
     }
 
     state.fileToProcess = file;
+  }
+  async function getFileSource(
+    file: File,
+  ): Promise<Uint8Array | ReadableStream<Uint8Array>> {
+    let source: Uint8Array | ReadableStream<Uint8Array>;
+    if (option.streamSupport.isSupported) {
+      source = file.stream();
+    } else {
+      try {
+        source = await file.bytes();
+      } catch (e) {
+        if (e instanceof Error) {
+          throw new MemoryLoadError(
+            "メモリ不足のためファイルを読み込めませんでした。ブラウザを再起動するか、より小さいファイルを使用してください。",
+          );
+        }
+      }
+    }
+    return source!;
   }
   return {
     ...option,
     ...toRefs(state),
     state,
     isProcessing,
+    getFileSource,
     setError,
     setWarning,
     setProgress,
@@ -106,8 +118,10 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
 
     try {
       const file = fileCrypt.state.fileToProcess;
+      const source = await fileCrypt.getFileSource(file);
+
       const input = {
-        source: file.stream(),
+        source: source,
         filename: file.name,
         fileSize: file.size,
         filetype: file.type,
@@ -124,7 +138,7 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
       fileCrypt.setError(null);
       fileCrypt.setWarning(null);
     } catch (error) {
-      if (error instanceof EncryptionError || FileCryptoError) {
+      if (error instanceof FileCryptoError) {
         fileCrypt.setError(getErrorMessage(error));
       }
       throw error;
@@ -184,10 +198,10 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
       fileCrypt.setError("暗号情報の読み込みが完了していません");
       return;
     }
-
+    const source = await fileCrypt.getFileSource(file);
     try {
       const input = {
-        source: file.stream(),
+        source: source,
         filename: file.name,
         fileSize: file.size,
         filetype: file.type,

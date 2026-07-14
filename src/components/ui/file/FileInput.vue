@@ -9,7 +9,7 @@ import { computed } from "vue";
 const props = defineProps<{
   files: ReturnType<typeof useFileEncrypt> | ReturnType<typeof useFileDecrypt>;
   cryptoKey: CryptoKey | null;
-  callback: (maxFileSize: number, event: Event) => void;
+  callback: (event: Event) => void;
 }>();
 
 const disabled = computed(
@@ -22,7 +22,7 @@ const disabled = computed(
 );
 
 function handleChange(event: Event) {
-  props.callback(props.files.maxFileSize, event);
+  props.callback(event);
 }
 </script>
 

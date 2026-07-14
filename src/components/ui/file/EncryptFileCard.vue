@@ -2,7 +2,6 @@
 import type { KeyHandle } from "@/composables/useCryptoKeys.ts";
 import type { useFileEncrypt } from "@/composables/useFileCrypto";
 import { formatBytes } from "@/lib/unit";
-import { LockKeyhole } from "lucide-vue-next";
 import ActionButton from "./ActionButton.vue";
 import FileHeader from "./Header.vue";
 import FileInput from "./FileInput.vue";
@@ -14,7 +13,7 @@ const props = defineProps<{
   keyHandle: KeyHandle;
 }>();
 
-function onFileChange(_: number, event: Event) {
+function onFileChange(event: Event) {
   const files = (event.target as HTMLInputElement).files;
   if (files != null) {
     props.files.setFile(files[0]);
@@ -25,10 +24,7 @@ function onFileChange(_: number, event: Event) {
 
 <template>
   <Card class="rounded-lg">
-    <FileHeader :key-handle="keyHandle" :max-file-size="files.maxFileSize">
-      <LockKeyhole aria-hidden="true" class="size-4" />
-      Encrypt
-    </FileHeader>
+    <FileHeader :key-handle="keyHandle"> Encrypt </FileHeader>
 
     <CardContent class="grid gap-4">
       <div

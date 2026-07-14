@@ -10,15 +10,13 @@ import Header from "./components/ui/header/Header.vue";
 import Algorithmns from "./components/ui/algorithms/Algorithmns.vue";
 import { Toaster } from "@/components/base/sonner";
 import KeyControlCard from "./components/ui/keys/card/KeyControlCard.vue";
-const MAX_FILE_SIZE = 1.5 * 1024 * 1024 * 1024;
-const WARNING_FILE_SIZE = 500 * 1024 * 1024;
+import { WARNING_FILE_SIZE } from "./crypt/constants.ts";
 
 const keys = useCryptoKeys();
 
 const streamSupported = useStreamSupport();
 const option = {
   streamSupport: streamSupported,
-  maxFileSize: MAX_FILE_SIZE,
   warnFileSize: WARNING_FILE_SIZE,
 };
 const enc = useFileEncrypt(option);
