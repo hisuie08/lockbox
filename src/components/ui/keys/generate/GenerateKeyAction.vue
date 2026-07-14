@@ -17,15 +17,10 @@ import { CardContent, CardTitle } from "@/components/base/card/index.ts";
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
 }>();
-const { pubKey, privKey } = useKeyGenerations();
+const { pubKey, privKey, init } = useKeyGenerations();
 provide(keyIsGenerating, props.keys.isGenerating);
 const isOpen = ref(false);
 const closable = computed(() => pubKey.isSaved.value && privKey.isSaved.value);
-
-function init() {
-  pubKey.isSaved.value = false;
-  privKey.isSaved.value = false;
-}
 
 async function generate() {
   const { publicJwk, privateJwk } = await props.keys.generateKeys();
@@ -61,13 +56,9 @@ function cancel() {
       <CardTitle>新しい鍵ペアの作成</CardTitle>
       <CardContent class="grid gap-5">
         <div class="grid gap-3">
-          <CopyableKeyView :gen-key="pubKey" :callback="() => pubKey.setSaved"
-            >公開鍵</CopyableKeyView
-          >
+          <CopyableKeyView :gen-key="pubKey">公開鍵</CopyableKeyView>
 
-          <CopyableKeyView :gen-key="privKey" :callback="() => privKey.setSaved"
-            >秘密鍵</CopyableKeyView
-          >
+          <CopyableKeyView :gen-key="privKey">秘密鍵</CopyableKeyView>
           <span class="text-destructive">
             秘密鍵は決して他人に共有しないでください
           </span>

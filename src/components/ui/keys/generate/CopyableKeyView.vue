@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from "vue";
 import { Check, Copy } from "lucide-vue-next";
-import type { useKeyGeneration } from "@/composables/useKeyGeneration";
+import type { GeneratedKeyHandle } from "@/composables/useKeyGeneration";
 import { keyIsGenerating } from "../provideKeys";
 import {
   InputGroup,
@@ -11,25 +11,23 @@ import {
 } from "@/components/base/input-group";
 
 const props = defineProps<{
-  genKey: ReturnType<typeof useKeyGeneration>;
+  genKey: GeneratedKeyHandle;
 }>();
 
 const isGenerating = inject<Ref<boolean>>(keyIsGenerating);
-const inputType = props.genKey.isPrivate ? "password" : "text";
+const inputType = props.genKey.keyType == "private" ? "password" : "text";
+
 const value = computed(() =>
   isGenerating?.value
     ? "Generating..."
     : JSON.stringify(props.genKey.jwk.value),
 );
 
-async function copyKey() {
-  await props.genKey.copy();
-}
 function onFocus(event: FocusEvent) {
   (event.target as HTMLInputElement).select();
 }
 function onCopy() {
-  props.genKey.setSaved();
+  props.genKey.isSaved.value = true;
 }
 </script>
 
@@ -52,7 +50,7 @@ function onCopy() {
           aria-label="Copy"
           title="Copy"
           size="icon-xs"
-          @click="copyKey"
+          @click="genKey.copy"
         >
           <Copy v-if="!props.genKey.copied.value" aria-hidden="true" />
           <Check v-else aria-hidden="true" />
