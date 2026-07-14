@@ -11,6 +11,7 @@ import {
 import { createByteReader, type ByteReader } from "./byteReader";
 import {
   InputReadError,
+  MemoryError,
   OutputWriteError,
   UnexpectedCryptoError,
 } from "../errors";
@@ -173,6 +174,9 @@ export async function decryptFile(input: {
       try {
         await input.writer.write(plaintext);
       } catch (error) {
+        if (error instanceof MemoryError) {
+          throw error;
+        }
         throw new OutputWriteError("Failed to write decrypted output.", error);
       }
       writtenBytes += plaintext.length;

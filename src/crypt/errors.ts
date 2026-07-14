@@ -8,7 +8,18 @@ export abstract class FileCryptoError extends Error {
   }
 }
 
-export class MemoryLoadError extends FileCryptoError {
+export abstract class MemoryError extends FileCryptoError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
+  }
+}
+export class MemoryLoadError extends MemoryError {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause);
+  }
+}
+
+export class MemoryWriteError extends MemoryError {
   constructor(message: string, cause?: unknown) {
     super(message, cause);
   }

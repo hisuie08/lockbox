@@ -8,6 +8,7 @@ import {
 } from "../constants";
 import {
   FileCryptoError,
+  MemoryError,
   OutputWriteError,
   UnexpectedCryptoError,
 } from "../errors";
@@ -136,6 +137,9 @@ export async function writeFileHeader(
     await writer.write(encodedHeader.headerLength);
     await writer.write(encodedHeader.headerBytes);
   } catch (error) {
+    if (error instanceof MemoryError) {
+      throw error;
+    }
     throw new OutputWriteError("Failed to write encrypted output.", error);
   }
 }
@@ -149,6 +153,9 @@ export async function writeChunk(
     await writer.write(chunk.iv);
     await writer.write(chunk.ciphertext);
   } catch (error) {
+    if (error instanceof MemoryError) {
+      throw error;
+    }
     throw new OutputWriteError("Failed to write encrypted output.", error);
   }
 }
@@ -200,6 +207,9 @@ export async function encryptFile(input: {
       await input.writer.close();
     } catch (error) {
       await input.writer.abort(error);
+      if (error instanceof MemoryError) {
+        throw error;
+      }
       throw new OutputWriteError("Failed to write encrypted output.", error);
     }
     input.onSaved(true);

@@ -83,14 +83,13 @@ function useFileCrypt(option: UseFileCryptoOption) {
       try {
         source = await file.bytes();
       } catch (e) {
-        if (e instanceof Error) {
-          throw new MemoryLoadError(
-            "メモリ不足のためファイルを読み込めませんでした。ブラウザを再起動するか、より小さいファイルを使用してください。",
-          );
-        }
+        throw new MemoryLoadError(
+          "メモリ不足のためファイルを読み込めませんでした。ブラウザを再起動するか、より小さいファイルを使用してください。",
+          e,
+        );
       }
     }
-    return source!;
+    return source;
   }
   return {
     ...option,
