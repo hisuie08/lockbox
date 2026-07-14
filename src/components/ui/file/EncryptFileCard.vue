@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { useCryptoKeys } from "@/composables/useCryptoKeys.ts";
-import type { useFileEncrypt } from "@/composables/useFileCryptoStream";
+import type { useFileEncrypt } from "@/composables/useFileCrypto.ts";
 import { formatBytes } from "@/lib/unit";
 import { LockKeyhole } from "lucide-vue-next";
 import ActionButton from "./ActionButton.vue";

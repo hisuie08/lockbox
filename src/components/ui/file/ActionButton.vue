@@ -2,7 +2,7 @@
 import type {
   useFileDecrypt,
   useFileEncrypt,
-} from "@/composables/useFileCryptoStream";
+} from "@/composables/useFileCrypto";
 import { computed } from "vue";
 import { Check, LockKeyhole } from "lucide-vue-next";
 import { Button } from "@/components/base/button";

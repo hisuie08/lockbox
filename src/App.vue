@@ -2,10 +2,7 @@
 import AlertStreamNotSupported from "./components/ui/static/AlertStreamNotSupported.vue";
 import { useCryptoKeys } from "@/composables/useCryptoKeys.ts";
 import { useStreamSupport } from "@/composables/useStreamSupport.ts";
-import {
-  useFileEncrypt,
-  useFileDecrypt,
-} from "@/composables/useFileCryptoStream.ts";
+import { useFileEncrypt, useFileDecrypt } from "@/composables/useFileCrypto.ts";
 import { useShareLink } from "./composables/useShareLink.ts";
 import EncryptFileCard from "./components/ui/file/EncryptFileCard.vue";
 import DecryptFileCard from "./components/ui/file/DecryptFileCard.vue";

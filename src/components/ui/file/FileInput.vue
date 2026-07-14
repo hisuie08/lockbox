@@ -3,7 +3,7 @@ import { Input } from "@/components/base/input";
 import type {
   useFileDecrypt,
   useFileEncrypt,
-} from "@/composables/useFileCryptoStream";
+} from "@/composables/useFileCrypto";
 import { computed } from "vue";
 
 const props = defineProps<{
