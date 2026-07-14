@@ -14,8 +14,7 @@ import AlertKeyPairMismatch from "../../static/AlertKeyPairMismatch.vue";
 
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import GenerateKeyAction from "../generate/GenerateKeyAction.vue";
-import PublicKeyView from "./PublicKeyView.vue";
-import PrivateKeyView from "./PrivateKeyView.vue";
+import KeyView from "./KeyView.vue";
 
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
@@ -29,9 +28,7 @@ const props = defineProps<{
         <KeyRound class="size-4" />
         Keys
       </CardTitle>
-
       <CardDescription> 鍵ペアの管理 </CardDescription>
-
       <CardAction>
         <GenerateKeyAction :keys="keys" />
       </CardAction>
@@ -39,8 +36,8 @@ const props = defineProps<{
 
     <CardContent class="grid gap-5">
       <AlertKeyPairMismatch v-if="keys.mismatchKeys.value" />
-      <PublicKeyView :key-handle="keys.public" />
-      <PrivateKeyView :key-handle="keys.private" />
+      <KeyView :key-handle="keys.public" />
+      <KeyView :key-handle="keys.private" />
     </CardContent>
   </Card>
 </template>
