@@ -39,8 +39,8 @@ const props = defineProps<{
 
     <CardContent class="grid gap-5">
       <AlertKeyPairMismatch v-if="keys.mismatchKeys.value" />
-      <PublicKeyView :keys="keys" />
-      <PrivateKeyView :keys="keys" />
+      <PublicKeyView :key-handle="keys.public" />
+      <PrivateKeyView :key-handle="keys.private" />
     </CardContent>
   </Card>
 </template>

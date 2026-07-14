@@ -10,13 +10,12 @@ import { Input } from "@/components/base/input";
 import { Textarea } from "@/components/base/textarea";
 import { Button } from "@/components/base/button";
 import { DialogClose } from "@/components/base/dialog";
-import type { KeyAgreementKeyType } from "@/crypt";
+import type { KeyHandle } from "@/composables/useCryptoKeys.ts";
 const props = defineProps<{
-  keyType: KeyAgreementKeyType;
-  callback: (jwk: JsonWebKey, withPub?: boolean) => Promise<void>;
+  keyHandle: KeyHandle;
 }>();
 const { isValid, validJwk, loadKeyFile, loadKeyString, error } = useKeyLoad(
-  props.keyType,
+  props.keyHandle.keyType,
 );
 const method = ref<"file" | "paste">("file");
 const checked = ref<boolean>(false);
@@ -31,11 +30,16 @@ function onChangeFile(event: Event) {
   }
 }
 function onSubmit() {
-  props.callback(validJwk.value!, props.keyType == "private" && checked.value);
+  props.keyHandle.importJwk(
+    validJwk.value!,
+    props.keyHandle.keyType == "private" && checked.value,
+  );
 }
 </script>
 <template>
-  <DialogTitle>{{ keyType == "public" ? "公開鍵" : "秘密鍵" }}</DialogTitle>
+  <DialogTitle>{{
+    keyHandle.keyType == "public" ? "公開鍵" : "秘密鍵"
+  }}</DialogTitle>
   <div class="grid gap-3">
     <RadioGroup v-model="method" class="w-fit">
       <div class="flex items-center gap-3">
@@ -59,10 +63,14 @@ function onSubmit() {
       />
       <div v-if="isValid" class="flex text-green-700">
         <Check :size="16" class="mr-1" color="green" />
-        <span color="green">Valid {{ props.keyType }} key</span>
+        <span color="green">Valid {{ keyHandle.keyType }} key</span>
       </div>
     </div>
-    <Field v-if="keyType == 'private'" orientation="horizontal" class="py-1">
+    <Field
+      v-if="keyHandle.keyType == 'private'"
+      orientation="horizontal"
+      class="py-1"
+    >
       <Checkbox id="with-pub" v-model="checked" />
       <Label for="with-pub">秘密鍵に対応する公開鍵を同時に設定する</Label>
     </Field>

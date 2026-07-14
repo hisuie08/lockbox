@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { useCryptoKeys } from "@/composables/useCryptoKeys.ts";
+import type { KeyHandle } from "@/composables/useCryptoKeys.ts";
 import type { useFileEncrypt } from "@/composables/useFileCryptoStream";
 import { formatBytes } from "@/lib/unit";
 import { LockKeyhole } from "lucide-vue-next";
@@ -11,7 +11,7 @@ import FileIndicator from "./FileIndicator.vue";
 
 const props = defineProps<{
   files: ReturnType<typeof useFileEncrypt>;
-  keys: ReturnType<typeof useCryptoKeys>;
+  keyHandle: KeyHandle;
 }>();
 
 function onFileChange(_: number, event: Event) {
@@ -43,7 +43,7 @@ function onFileChange(_: number, event: Event) {
       </div>
       <FileInput
         :files="files"
-        :crypto-key="keys.public.key.value"
+        :crypto-key="keyHandle.key.value"
         :callback="onFileChange"
       />
       <div
@@ -64,8 +64,8 @@ function onFileChange(_: number, event: Event) {
 
       <ActionButton
         :files="files"
-        :crypto-key="keys.public.key.value"
-        :on-click="() => files.encryptSelectedFile(keys.public.key.value)"
+        :crypto-key="keyHandle.key.value"
+        :on-click="() => files.encryptSelectedFile(keyHandle.key.value)"
         label="暗号化"
       />
     </CardContent>

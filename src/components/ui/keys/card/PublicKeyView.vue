@@ -24,13 +24,13 @@ import {
 } from "lucide-vue-next";
 
 import { Dialog, DialogContent } from "@/components/base/dialog";
-import type { useCryptoKeys } from "@/composables/useCryptoKeys";
+import type { KeyHandle } from "@/composables/useCryptoKeys";
 import { useShareLink } from "@/composables/useShareLink";
 import { useClipboard } from "@vueuse/core";
 import { toast } from "vue-sonner";
 import EditDialog from "./EditDialog.vue";
 const props = defineProps<{
-  keys: ReturnType<typeof useCryptoKeys>;
+  keyHandle: KeyHandle;
 }>();
 const isOpen = ref(false);
 
@@ -38,8 +38,8 @@ const { genLink } = useShareLink();
 const { copy } = useClipboard();
 
 function sharePublicKey() {
-  if (!props.keys.public.jwk.value) return;
-  const link = genLink(props.keys.public.jwk.value as JsonWebKey);
+  if (!props.keyHandle.jwk.value) return;
+  const link = genLink(props.keyHandle.jwk.value as JsonWebKey);
   copy(link);
   toast.info("share link was copied");
 }
@@ -50,13 +50,13 @@ function sharePublicKey() {
       <span class="text-sm font-medium">
         公開鍵
 
-        <span v-if="keys.public.key.value" class="ml-1 text-green-700">
+        <span v-if="keyHandle.key.value" class="ml-1 text-green-700">
           Loaded
         </span>
       </span>
 
       <InputGroup>
-        <InputGroupInput :model-value="keys.public.thumbprint" readonly />
+        <InputGroupInput :model-value="keyHandle.thumbprint" readonly />
         <InputGroupAddon align="inline-end">
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
@@ -75,7 +75,7 @@ function sharePublicKey() {
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                :disabled="!keys.public.key.value"
+                :disabled="!keyHandle.key.value"
                 @select="sharePublicKey"
               >
                 <Share2Icon />
@@ -84,10 +84,7 @@ function sharePublicKey() {
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem
-                variant="destructive"
-                @select="keys.clearPublicKey"
-              >
+              <DropdownMenuItem variant="destructive" @select="keyHandle.clear">
                 <TrashIcon />
                 Delete
               </DropdownMenuItem>
@@ -98,7 +95,7 @@ function sharePublicKey() {
     </label>
     <Dialog v-model:open="isOpen" modal>
       <DialogContent>
-        <EditDialog :keyType="'public'" :callback="keys.importPublicJwk" />
+        <EditDialog :key-handle="keyHandle" />
       </DialogContent>
     </Dialog>
   </div>

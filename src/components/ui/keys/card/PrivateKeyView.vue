@@ -19,10 +19,10 @@ import {
 import { Edit2Icon, MoreHorizontal, TrashIcon } from "lucide-vue-next";
 
 import { Dialog, DialogContent } from "@/components/base/dialog";
-import type { useCryptoKeys } from "@/composables/useCryptoKeys";
+import type { KeyHandle } from "@/composables/useCryptoKeys";
 import EditDialog from "./EditDialog.vue";
 const props = defineProps<{
-  keys: ReturnType<typeof useCryptoKeys>;
+  keyHandle: KeyHandle;
 }>();
 const editDialog = ref(false);
 </script>
@@ -31,13 +31,13 @@ const editDialog = ref(false);
     <label class="grid gap-2">
       <span class="text-sm font-medium">
         秘密鍵
-        <span v-if="keys.private.key.value" class="ml-1 text-green-700">
+        <span v-if="keyHandle.key.value" class="ml-1 text-green-700">
           Loaded
         </span>
       </span>
 
       <InputGroup>
-        <InputGroupInput :model-value="keys.private.thumbprint" readonly />
+        <InputGroupInput :model-value="keyHandle.thumbprint" readonly />
 
         <InputGroupAddon align="inline-end">
           <DropdownMenu>
@@ -60,7 +60,7 @@ const editDialog = ref(false);
 
               <DropdownMenuItem
                 variant="destructive"
-                @select="keys.clearPrivateKey"
+                @select="keyHandle.clear"
               >
                 <TrashIcon />
                 Delete
@@ -72,7 +72,7 @@ const editDialog = ref(false);
     </label>
     <Dialog v-model:open="editDialog">
       <DialogContent>
-        <EditDialog :keyType="'private'" :callback="keys.importPrivateJwk"
+        <EditDialog :key-handle="keyHandle"
       /></DialogContent>
     </Dialog>
   </div>

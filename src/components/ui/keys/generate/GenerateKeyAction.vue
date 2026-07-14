@@ -40,8 +40,8 @@ function openAndGenerate() {
 }
 
 function submit() {
-  props.keys.importPublicJwk(pubKey.jwk.value!);
-  props.keys.importPrivateJwk(privKey.jwk.value!);
+  props.keys.public.importJwk(pubKey.jwk.value!);
+  props.keys.private.importJwk(privKey.jwk.value!);
   isOpen.value = false;
 }
 function cancel() {

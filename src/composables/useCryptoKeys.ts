@@ -10,7 +10,7 @@ import { useWithErrors } from "./useWithErrors";
 import { createKeyState, type KeyState } from "./useKeyState";
 
 export type KeyHandle = KeyState & {
-  importJwk(jwk: JsonWebKey, withPublic?: boolean): void;
+  importJwk(jwk: JsonWebKey, withPublic?: boolean): Promise<void>;
   clear(): void;
 };
 
@@ -78,8 +78,6 @@ export function useCryptoKeys() {
     state[keyType].key.value = null;
     error.value = null;
   }
-  const clearPublicKey = () => clear("public");
-  const clearPrivateKey = () => clear("private");
 
   const publicHandle: KeyHandle = {
     ...state.public,
@@ -98,10 +96,6 @@ export function useCryptoKeys() {
     mismatchKeys,
     isGenerating,
     error,
-    clearPublicKey,
-    clearPrivateKey,
     generateKeys,
-    importPrivateJwk,
-    importPublicJwk,
   };
 }
