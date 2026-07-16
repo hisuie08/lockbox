@@ -1,0 +1,91 @@
+const downloads = new Map();
+
+/**
+ * ClientからReadableStreamを受け取る
+ */
+self.addEventListener("message", (event) => {
+  const port = event.ports[0];
+  const data = event.data;
+
+  if (data?.type !== "register-download") return;
+
+  downloads.set(data.id, {
+    stream: data.stream,
+    filename: data.filename ?? "download.bin",
+    contentType: data.contentType ?? "application/octet-stream",
+    port: port,
+  });
+  port.postMessage({ ok: true });
+});
+/**
+ * ダウンロード要求を横取り
+ */
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  if (!url.pathname.startsWith("/download/")) return;
+
+  const id = url.pathname.substring("/download/".length);
+
+  const download = downloads.get(id);
+  const port = download.port;
+
+  if (!download) {
+    event.respondWith(
+      new Response("Download not found.", {
+        status: 404,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      }),
+    );
+    return;
+  }
+
+  downloads.delete(id);
+  const stream = download.stream;
+
+  event.respondWith(
+    (async () => {
+      const reader = stream.getReader();
+      const rs = new ReadableStream({
+        async pull(controller) {
+          try {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              controller.close();
+              return;
+            }
+
+            controller.enqueue(value);
+          } catch (err) {
+            port.postMessage({
+              type: "cancel",
+            });
+
+            controller.error(err);
+          }
+        },
+
+        async cancel(reason) {
+          port.postMessage({
+            type: "cancel",
+          });
+
+          try {
+            await reader.cancel(reason);
+          } catch (err) {
+            port.postMessage({
+              type: "cancel",
+            });
+
+            controller.error(err);
+          }
+        },
+      });
+
+      return new Response(rs);
+    })(),
+  );
+});
