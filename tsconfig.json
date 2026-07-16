@@ -5,7 +5,8 @@
       "@/*": ["./src/*"]
     },
     "moduleResolution": "bundler",
-    "resolvePackageJsonImports": true
+    "resolvePackageJsonImports": true,
+    "noImplicitAny": true
   },
   "references": [
     { "path": "./tsconfig.app.json" },
