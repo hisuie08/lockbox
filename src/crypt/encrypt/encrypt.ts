@@ -214,10 +214,9 @@ export async function encryptFile(input: {
     }
     input.onSaved(true);
   } catch (error) {
-    if (error instanceof EncryptionError) {
+    if (error instanceof EncryptionError || OutputWriteError) {
       throw error;
     }
-
     throw new UnexpectedCryptoError(error);
   }
 }

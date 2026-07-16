@@ -3,13 +3,12 @@ import type { useStreamSupport } from "./useStreamSupport";
 import {
   decryptFile,
   DecryptionError,
-  ENCRYPTED_FILE_MIMETYPE,
   encryptFile,
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
-import { downloadBlob } from "@/lib/download";
 import { FileCryptoError } from "@/crypt/errors";
+import { registerDownload } from "@/lib/registerDownload";
 type UseFileCryptoOption = {
   warnFileSize: number;
   streamSupport: ReturnType<typeof useStreamSupport>;
@@ -54,6 +53,22 @@ function useFileCrypt(option: UseFileCryptoOption) {
     state.saved = saved;
   }
 
+  async function getDownloadWriter(filename: string) {
+    const pipe = new TransformStream<Uint8Array, Uint8Array>();
+
+    const url = await registerDownload({
+      stream: pipe.readable,
+      filename: filename,
+    });
+    const a: HTMLAnchorElement = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    const writer = pipe.writable.getWriter();
+    return writer;
+  }
+
   async function setFile(file: File | null) {
     state.saved = false;
     state.progress = 0;
@@ -84,7 +99,7 @@ function useFileCrypt(option: UseFileCryptoOption) {
     setProgress,
     setSaved,
     setFile,
-    createOutputWriter: option.streamSupport.getStreamWriter,
+    createOutputWriter: getDownloadWriter,
   };
 }
 
@@ -100,21 +115,29 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
     try {
       const file = fileCrypt.state.fileToProcess;
 
+      const filename = `${file.name}.enc`;
       const input = {
         source: file.stream(),
-        filename: file.name,
+        filename: filename,
         fileSize: file.size,
         filetype: file.type,
         publicKey: publicKey,
         onProgress: fileCrypt.setProgress,
         onSaved: fileCrypt.setSaved,
       };
-      const filename = `${file.name}.enc`;
-      const { writer, buffer } = await fileCrypt.createOutputWriter(filename);
-      await encryptFile({ ...input, writer });
-      if (buffer) {
-        downloadBlob(buffer.toBlob(ENCRYPTED_FILE_MIMETYPE), filename);
-      }
+      const pipe = new TransformStream<Uint8Array, Uint8Array>();
+      const url = await registerDownload({
+        stream: pipe.readable,
+        filename: filename,
+      });
+      const a: HTMLAnchorElement = document.createElement("a");
+      a.href = url;
+      a.click();
+      const writer = pipe.writable.getWriter();
+      await encryptFile({
+        ...input,
+        writer,
+      });
       fileCrypt.setError(null);
       fileCrypt.setWarning(null);
     } catch (error) {
@@ -191,16 +214,12 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
 
       const filename = originFile.value.originalName;
 
-      const { writer, buffer } = await fileCrypt.createOutputWriter(filename);
+      const writer = await fileCrypt.createOutputWriter(filename);
 
       await decryptFile({
         ...input,
         writer,
       });
-
-      if (buffer) {
-        downloadBlob(buffer.toBlob(originFile.value.originalType), filename);
-      }
 
       fileCrypt.setError(null);
       fileCrypt.setWarning(null);
