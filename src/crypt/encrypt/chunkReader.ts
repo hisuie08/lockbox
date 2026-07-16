@@ -6,14 +6,6 @@ export interface ChunkReader {
   readChunk(): Promise<Uint8Array | null>;
 }
 
-export function createChunkReader(
-  source: Uint8Array | ReadableStream<Uint8Array>,
-) {
-  return source instanceof ReadableStream
-    ? new StreamChunkReader(source)
-    : new ArrayBufferChunkReader(source);
-}
-
 export class StreamChunkReader implements ChunkReader {
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
   // reader.read()は勝手なサイズで返してくる
@@ -66,28 +58,6 @@ export class StreamChunkReader implements ChunkReader {
     // 通常チャンク
     const chunk = this.pending.slice(0, this.chunkSize);
     this.pending = this.pending.slice(this.chunkSize);
-    return chunk;
-  }
-}
-
-export class ArrayBufferChunkReader implements ChunkReader {
-  private offset = 0;
-  private readonly bytes: Uint8Array;
-  private readonly chunkSize: number;
-  constructor(bytes: Uint8Array, chunkSize = DEFAULT_CHUNK_SIZE) {
-    this.bytes = bytes;
-    this.chunkSize = chunkSize;
-  }
-
-  async readChunk(): Promise<Uint8Array | null> {
-    if (this.offset >= this.bytes.length) return null;
-
-    const chunk = this.bytes.subarray(
-      this.offset,
-      this.offset + this.chunkSize,
-    );
-
-    this.offset += chunk.length;
     return chunk;
   }
 }

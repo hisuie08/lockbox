@@ -8,7 +8,7 @@ import {
   InvalidPrivateKeyError,
   UnsupportedVersionError,
 } from "./errors";
-import { createByteReader, type ByteReader } from "./byteReader";
+import { StreamBufferedReader, type BufferedReader } from "./bufferedReader";
 import {
   InputReadError,
   MemoryError,
@@ -28,7 +28,7 @@ import { getJwkThumbprint } from "../key/validate";
 const decoder = new TextDecoder();
 
 export async function readFileHeader(
-  reader: ByteReader,
+  reader: BufferedReader,
 ): Promise<EncryptedFileHeader> {
   const signature = decoder.decode(
     await reader.readBytes(PREAMBLE_LENGTHS.FILE_SIGNATURE),
@@ -83,7 +83,7 @@ async function prepareAESKey(
 }
 
 async function readChunkHeader(
-  reader: ByteReader,
+  reader: BufferedReader,
 ): Promise<ChunkHeader | null> {
   const bytes = await reader.tryReadBytes(
     CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH + CHUNK_HEADER_LENGTHS.IV_LENGTH,
@@ -128,7 +128,7 @@ type Chunk = {
   iv: Uint8Array;
   ciphertext: Uint8Array;
 };
-async function readChunk(reader: ByteReader): Promise<Chunk | null> {
+async function readChunk(reader: BufferedReader): Promise<Chunk | null> {
   const chunkHeader = await readChunkHeader(reader);
   if (chunkHeader == null) {
     return null;
@@ -139,10 +139,10 @@ async function readChunk(reader: ByteReader): Promise<Chunk | null> {
 }
 
 export async function getEncryptedFileHeader(input: {
-  source: Uint8Array | ReadableStream<Uint8Array>;
+  source: ReadableStream<Uint8Array>;
 }): Promise<EncryptedFileHeader> {
   try {
-    const reader = createByteReader(input.source);
+    const reader: BufferedReader = new StreamBufferedReader(input.source);
     return await readFileHeader(reader);
   } catch (error) {
     if (error instanceof DecryptionError || InputReadError) {
@@ -154,7 +154,7 @@ export async function getEncryptedFileHeader(input: {
 }
 
 export async function decryptFile(input: {
-  source: Uint8Array | ReadableStream<Uint8Array>;
+  source: ReadableStream<Uint8Array>;
   privateKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;
   onProgress: (progress: number) => void;
@@ -162,7 +162,7 @@ export async function decryptFile(input: {
 }): Promise<EncryptedFileHeader> {
   try {
     let writtenBytes = 0;
-    const reader = createByteReader(input.source);
+    const reader = new StreamBufferedReader(input.source);
     const header = await readFileHeader(reader);
     const aesKey = await prepareAESKey(header, input.privateKey);
     while (true) {

@@ -4,20 +4,12 @@ export class UnexpectedEofError extends InputReadError {
     super("Unexpected end of file.");
   }
 }
-export interface ByteReader {
+export interface BufferedReader {
   readBytes(length: number): Promise<Uint8Array>;
   tryReadBytes(length: number): Promise<Uint8Array | null>;
 }
 
-export function createByteReader(
-  source: Uint8Array | ReadableStream<Uint8Array>,
-): ByteReader {
-  return source instanceof ReadableStream
-    ? new StreamByteReader(source)
-    : new ArrayBufferByteReader(source);
-}
-
-export class StreamByteReader implements ByteReader {
+export class StreamBufferedReader implements BufferedReader {
   private readonly reader: ReadableStreamDefaultReader<Uint8Array>;
 
   private buffer = new Uint8Array(0);
@@ -61,41 +53,6 @@ export class StreamByteReader implements ByteReader {
 
     const result = this.buffer.slice(0, length);
     this.buffer = this.buffer.slice(length);
-
-    return result;
-  }
-
-  async readBytes(length: number): Promise<Uint8Array> {
-    return this.read(length, false);
-  }
-
-  async tryReadBytes(length: number): Promise<Uint8Array | null> {
-    return this.read(length, true);
-  }
-}
-
-export class ArrayBufferByteReader implements ByteReader {
-  private offset = 0;
-  private readonly bytes: Uint8Array;
-  constructor(bytes: Uint8Array) {
-    this.bytes = bytes;
-  }
-
-  private read(length: number, asTry: false): Uint8Array;
-  private read(length: number, asTry: true): Uint8Array | null;
-  private read(length: number, asTry: boolean): Uint8Array | null {
-    const remaining = this.bytes.length - this.offset;
-
-    if (remaining < length) {
-      if (asTry && remaining === 0) {
-        return null;
-      }
-      throw new UnexpectedEofError();
-    }
-
-    const result = this.bytes.subarray(this.offset, this.offset + length);
-
-    this.offset += length;
 
     return result;
   }

@@ -22,7 +22,7 @@ import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
 import { deriveContentEncryptionKey } from "../key/kdf";
 import { genKeyPair } from "../key/keyPair";
 import { getJwkThumbprint } from "../key/validate";
-import { createChunkReader } from "./chunkReader";
+import { StreamChunkReader, type ChunkReader } from "./chunkReader";
 
 export abstract class EncryptionError extends FileCryptoError {
   override cause?: unknown;
@@ -164,7 +164,7 @@ export async function encryptFile(input: {
   filename: string;
   filetype: string;
   fileSize: number;
-  source: Uint8Array | ReadableStream<Uint8Array>;
+  source: ReadableStream<Uint8Array>;
   publicKey: CryptoKey;
   writer: WritableStreamDefaultWriter<Uint8Array>;
   onProgress: (progress: number) => void;
@@ -182,7 +182,7 @@ export async function encryptFile(input: {
     });
 
     await writeFileHeader(input.writer, header);
-    const reader = createChunkReader(input.source);
+    const reader: ChunkReader = new StreamChunkReader(input.source);
     while (true) {
       const chunk = await reader.readChunk();
       if (chunk === null) {

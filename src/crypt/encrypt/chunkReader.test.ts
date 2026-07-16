@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ArrayBufferChunkReader, StreamChunkReader } from "./chunkReader";
+import { StreamChunkReader } from "./chunkReader";
 import { InputReadError } from "../errors";
 
 function createStream(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
@@ -74,26 +74,6 @@ describe("StreamChunkReader", () => {
 
     expect(await reader.readChunk()).toEqual(Uint8Array.from([1, 2, 3, 4]));
     expect(await reader.readChunk()).toEqual(Uint8Array.from([5, 6, 7]));
-    expect(await reader.readChunk()).toBeNull();
-  });
-});
-
-describe("ArrayBufferChunkReader", () => {
-  it("splits into fixed-size chunks", async () => {
-    const reader = new ArrayBufferChunkReader(
-      Uint8Array.from([1, 2, 3, 4, 5]),
-      2,
-    );
-
-    expect(await reader.readChunk()).toEqual(Uint8Array.from([1, 2]));
-    expect(await reader.readChunk()).toEqual(Uint8Array.from([3, 4]));
-    expect(await reader.readChunk()).toEqual(Uint8Array.from([5]));
-    expect(await reader.readChunk()).toBeNull();
-  });
-
-  it("returns null for an empty buffer", async () => {
-    const reader = new ArrayBufferChunkReader(new Uint8Array(), 4);
-
     expect(await reader.readChunk()).toBeNull();
   });
 });
