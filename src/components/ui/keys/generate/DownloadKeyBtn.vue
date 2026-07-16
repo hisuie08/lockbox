@@ -3,7 +3,7 @@ import { Download } from "lucide-vue-next";
 import { computed, inject, type Ref } from "vue";
 import { keyIsGenerating } from "../provideKeys";
 import { Button } from "@/components/base/button";
-import type { GeneratedKeyHandle } from "@/composables/useKeyGeneration";
+import { type GeneratedKeyHandle } from "@/composables/useCryptoKeys";
 
 const props = defineProps<{
   genKey: GeneratedKeyHandle;

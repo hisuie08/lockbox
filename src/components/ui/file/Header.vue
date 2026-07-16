@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CardHeader } from "@/components/base/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/base/card";
 import type { KeyHandle } from "@/composables/useCryptoKeys";
 import { useStreamSupport } from "@/composables/useStreamSupport";
 import { WARNING_FILE_SIZE } from "@/crypt";

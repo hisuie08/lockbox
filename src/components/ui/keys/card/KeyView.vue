@@ -56,7 +56,7 @@ function sharePublicKey() {
       </span>
 
       <InputGroup>
-        <InputGroupInput :model-value="keyHandle.thumbprint" readonly />
+        <InputGroupInput v-model="keyHandle.thumbprint" readonly />
         <InputGroupAddon align="inline-end">
           <DropdownMenu>
             <DropdownMenuTrigger as-child>

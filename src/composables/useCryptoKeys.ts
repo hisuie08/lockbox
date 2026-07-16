@@ -1,13 +1,9 @@
-import { ref, computed } from "vue";
-import {
-  exportAsJwk,
-  importJwk,
-  toPublicJwk,
-  type KeyAgreementKeyType,
-  genKeyPair,
-} from "@/crypt";
+import { computed } from "vue";
+import { importJwk, toPublicJwk, type KeyAgreementKeyType } from "@/crypt";
 import { useWithErrors } from "./useWithErrors";
 import { createKeyState, type KeyState } from "./useKeyState";
+import { useKeyGenerations } from "./useKeyGeneration";
+export { type GeneratedKeyHandle } from "./useKeyGeneration";
 
 export type KeyHandle = KeyState & {
   importJwk(jwk: JsonWebKey, withPublic?: boolean): Promise<void>;
@@ -19,7 +15,7 @@ export function useCryptoKeys() {
     public: createKeyState("public"),
     private: createKeyState("private"),
   };
-  const isGenerating = ref(false);
+  const { isGenerating, genKey, ...generator } = useKeyGenerations();
   const { error, withKeyPairError } = useWithErrors();
 
   const mismatchKeys = computed(
@@ -29,27 +25,12 @@ export function useCryptoKeys() {
       state.private.thumbprint.value !== "",
   );
 
-  async function genKey() {
-    isGenerating.value = true;
-    error.value = null;
-    const keyPair = await genKeyPair();
-    const [publicJwk, privateJwk] = await Promise.all([
-      exportAsJwk(keyPair.publicKey),
-      exportAsJwk(keyPair.privateKey),
-    ]);
-    isGenerating.value = false;
-    return { publicJwk, privateJwk };
-  }
-
   async function generateKeys() {
     return withKeyPairError(
-      genKey,
-      () => {
-        return {
-          publicJwk: null,
-          privateJwk: null,
-        };
+      async () => {
+        return genKey(error);
       },
+      () => {},
       () => {
         isGenerating.value = false;
       },
@@ -97,5 +78,6 @@ export function useCryptoKeys() {
     isGenerating,
     error,
     generateKeys,
+    generator,
   };
 }

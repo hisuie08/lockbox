@@ -4,7 +4,6 @@ import { computed, provide, ref } from "vue";
 import { KeyRound } from "lucide-vue-next";
 import CopyableKeyView from "./CopyableKeyView.vue";
 import { keyIsGenerating } from "../provideKeys.ts";
-import { useKeyGenerations } from "@/composables/useKeyGeneration.ts";
 import DownloadKeyBtn from "./DownloadKeyBtn.vue";
 import { Button } from "@/components/base/button";
 import {
@@ -17,26 +16,21 @@ import { CardContent, CardTitle } from "@/components/base/card/index.ts";
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
 }>();
-const { pubKey, privKey, init } = useKeyGenerations();
+const { generatedPubKey, generatedPrivKey } = props.keys.generator;
 provide(keyIsGenerating, props.keys.isGenerating);
 const isOpen = ref(false);
-const closable = computed(() => pubKey.isSaved.value && privKey.isSaved.value);
-
-async function generate() {
-  const { publicJwk, privateJwk } = await props.keys.generateKeys();
-  pubKey.jwk.value = publicJwk;
-  privKey.jwk.value = privateJwk;
-}
+const closable = computed(
+  () => generatedPubKey.isSaved.value && generatedPrivKey.isSaved.value,
+);
 
 function openAndGenerate() {
   isOpen.value = true;
-  init();
-  generate();
+  props.keys.generateKeys();
 }
 
 function submit() {
-  props.keys.public.importJwk(pubKey.jwk.value!);
-  props.keys.private.importJwk(privKey.jwk.value!);
+  props.keys.public.importJwk(generatedPubKey.jwk.value!);
+  props.keys.private.importJwk(generatedPrivKey.jwk.value!);
   isOpen.value = false;
 }
 function cancel() {
@@ -56,9 +50,9 @@ function cancel() {
       <CardTitle>新しい鍵ペアの作成</CardTitle>
       <CardContent class="grid gap-5">
         <div class="grid gap-3">
-          <CopyableKeyView :gen-key="pubKey">公開鍵</CopyableKeyView>
+          <CopyableKeyView :gen-key="generatedPubKey">公開鍵</CopyableKeyView>
 
-          <CopyableKeyView :gen-key="privKey">秘密鍵</CopyableKeyView>
+          <CopyableKeyView :gen-key="generatedPrivKey">秘密鍵</CopyableKeyView>
           <span class="text-destructive">
             秘密鍵は決して他人に共有しないでください
           </span>
@@ -68,11 +62,11 @@ function cancel() {
         </div>
 
         <div class="grid gap-2">
-          <DownloadKeyBtn :gen-key="pubKey"
+          <DownloadKeyBtn :gen-key="generatedPubKey"
             >公開鍵をダウンロード</DownloadKeyBtn
           >
 
-          <DownloadKeyBtn :gen-key="privKey"
+          <DownloadKeyBtn :gen-key="generatedPrivKey"
             >秘密鍵をダウンロード</DownloadKeyBtn
           >
         </div>

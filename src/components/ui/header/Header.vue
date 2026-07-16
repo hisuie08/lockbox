@@ -42,13 +42,13 @@ const base = document.baseURI;
           </div>
         </a>
       </div>
-      <div class="flex space-x-2 h-7">
-        <div class="flex items-center p-0.5" @click="changeColorMode">
+      <div class="flex space-x-2 h-7 items-center">
+        <div class="flex p-0.5" @click="changeColorMode">
           <SunIcon class="w-full h-full" v-if="mode == 'light'" />
           <MoonIcon class="w-full h-full" v-if="mode == 'dark'" />
         </div>
         <Separator orientation="vertical" />
-        <Github class="inline w-8 h-auto" />
+        <Github class="w-8 h-auto" />
       </div>
     </div>
 

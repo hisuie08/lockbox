@@ -1,7 +1,7 @@
-import type { KeyAgreementKeyType } from "@/crypt";
+import { exportAsJwk, genKeyPair, type KeyAgreementKeyType } from "@/crypt";
 import { downloadText } from "@/lib/download";
 import { useClipboard } from "@vueuse/core";
-import { ref } from "vue";
+import { ref, type Ref } from "vue";
 import { toast } from "vue-sonner";
 
 export type GeneratedKeyHandle = ReturnType<typeof createGeneratedKeyHandle>;
@@ -30,16 +30,31 @@ function createGeneratedKeyHandle(keyType: KeyAgreementKeyType) {
 }
 
 export function useKeyGenerations() {
-  const pubKey = createGeneratedKeyHandle("public");
-  const privKey = createGeneratedKeyHandle("private");
+  const isGenerating = ref(false);
+  const generatedPubKey = createGeneratedKeyHandle("public");
+  const generatedPrivKey = createGeneratedKeyHandle("private");
   function init() {
-    pubKey.isSaved.value = false;
-    privKey.isSaved.value = false;
+    generatedPubKey.isSaved.value = false;
+    generatedPrivKey.isSaved.value = false;
   }
-
+  async function genKey(error: Ref<string | null>) {
+    isGenerating.value = true;
+    init();
+    error.value = null;
+    const keyPair = await genKeyPair();
+    const [publicJwk, privateJwk] = await Promise.all([
+      exportAsJwk(keyPair.publicKey),
+      exportAsJwk(keyPair.privateKey),
+    ]);
+    isGenerating.value = false;
+    generatedPubKey.jwk.value = publicJwk;
+    generatedPrivKey.jwk.value = privateJwk;
+  }
   return {
-    pubKey,
-    privKey,
+    isGenerating,
+    generatedPubKey,
+    generatedPrivKey,
+    genKey,
     init,
   };
 }
