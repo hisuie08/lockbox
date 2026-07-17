@@ -28,7 +28,8 @@ self.addEventListener("message", (event) => {
  */
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-
+  const base = new URL(import.meta.env.BASE_URL, self.location.origin).pathname;
+  if (!url.pathname.startsWith(base + "download/")) return;
   const id = url.pathname.split("/").pop();
 
   const download = downloads.get(id);
