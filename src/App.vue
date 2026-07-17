@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import AlertStreamNotSupported from "./components/ui/static/AlertStreamNotSupported.vue";
 import { useCryptoKeys } from "@/composables/useCryptoKeys.ts";
-import { useStreamSupport } from "@/composables/useStreamSupport.ts";
 import { useFileEncrypt, useFileDecrypt } from "@/composables/useFileCrypto.ts";
 import { useShareLink } from "./composables/useShareLink.ts";
 import EncryptFileCard from "./components/ui/file/EncryptFileCard.vue";
@@ -10,17 +8,11 @@ import Header from "./components/ui/header/Header.vue";
 import Algorithmns from "./components/ui/algorithms/Algorithmns.vue";
 import { Toaster } from "@/components/base/sonner";
 import KeyControlCard from "./components/ui/keys/card/KeyControlCard.vue";
-import { WARNING_FILE_SIZE } from "./crypt/constants.ts";
 
 const keys = useCryptoKeys();
 
-const streamSupported = useStreamSupport();
-const option = {
-  streamSupport: streamSupported,
-  warnFileSize: WARNING_FILE_SIZE,
-};
-const enc = useFileEncrypt(option);
-const dec = useFileDecrypt(option);
+const enc = useFileEncrypt();
+const dec = useFileDecrypt();
 const { loadLink } = useShareLink();
 onload = async () => {
   const publicJwk = loadLink();
@@ -37,7 +29,6 @@ onload = async () => {
       <div
         class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-5 sm:px-6 lg:px-8"
       >
-        <AlertStreamNotSupported v-if="!streamSupported.isSupported" />
         <section class="grid gap-6 lg:grid-cols-[0.3fr_0.9fr]">
           <KeyControlCard :keys="keys" />
           <div class="grid gap-6">

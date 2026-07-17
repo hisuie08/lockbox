@@ -8,7 +8,7 @@ import {
   InvalidPrivateKeyError,
   UnsupportedVersionError,
 } from "./errors";
-import { BufferedWriter } from "../bufferio/bufferWriter";
+import { BufferedWriter } from "../test/bufferWriter";
 import { genKeyPair } from "../key/keyPair";
 import { encryptFile } from "../encrypt/encrypt";
 import {

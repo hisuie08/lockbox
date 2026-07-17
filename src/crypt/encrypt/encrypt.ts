@@ -160,21 +160,25 @@ export async function writeChunk(
   }
 }
 
-export async function encryptFile(input: {
-  filename: string;
-  filetype: string;
-  fileSize: number;
-  source: ReadableStream<Uint8Array>;
-  publicKey: CryptoKey;
-  writer: WritableStreamDefaultWriter<Uint8Array>;
-  onProgress: (progress: number) => void;
-  onSaved: (saved: boolean) => void;
-  createdAt?: string;
-}): Promise<void> {
+export async function encryptFile(
+  input: {
+    filename: string;
+    filetype: string;
+    fileSize: number;
+    source: ReadableStream<Uint8Array>;
+    publicKey: CryptoKey;
+    writer: WritableStreamDefaultWriter<Uint8Array>;
+    onProgress: (progress: number) => void;
+    onSaved: (saved: boolean) => void;
+    createdAt?: string;
+  },
+  signal?: AbortSignal,
+): Promise<void> {
   try {
     let processedBytes = 0;
 
     // 暗号化ヘッダーを生成して先頭へ書き込む
+    signal?.throwIfAborted();
     const { aesKey, header } = await createEncryptedFileHeader({
       ...input,
       recipientPublicKey: input.publicKey,
@@ -184,19 +188,21 @@ export async function encryptFile(input: {
     await writeFileHeader(input.writer, header);
     const reader: ChunkReader = new StreamChunkReader(input.source);
     while (true) {
+      signal?.throwIfAborted();
       const chunk = await reader.readChunk();
       if (chunk === null) {
         break;
       }
       processedBytes += chunk.length;
       input.onProgress(processedBytes / input.fileSize);
-
+      signal?.throwIfAborted();
       const encrypted = await encryptChunk(chunk, aesKey);
       await writeChunk(input.writer, encrypted);
     }
 
     // 空ファイルでも完全性保護のため空チャンクを1つ保存する。
     if (processedBytes === 0) {
+      signal?.throwIfAborted();
       const encrypted = await encryptChunk(new Uint8Array(), aesKey);
       await writeChunk(input.writer, encrypted);
     }
@@ -214,6 +220,7 @@ export async function encryptFile(input: {
     }
     input.onSaved(true);
   } catch (error) {
+    signal?.throwIfAborted();
     if (error instanceof EncryptionError || OutputWriteError) {
       throw error;
     }

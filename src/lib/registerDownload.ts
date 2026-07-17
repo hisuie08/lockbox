@@ -8,16 +8,18 @@ export async function registerDownload({
   stream,
   filename,
   contentType = "application/octet-stream",
-}: RegisterDownloadOptions): Promise<string> {
+}: RegisterDownloadOptions): Promise<{ url: string; signal: AbortSignal }> {
   if (!("serviceWorker" in navigator))
     throw new Error("Service Worker is not supported.");
   const channel = new MessageChannel();
+  const port = channel.port1;
   const registration = await navigator.serviceWorker.ready;
 
   if (!registration.active) throw new Error("Service Worker is not active.");
 
   const id = crypto.randomUUID();
 
+  const controller = new AbortController();
   registration.active.postMessage(
     {
       type: "register-download",
@@ -29,11 +31,20 @@ export async function registerDownload({
     [stream, channel.port2],
   );
   await new Promise<void>((resolve, reject) => {
-    channel.port1.onmessage = (e) => {
+    port.onmessage = (e) => {
       if (e.data.ok) resolve();
       else reject(new Error("failed to register download"));
     };
   });
 
-  return `/download/${id}`;
+  port.onmessage = (event) => {
+    if (event.data.type === "cancel") {
+      controller.abort();
+    }
+  };
+
+  return {
+    url: `/download/${id}`,
+    signal: controller.signal,
+  };
 }

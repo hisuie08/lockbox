@@ -1,6 +1,6 @@
 import { MemoryWriteError } from "../errors";
 
-// Firefox等 stream非対応ブラウザ用
+// テスト用
 export class BufferedWriter {
   private readonly chunks: Uint8Array[] = [];
 
@@ -38,7 +38,6 @@ export class BufferedWriter {
       );
     }
   }
-  // テスト用
   toFile(filename: string, filetype: string): File {
     return new File(this.chunks as BlobPart[], filename, {
       type: filetype,

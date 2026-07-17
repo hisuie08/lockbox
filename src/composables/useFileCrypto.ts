@@ -1,5 +1,4 @@
 import { reactive, computed, toRefs, ref, watchEffect } from "vue";
-import type { useStreamSupport } from "./useStreamSupport";
 import {
   decryptFile,
   DecryptionError,
@@ -9,10 +8,7 @@ import {
 } from "@/crypt";
 import { FileCryptoError } from "@/crypt/errors";
 import { registerDownload } from "@/lib/registerDownload";
-type UseFileCryptoOption = {
-  warnFileSize: number;
-  streamSupport: ReturnType<typeof useStreamSupport>;
-};
+import { CancelableWriter } from "@/crypt/cancelableWriter";
 type FileCryptoState = {
   fileToProcess: File | null;
   progress: number;
@@ -26,7 +22,7 @@ function getErrorMessage(error: unknown): string {
   throw error;
 }
 
-function useFileCrypt(option: UseFileCryptoOption) {
+function useFileCrypt() {
   const state = reactive<FileCryptoState & { saved: boolean }>({
     fileToProcess: null,
     progress: 0,
@@ -39,6 +35,11 @@ function useFileCrypt(option: UseFileCryptoOption) {
 
   function setError(message: string | null) {
     state.error = message;
+  }
+
+  function cancel() {
+    state.progress = 0;
+    state.saved = false;
   }
 
   function setWarning(message: string | null) {
@@ -56,17 +57,16 @@ function useFileCrypt(option: UseFileCryptoOption) {
   async function getDownloadWriter(filename: string) {
     const pipe = new TransformStream<Uint8Array, Uint8Array>();
 
-    const url = await registerDownload({
+    const { url, signal } = await registerDownload({
       stream: pipe.readable,
       filename: filename,
     });
     const a: HTMLAnchorElement = document.createElement("a");
     a.href = url;
-    a.download = filename;
     a.click();
 
-    const writer = pipe.writable.getWriter();
-    return writer;
+    const writer = new CancelableWriter(pipe.writable.getWriter(), signal);
+    return { writer, signal };
   }
 
   async function setFile(file: File | null) {
@@ -79,18 +79,10 @@ function useFileCrypt(option: UseFileCryptoOption) {
       state.fileToProcess = null;
       return;
     }
-
-    if (!option.streamSupport.isSupported) {
-      if (file.size > option.warnFileSize) {
-        state.warning = "大きなファイルの操作はChromeを推奨します";
-      }
-    }
-
     state.fileToProcess = file;
   }
 
   return {
-    ...option,
     ...toRefs(state),
     state,
     isProcessing,
@@ -98,13 +90,14 @@ function useFileCrypt(option: UseFileCryptoOption) {
     setWarning,
     setProgress,
     setSaved,
+    cancel,
     setFile,
     createOutputWriter: getDownloadWriter,
   };
 }
 
-export function useFileEncrypt(option: UseFileCryptoOption) {
-  const fileCrypt = useFileCrypt(option);
+export function useFileEncrypt() {
+  const fileCrypt = useFileCrypt();
 
   async function encryptSelectedFile(publicKey: CryptoKey | null) {
     if (!fileCrypt.state.fileToProcess || !publicKey) {
@@ -115,32 +108,33 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
     try {
       const file = fileCrypt.state.fileToProcess;
 
-      const filename = `${file.name}.enc`;
+      const encFileName = `${file.name}.enc`;
       const input = {
         source: file.stream(),
-        filename: filename,
+        filename: file.name,
         fileSize: file.size,
         filetype: file.type,
         publicKey: publicKey,
         onProgress: fileCrypt.setProgress,
         onSaved: fileCrypt.setSaved,
       };
-      const pipe = new TransformStream<Uint8Array, Uint8Array>();
-      const url = await registerDownload({
-        stream: pipe.readable,
-        filename: filename,
-      });
-      const a: HTMLAnchorElement = document.createElement("a");
-      a.href = url;
-      a.click();
-      const writer = pipe.writable.getWriter();
-      await encryptFile({
-        ...input,
-        writer,
-      });
+
+      const { writer, signal } =
+        await fileCrypt.createOutputWriter(encFileName);
+      await encryptFile(
+        {
+          ...input,
+          writer,
+        },
+        signal,
+      );
       fileCrypt.setError(null);
       fileCrypt.setWarning(null);
     } catch (error) {
+      if ((error as Error).name == "AbortError") {
+        fileCrypt.setError("キャンセルされました");
+        fileCrypt.cancel();
+      }
       if (error instanceof FileCryptoError) {
         fileCrypt.setError(getErrorMessage(error));
       }
@@ -154,8 +148,8 @@ export function useFileEncrypt(option: UseFileCryptoOption) {
   };
 }
 
-export function useFileDecrypt(option: UseFileCryptoOption) {
-  const fileCrypt = useFileCrypt(option);
+export function useFileDecrypt() {
+  const fileCrypt = useFileCrypt();
 
   const originFile = ref<EncryptedFileHeader | null>(null);
 
@@ -214,16 +208,23 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
 
       const filename = originFile.value.originalName;
 
-      const writer = await fileCrypt.createOutputWriter(filename);
+      const { writer, signal } = await fileCrypt.createOutputWriter(filename);
 
-      await decryptFile({
-        ...input,
-        writer,
-      });
+      await decryptFile(
+        {
+          ...input,
+          writer,
+        },
+        signal,
+      );
 
       fileCrypt.setError(null);
       fileCrypt.setWarning(null);
     } catch (error) {
+      if ((error as Error).name == "AbortError") {
+        fileCrypt.setError("キャンセルされました");
+        fileCrypt.cancel();
+      }
       if (
         error instanceof DecryptionError ||
         error instanceof FileCryptoError
@@ -231,10 +232,6 @@ export function useFileDecrypt(option: UseFileCryptoOption) {
         switch (error.name) {
           case "InvalidPrivateKeyError":
             fileCrypt.setError("秘密鍵がファイルに対応していません");
-            break;
-
-          case "AbortError":
-            fileCrypt.setError(null);
             break;
 
           default:

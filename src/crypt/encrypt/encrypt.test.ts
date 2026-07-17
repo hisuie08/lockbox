@@ -10,7 +10,7 @@ import {
   FORMAT_VERSION,
   PREAMBLE_LAYOUT,
 } from "../constants";
-import { BufferedWriter } from "../bufferio/bufferWriter";
+import { BufferedWriter } from "../test/bufferWriter";
 import type { EncryptedFileHeader } from "../types";
 import {
   createEncryptedFileHeader,

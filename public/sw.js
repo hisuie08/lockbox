@@ -1,5 +1,11 @@
 const downloads = new Map();
 
+// urlのパーセントエンコーディングをやりくりするヘルパー関数
+function encodeRFC5987(value) {
+  return encodeURIComponent(value)
+    .replace(/['()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase())
+    .replace(/%(7C|60|5E)/g, (match) => match.toUpperCase());
+}
 /**
  * ClientからReadableStreamを受け取る
  */
@@ -11,7 +17,7 @@ self.addEventListener("message", (event) => {
 
   downloads.set(data.id, {
     stream: data.stream,
-    filename: data.filename ?? "download.bin",
+    filename: data.filename ?? "encrypted.enc",
     contentType: data.contentType ?? "application/octet-stream",
     port: port,
   });
@@ -28,7 +34,6 @@ self.addEventListener("fetch", (event) => {
   const id = url.pathname.substring("/download/".length);
 
   const download = downloads.get(id);
-  const port = download.port;
 
   if (!download) {
     event.respondWith(
@@ -42,6 +47,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const port = download.port;
   downloads.delete(id);
   const stream = download.stream;
 
@@ -85,7 +91,12 @@ self.addEventListener("fetch", (event) => {
         },
       });
 
-      return new Response(rs);
+      return new Response(rs, {
+        headers: {
+          "Content-Type": download.contentType,
+          "Content-Disposition": `attachment; filename*=UTF-8''${encodeRFC5987(download.filename)}`,
+        },
+      });
     })(),
   );
 });

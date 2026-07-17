@@ -138,13 +138,18 @@ async function readChunk(reader: BufferedReader): Promise<Chunk | null> {
   return { header: chunkHeader, iv, ciphertext };
 }
 
-export async function getEncryptedFileHeader(input: {
-  source: ReadableStream<Uint8Array>;
-}): Promise<EncryptedFileHeader> {
+export async function getEncryptedFileHeader(
+  input: {
+    source: ReadableStream<Uint8Array>;
+  },
+  signal?: AbortSignal,
+): Promise<EncryptedFileHeader> {
   try {
+    signal?.throwIfAborted();
     const reader: BufferedReader = new StreamBufferedReader(input.source);
     return await readFileHeader(reader);
   } catch (error) {
+    signal?.throwIfAborted();
     if (error instanceof DecryptionError || InputReadError) {
       throw error;
     }
@@ -153,20 +158,27 @@ export async function getEncryptedFileHeader(input: {
   }
 }
 
-export async function decryptFile(input: {
-  source: ReadableStream<Uint8Array>;
-  privateKey: CryptoKey;
-  writer: WritableStreamDefaultWriter<Uint8Array>;
-  onProgress: (progress: number) => void;
-  onSaved: (saved: boolean) => void;
-}): Promise<EncryptedFileHeader> {
+export async function decryptFile(
+  input: {
+    source: ReadableStream<Uint8Array>;
+    privateKey: CryptoKey;
+    writer: WritableStreamDefaultWriter<Uint8Array>;
+    onProgress: (progress: number) => void;
+    onSaved: (saved: boolean) => void;
+  },
+  signal?: AbortSignal,
+): Promise<EncryptedFileHeader> {
   try {
+    signal?.throwIfAborted();
     let writtenBytes = 0;
     const reader = new StreamBufferedReader(input.source);
+    signal?.throwIfAborted();
     const header = await readFileHeader(reader);
+    signal?.throwIfAborted();
     const aesKey = await prepareAESKey(header, input.privateKey);
     while (true) {
       const chunk = await readChunk(reader);
+      signal?.throwIfAborted();
       if (!chunk) {
         break;
       }
@@ -174,6 +186,7 @@ export async function decryptFile(input: {
       try {
         await input.writer.write(plaintext);
       } catch (error) {
+        signal?.throwIfAborted();
         if (error instanceof MemoryError) {
           throw error;
         }
@@ -189,10 +202,12 @@ export async function decryptFile(input: {
       await input.writer.close();
       input.onSaved(true);
     } catch (error) {
+      signal?.throwIfAborted();
       throw new OutputWriteError("Failed to write decrypted output.", error);
     }
     return header;
   } catch (error) {
+    signal?.throwIfAborted();
     if (error instanceof DecryptionError || InputReadError) {
       throw error;
     }
