@@ -10,8 +10,9 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
-} from "@/components/base/dialog/index.ts";
-import { CardContent, CardTitle } from "@/components/base/card/index.ts";
+  DialogTitle,
+} from "@/components/base/dialog";
+import { CardContent, CardTitle } from "@/components/base/card";
 
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
@@ -46,8 +47,12 @@ function cancel() {
         {{ keys.isGenerating.value ? "作成中" : "新規鍵ペア" }}
       </Button></DialogTrigger
     >
-    <DialogContent @pointer-down-outside.prevent :show-close-button="false">
-      <CardTitle>新しい鍵ペアの作成</CardTitle>
+    <DialogContent
+      @pointer-down-outside.prevent
+      :show-close-button="false"
+      :aria-describedby="undefined"
+    >
+      <DialogTitle>新しい鍵ペアの作成</DialogTitle>
       <CardContent class="grid gap-5">
         <div class="grid gap-3">
           <CopyableKeyView :gen-key="generatedPubKey">公開鍵</CopyableKeyView>

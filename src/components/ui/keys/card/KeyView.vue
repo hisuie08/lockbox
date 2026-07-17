@@ -56,7 +56,7 @@ function sharePublicKey() {
       </span>
 
       <InputGroup>
-        <InputGroupInput v-model="keyHandle.thumbprint" readonly />
+        <InputGroupInput :value="keyHandle.thumbprint.value" readonly />
         <InputGroupAddon align="inline-end">
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
@@ -95,7 +95,7 @@ function sharePublicKey() {
       </InputGroup>
     </label>
     <Dialog v-model:open="isOpen" modal>
-      <DialogContent>
+      <DialogContent :aria-describedby="undefined">
         <EditDialog :key-handle="keyHandle" />
       </DialogContent>
     </Dialog>
