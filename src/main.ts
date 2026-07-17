@@ -2,6 +2,11 @@ import { createApp } from "vue";
 import "./index.css";
 import "vue-sonner/style.css";
 import App from "./App.vue";
-await navigator.serviceWorker.register("/sw.js");
+
+const base = import.meta.env.BASE_URL;
+
+await navigator.serviceWorker.register(`${base}sw.js`, {
+  scope: base,
+});
 await navigator.serviceWorker.ready;
 createApp(App).mount("#root");
