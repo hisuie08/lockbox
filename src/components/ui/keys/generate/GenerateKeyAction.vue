@@ -12,7 +12,7 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/base/dialog";
-import { CardContent, CardTitle } from "@/components/base/card";
+import { CardContent } from "@/components/base/card";
 
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
