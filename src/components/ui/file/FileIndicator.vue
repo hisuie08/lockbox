@@ -2,7 +2,7 @@
 import { Progress } from "@/components/base/progress";
 import { computed } from "vue";
 const props = defineProps<{ progress: number }>();
-const indicator = computed(() => props.progress * 100);
+const indicator = computed(() => parseFloat((props.progress * 100).toFixed(1)));
 </script>
 <template>
   <div class="grid gap-1">
