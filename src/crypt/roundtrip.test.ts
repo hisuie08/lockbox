@@ -93,7 +93,7 @@ describe("encrypt file stream round trip", () => {
     100000,
     1024 * 1024, // 1MB
     100 * 1024 * 1024, // 100MB
-    //1024 * 1024 * 1024, // 1GB
+    1024 * 1024 * 1024, // 1GB
   ];
 
   for (const fileSize of fileSizes) {
