@@ -55,7 +55,7 @@ export async function registerDownload({
 
   await registered;
   return {
-    url: `${import.meta.env.BASE_URL}/download/${id}`,
+    url: `${import.meta.env.BASE_URL}download/${id}`,
     signal: controller.signal,
   };
 }
