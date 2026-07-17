@@ -18,7 +18,6 @@ function onFileChange(event: Event) {
   if (files != null) {
     props.files.setFile(files[0]);
   }
-  (event.target as HTMLInputElement).value = "";
 }
 </script>
 

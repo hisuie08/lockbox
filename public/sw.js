@@ -21,7 +21,7 @@ self.addEventListener("message", (event) => {
     contentType: data.contentType ?? "application/octet-stream",
     port: port,
   });
-  port.postMessage({ ok: true });
+  port.postMessage({ type: "registered" });
 });
 /**
  * ダウンロード要求を横取り
@@ -30,11 +30,9 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
   if (!url.pathname.startsWith("/download/")) return;
-
   const id = url.pathname.substring("/download/".length);
 
   const download = downloads.get(id);
-
   if (!download) {
     event.respondWith(
       new Response("Download not found.", {
@@ -50,6 +48,15 @@ self.addEventListener("fetch", (event) => {
   const port = download.port;
   downloads.delete(id);
   const stream = download.stream;
+  let cancelled = false;
+
+  function notifyCancel() {
+    if (cancelled) return;
+    cancelled = true;
+    port.postMessage({
+      type: "cancel",
+    });
+  }
 
   event.respondWith(
     (async () => {
@@ -58,35 +65,23 @@ self.addEventListener("fetch", (event) => {
         async pull(controller) {
           try {
             const { done, value } = await reader.read();
-
             if (done) {
               controller.close();
               return;
             }
-
             controller.enqueue(value);
           } catch (err) {
-            port.postMessage({
-              type: "cancel",
-            });
-
+            notifyCancel();
             controller.error(err);
           }
         },
 
         async cancel(reason) {
-          port.postMessage({
-            type: "cancel",
-          });
-
+          notifyCancel();
           try {
             await reader.cancel(reason);
-          } catch (err) {
-            port.postMessage({
-              type: "cancel",
-            });
-
-            controller.error(err);
+          } catch (_) {
+            // キャンセルのpostMessageは出しているのでcancelの例外は意図的に握りつぶす
           }
         },
       });
