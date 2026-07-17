@@ -5,6 +5,9 @@ import App from "./App.vue";
 
 const base = import.meta.env.BASE_URL;
 
-await navigator.serviceWorker.register(`${base}sw.js`);
+await navigator.serviceWorker.register(`${base}sw.js`, {
+  scope: base,
+  updateViaCache: "none",
+});
 await navigator.serviceWorker.ready;
 createApp(App).mount("#root");

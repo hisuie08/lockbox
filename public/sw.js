@@ -28,10 +28,10 @@ self.addEventListener("message", (event) => {
  */
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-
-  if (!url.pathname.startsWith("/download/")) return;
-  const id = url.pathname.substring("/download/".length);
-
+  const BASE_PATH = new URL(self.registration.scope).pathname;
+  const prefix = `${BASE_PATH}download/`;
+  if (!url.pathname.startsWith(prefix)) return;
+  const id = url.pathname.slice(prefix.length);
   const download = downloads.get(id);
   if (!download) {
     event.respondWith(
