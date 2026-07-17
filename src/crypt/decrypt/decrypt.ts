@@ -27,7 +27,7 @@ import { _SHA224 } from "@noble/hashes/sha2.js";
 import { getJwkThumbprint } from "../key/validate";
 const decoder = new TextDecoder();
 
-export async function readFileHeader(
+async function readFileHeader(
   reader: BufferedReader,
 ): Promise<EncryptedFileHeader> {
   const signature = decoder.decode(

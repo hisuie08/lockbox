@@ -1,1 +1,1 @@
-export {encryptFile,EncryptionError} from "./encrypt"
+export {encryptFile} from "./encrypt"

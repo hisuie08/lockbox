@@ -14,7 +14,7 @@ export function createKeyState(keyType: KeyAgreementKeyType) {
   return { keyType, key, jwk, thumbprint };
 }
 
-export function useJwk(key: Ref<CryptoKey | null>) {
+function useJwk(key: Ref<CryptoKey | null>) {
   const jwk = ref<JsonWebKey | null>(null);
   watch(key, async () => {
     jwk.value = key.value ? await exportAsJwk(key.value) : null;
@@ -22,7 +22,7 @@ export function useJwk(key: Ref<CryptoKey | null>) {
   return readonly(jwk);
 }
 
-export function useThumbprint(key: Ref<CryptoKey | null>) {
+function useThumbprint(key: Ref<CryptoKey | null>) {
   const thumbprint = ref("");
   watch(key, async () => {
     thumbprint.value = key.value ? await getJwkThumbprint(key.value) : "";

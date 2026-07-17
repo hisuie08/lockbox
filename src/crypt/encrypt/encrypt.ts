@@ -24,7 +24,7 @@ import { genKeyPair } from "../key/keyPair";
 import { getJwkThumbprint } from "../key/validate";
 import { StreamChunkReader, type ChunkReader } from "./chunkReader";
 
-export abstract class EncryptionError extends FileCryptoError {
+class EncryptionError extends FileCryptoError {
   override cause?: unknown;
 
   constructor(message: string, cause?: unknown) {
@@ -108,7 +108,7 @@ export async function encryptChunk(
       ciphertext,
     };
   } catch (error) {
-    throw new UnexpectedCryptoError(error);
+    throw new EncryptionError("failed to encrypt chunk", error);
   }
 }
 
