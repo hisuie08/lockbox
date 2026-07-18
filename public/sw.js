@@ -1,4 +1,4 @@
-console.log("SW version 2026-07-18-2");
+console.log("SW version 2026-07-18-3");
 const downloads = new Map();
 
 // urlのパーセントエンコーディングをやりくりするヘルパー関数
