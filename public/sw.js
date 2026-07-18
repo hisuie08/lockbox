@@ -1,4 +1,13 @@
-console.log("SW version 2026-07-18-3");
+console.log("SW version 2026-07-18-4");
+
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 const downloads = new Map();
 
 // urlのパーセントエンコーディングをやりくりするヘルパー関数
