@@ -14,7 +14,6 @@ type FileCryptoState = {
   fileToProcess: File | null;
   progress: number;
   error: string | null;
-  warning: string | null;
 };
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
@@ -28,17 +27,12 @@ function useFileCrypt(keyState: KeyState) {
     fileToProcess: null,
     progress: 0,
     error: null,
-    warning: null,
   });
 
   const isProcessing = computed(() => state.progress > 0 && state.progress < 1);
 
   function setError(message: string | null) {
     state.error = message;
-  }
-
-  function setWarning(message: string | null) {
-    state.warning = message;
   }
 
   function setProgress(progress: number) {
@@ -63,7 +57,6 @@ function useFileCrypt(keyState: KeyState) {
   async function setFile(file: File | null) {
     state.progress = 0;
     state.error = null;
-    state.warning = null;
 
     if (!file) {
       state.fileToProcess = null;
@@ -78,7 +71,6 @@ function useFileCrypt(keyState: KeyState) {
     state,
     isProcessing,
     setError,
-    setWarning,
     setProgress,
     setFile,
     getDownloadWriter,
@@ -116,7 +108,6 @@ export function useFileEncrypt(publicKey: KeyState) {
         signal,
       );
       fileCrypt.setError(null);
-      fileCrypt.setWarning(null);
     } catch (error) {
       if ((error as Error).name == "AbortError") {
         fileCrypt.setError("キャンセルされました");
@@ -205,7 +196,6 @@ export function useFileDecrypt(privateKey: KeyState) {
       );
 
       fileCrypt.setError(null);
-      fileCrypt.setWarning(null);
     } catch (error) {
       if ((error as Error).name == "AbortError") {
         fileCrypt.setError("キャンセルされました");
