@@ -37,10 +37,6 @@ function useFileCrypt(keyState: KeyState) {
     state.error = message;
   }
 
-  function cancel() {
-    state.progress = 0;
-  }
-
   function setWarning(message: string | null) {
     state.warning = message;
   }
@@ -84,9 +80,8 @@ function useFileCrypt(keyState: KeyState) {
     setError,
     setWarning,
     setProgress,
-    cancel,
     setFile,
-    createOutputWriter: getDownloadWriter,
+    getDownloadWriter,
   };
 }
 
@@ -112,8 +107,7 @@ export function useFileEncrypt(publicKey: KeyState) {
         onProgress: fileCrypt.setProgress,
       };
 
-      const { writer, signal } =
-        await fileCrypt.createOutputWriter(encFileName);
+      const { writer, signal } = await fileCrypt.getDownloadWriter(encFileName);
       await encryptFile(
         {
           ...input,
@@ -126,7 +120,7 @@ export function useFileEncrypt(publicKey: KeyState) {
     } catch (error) {
       if ((error as Error).name == "AbortError") {
         fileCrypt.setError("キャンセルされました");
-        fileCrypt.cancel();
+        fileCrypt.progress.value = 0;
       }
       if (error instanceof FileCryptoError) {
         fileCrypt.setError(getErrorMessage(error));
@@ -200,7 +194,7 @@ export function useFileDecrypt(privateKey: KeyState) {
 
       const filename = originFile.value.originalName;
 
-      const { writer, signal } = await fileCrypt.createOutputWriter(filename);
+      const { writer, signal } = await fileCrypt.getDownloadWriter(filename);
 
       await decryptFile(
         {
@@ -215,7 +209,7 @@ export function useFileDecrypt(privateKey: KeyState) {
     } catch (error) {
       if ((error as Error).name == "AbortError") {
         fileCrypt.setError("キャンセルされました");
-        fileCrypt.cancel();
+        fileCrypt.progress.value = 0;
       }
       if (
         error instanceof DecryptionError ||
