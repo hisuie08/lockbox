@@ -57,16 +57,16 @@ function useFileCrypt() {
   async function getDownloadWriter(filename: string) {
     const pipe = new TransformStream<Uint8Array, Uint8Array>();
 
-    const { url, signal } = await registerDownload({
+    const reg = await registerDownload({
       stream: pipe.readable,
       filename: filename,
     });
     const a: HTMLAnchorElement = document.createElement("a");
-    a.href = url;
+    a.href = reg.url;
     a.click();
 
-    const writer = new CancelableWriter(pipe.writable.getWriter(), signal);
-    return { writer, signal };
+    const writer = new CancelableWriter(pipe.writable.getWriter(), reg.signal);
+    return { writer, ...reg };
   }
 
   async function setFile(file: File | null) {

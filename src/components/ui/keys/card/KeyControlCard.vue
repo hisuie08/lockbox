@@ -10,11 +10,10 @@ import {
 
 import { KeyRound } from "lucide-vue-next";
 
-import AlertKeyPairMismatch from "../../static/AlertKeyPairMismatch.vue";
-
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import GenerateKeyAction from "../generate/GenerateKeyAction.vue";
 import KeyView from "./KeyView.vue";
+import AlertView from "../../alerts/AlertView.vue";
 
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
@@ -35,7 +34,11 @@ const props = defineProps<{
     </CardHeader>
 
     <CardContent class="grid gap-5">
-      <AlertKeyPairMismatch v-if="keys.mismatchKeys.value" />
+      <AlertView
+        v-if="keys.mismatchKeys.value"
+        :title="'鍵のペアが一致していません'"
+        :description="'この公開鍵で暗号化したファイルを、この秘密鍵で復号化は出来ないことに注意してください'"
+      ></AlertView>
       <KeyView :key-handle="keys.public" />
       <KeyView :key-handle="keys.private" />
     </CardContent>

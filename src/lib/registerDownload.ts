@@ -11,6 +11,7 @@ export async function registerDownload({
 }: RegisterDownloadOptions): Promise<{
   url: string;
   signal: AbortSignal;
+  abort: () => void;
 }> {
   if (!("serviceWorker" in navigator)) {
     throw new Error("Service Worker is not supported.");
@@ -42,6 +43,10 @@ export async function registerDownload({
     }
   };
 
+  function abort() {
+    controller.abort();
+  }
+
   registration.active.postMessage(
     {
       type: "register-download",
@@ -57,5 +62,6 @@ export async function registerDownload({
   return {
     url: `${import.meta.env.BASE_URL}download/${id}`,
     signal: controller.signal,
+    abort,
   };
 }
