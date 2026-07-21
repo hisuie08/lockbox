@@ -164,7 +164,6 @@ export async function decryptFile(
     privateKey: CryptoKey;
     writer: WritableStreamDefaultWriter<Uint8Array>;
     onProgress: (progress: number) => void;
-    onSaved: (saved: boolean) => void;
   },
   signal?: AbortSignal,
 ): Promise<EncryptedFileHeader> {
@@ -200,9 +199,11 @@ export async function decryptFile(
     input.onProgress(1);
     try {
       await input.writer.close();
-      input.onSaved(true);
     } catch (error) {
       signal?.throwIfAborted();
+      if (error instanceof MemoryError) {
+        throw error;
+      }
       throw new OutputWriteError("Failed to write decrypted output.", error);
     }
     return header;

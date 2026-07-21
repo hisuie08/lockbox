@@ -25,10 +25,7 @@ const label = props.files.keyState.keyType == "public" ? "暗号化" : "復号�
 <template>
   <Button :disabled="disabled" @click="onClick">
     <LockKeyhole v-if="files.progress.value == 0" aria-hidden="true" />
-    <Spinner
-      v-else-if="files.isProcessing.value || !files.saved.value"
-      aria-hidden="true"
-    />
+    <Spinner v-else-if="files.isProcessing.value" aria-hidden="true" />
 
     <Check v-else aria-hidden="true" />
     {{
@@ -36,9 +33,7 @@ const label = props.files.keyState.keyType == "public" ? "暗号化" : "復号�
         ? label + "開始"
         : files.isProcessing.value
           ? label + "中..."
-          : !files.saved.value
-            ? "保存中..."
-            : "完了"
+          : "完了"
     }}
   </Button>
 </template>

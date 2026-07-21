@@ -24,12 +24,11 @@ function getErrorMessage(error: unknown): string {
 }
 
 function useFileCrypt(keyState: KeyState) {
-  const state = reactive<FileCryptoState & { saved: boolean }>({
+  const state = reactive<FileCryptoState>({
     fileToProcess: null,
     progress: 0,
     error: null,
     warning: null,
-    saved: false,
   });
 
   const isProcessing = computed(() => state.progress > 0 && state.progress < 1);
@@ -40,7 +39,6 @@ function useFileCrypt(keyState: KeyState) {
 
   function cancel() {
     state.progress = 0;
-    state.saved = false;
   }
 
   function setWarning(message: string | null) {
@@ -49,10 +47,6 @@ function useFileCrypt(keyState: KeyState) {
 
   function setProgress(progress: number) {
     state.progress = progress;
-  }
-
-  function setSaved(saved: boolean) {
-    state.saved = saved;
   }
 
   async function getDownloadWriter(filename: string) {
@@ -71,7 +65,6 @@ function useFileCrypt(keyState: KeyState) {
   }
 
   async function setFile(file: File | null) {
-    state.saved = false;
     state.progress = 0;
     state.error = null;
     state.warning = null;
@@ -91,7 +84,6 @@ function useFileCrypt(keyState: KeyState) {
     setError,
     setWarning,
     setProgress,
-    setSaved,
     cancel,
     setFile,
     createOutputWriter: getDownloadWriter,
@@ -118,7 +110,6 @@ export function useFileEncrypt(publicKey: KeyState) {
         filetype: file.type,
         publicKey: publicKey,
         onProgress: fileCrypt.setProgress,
-        onSaved: fileCrypt.setSaved,
       };
 
       const { writer, signal } =
@@ -205,7 +196,6 @@ export function useFileDecrypt(privateKey: KeyState) {
         filetype: file.type,
         privateKey,
         onProgress: fileCrypt.setProgress,
-        onSaved: fileCrypt.setSaved,
       };
 
       const filename = originFile.value.originalName;

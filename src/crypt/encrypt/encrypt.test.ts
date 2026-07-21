@@ -162,7 +162,6 @@ describe("encryptFileToStream", () => {
       onProgress(value) {
         progress = value;
       },
-      onSaved: () => {},
     });
 
     expect(progress).toBe(1);
@@ -199,7 +198,6 @@ describe("encryptFileToStream", () => {
       onProgress(value) {
         progress = value;
       },
-      onSaved: () => {},
     });
 
     expect(progress).toBe(1);
@@ -226,7 +224,6 @@ describe("encryptFileToStream", () => {
         publicKey,
         writer: buffer.stream.getWriter(),
         onProgress() {},
-        onSaved: () => {},
       }),
     ).rejects.toThrow();
   });

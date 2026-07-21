@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useCryptoKeys } from "@/composables/useCryptoKeys.ts";
-import { useFileEncrypt, useFileDecrypt } from "@/composables/useFileCrypto.ts";
 import { useShareLink } from "./composables/useShareLink.ts";
 import EncryptFileCard from "./components/ui/file/EncryptFileCard.vue";
 import DecryptFileCard from "./components/ui/file/DecryptFileCard.vue";
@@ -11,8 +10,6 @@ import KeyControlCard from "./components/ui/keys/card/KeyControlCard.vue";
 
 const keys = useCryptoKeys();
 
-const enc = useFileEncrypt(keys.public);
-const dec = useFileDecrypt(keys.private);
 const { loadLink } = useShareLink();
 onload = async () => {
   const publicJwk = loadLink();
@@ -32,8 +29,8 @@ onload = async () => {
         <section class="grid gap-6 lg:grid-cols-[0.3fr_0.9fr]">
           <KeyControlCard :keys="keys" />
           <div class="grid gap-6">
-            <EncryptFileCard :files="enc" :keyHandle="keys.public" />
-            <DecryptFileCard :files="dec" :keyHandle="keys.private" />
+            <EncryptFileCard :keyState="keys.public" />
+            <DecryptFileCard :keyState="keys.private" />
             <Algorithmns />
           </div>
         </section>

@@ -133,7 +133,6 @@ describe("decryptFileToStream", () => {
       publicKey: recipient.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
-      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(
@@ -147,7 +146,6 @@ describe("decryptFileToStream", () => {
       privateKey: recipient.privateKey,
       writer: decryptedBuffer.stream.getWriter(),
       onProgress() {},
-      onSaved: () => {},
     });
 
     const decryptedText = await decryptedBuffer
@@ -174,7 +172,6 @@ describe("decryptFileToStream", () => {
       publicKey: recipientA.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
-      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(
@@ -187,7 +184,6 @@ describe("decryptFileToStream", () => {
         privateKey: recipientB.privateKey,
         writer: new BufferedWriter().stream.getWriter(),
         onProgress() {},
-        onSaved: () => {},
       }),
     ).rejects.toThrow(InvalidPrivateKeyError);
   });
@@ -205,7 +201,6 @@ describe("decryptFileToStream", () => {
       publicKey: recipient.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
-      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(
@@ -220,7 +215,6 @@ describe("decryptFileToStream", () => {
         privateKey: recipient.privateKey,
         writer: new BufferedWriter().stream.getWriter(),
         onProgress() {},
-        onSaved: () => {},
       }),
     ).rejects.toThrow(CorruptedFileError);
   });
@@ -238,7 +232,6 @@ describe("decryptFileToStream", () => {
       publicKey: recipient.publicKey,
       writer: encryptedBuffer.stream.getWriter(),
       onProgress() {},
-      onSaved: () => {},
     });
 
     const encryptedBytes = await blobToBytes(
@@ -252,7 +245,6 @@ describe("decryptFileToStream", () => {
       privateKey: recipient.privateKey,
       writer: decryptedBuffer.stream.getWriter(),
       onProgress() {},
-      onSaved: () => {},
     });
 
     expect(decryptedBuffer.size).toBe(0);

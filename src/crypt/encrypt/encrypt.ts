@@ -169,7 +169,6 @@ export async function encryptFile(
     publicKey: CryptoKey;
     writer: WritableStreamDefaultWriter<Uint8Array>;
     onProgress: (progress: number) => void;
-    onSaved: (saved: boolean) => void;
     createdAt?: string;
   },
   signal?: AbortSignal,
@@ -212,13 +211,12 @@ export async function encryptFile(
     try {
       await input.writer.close();
     } catch (error) {
-      await input.writer.abort(error);
+      signal?.throwIfAborted();
       if (error instanceof MemoryError) {
         throw error;
       }
       throw new OutputWriteError("Failed to write encrypted output.", error);
     }
-    input.onSaved(true);
   } catch (error) {
     signal?.throwIfAborted();
     if (error instanceof EncryptionError || OutputWriteError) {

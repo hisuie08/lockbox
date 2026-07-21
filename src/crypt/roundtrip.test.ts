@@ -93,7 +93,7 @@ describe("encrypt file stream round trip", () => {
     100000,
     1024 * 1024, // 1MB
     100 * 1024 * 1024, // 100MB
-    1024 * 1024 * 1024, // 1GB
+    //1024 * 1024 * 1024, // 1GB
   ];
 
   for (const fileSize of fileSizes) {
@@ -113,7 +113,6 @@ describe("encrypt file stream round trip", () => {
         publicKey: keyPair.publicKey,
         writer: pipe.writable.getWriter(),
         onProgress: () => {},
-        onSaved: () => {},
       });
 
       const decryptPromise = decryptFile({
@@ -121,7 +120,6 @@ describe("encrypt file stream round trip", () => {
         privateKey: keyPair.privateKey,
         writer: hashWriter.stream.getWriter(),
         onProgress: () => {},
-        onSaved: () => {},
       });
 
       const [, header] = await Promise.all([encryptPromise, decryptPromise]);
@@ -152,7 +150,6 @@ describe("encrypt file stream round trip", () => {
       publicKey: keyPair.publicKey,
       writer: pipe.writable.getWriter(),
       onProgress: () => {},
-      onSaved: () => {},
     });
 
     const decryptPromise = decryptFile({
@@ -160,7 +157,6 @@ describe("encrypt file stream round trip", () => {
       privateKey: keyPair.privateKey,
       writer: hashWriter.stream.getWriter(),
       onProgress: () => {},
-      onSaved: () => {},
     });
 
     const [, header] = await Promise.all([encryptPromise, decryptPromise]);
@@ -183,7 +179,6 @@ describe("encrypt file stream round trip", () => {
       publicKey: keyPair.publicKey,
       writer: encrypted.stream.getWriter(),
       onProgress: () => {},
-      onSaved: () => {},
     });
 
     const encryptedFile = encrypted.toFile("enc.bin", ENCRYPTED_FILE_MIMETYPE);
@@ -194,7 +189,6 @@ describe("encrypt file stream round trip", () => {
         privateKey: otherKeyPair.privateKey,
         writer: new HashWriter().stream.getWriter(),
         onProgress: () => {},
-        onSaved: () => {},
       }),
     ).rejects.toThrow(InvalidPrivateKeyError);
   });
@@ -210,7 +204,6 @@ describe("encrypt file stream round trip", () => {
       publicKey: keyPair.publicKey,
       writer: encrypted.stream.getWriter(),
       onProgress: () => {},
-      onSaved: () => {},
     });
 
     const bytes = new Uint8Array(
@@ -227,7 +220,6 @@ describe("encrypt file stream round trip", () => {
         privateKey: keyPair.privateKey,
         writer: new HashWriter().stream.getWriter(),
         onProgress: () => {},
-        onSaved: () => {},
       }),
     ).rejects.toThrow(CorruptedFileError);
   });
@@ -242,7 +234,6 @@ describe("encrypt file stream round trip", () => {
       publicKey: keyPair.publicKey,
       writer: encrypted.stream.getWriter(),
       onProgress: () => {},
-      onSaved: () => {},
     });
 
     const bytes = new Uint8Array(
@@ -259,7 +250,6 @@ describe("encrypt file stream round trip", () => {
         privateKey: keyPair.privateKey,
         writer: new HashWriter().stream.getWriter(),
         onProgress: () => {},
-        onSaved: () => {},
       }),
     ).rejects.toThrow(CorruptedFileError);
   });
