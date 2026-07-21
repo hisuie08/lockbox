@@ -46,6 +46,7 @@ function useFileCrypt(keyState: KeyState) {
       stream: pipe.readable,
       filename: filename,
     });
+    //TODO: キャンセル可能なstreaming downloadの模索
     const a: HTMLAnchorElement = document.createElement("a");
     a.href = reg.url;
     a.click();
