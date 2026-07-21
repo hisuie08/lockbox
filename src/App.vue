@@ -11,8 +11,8 @@ import KeyControlCard from "./components/ui/keys/card/KeyControlCard.vue";
 
 const keys = useCryptoKeys();
 
-const enc = useFileEncrypt();
-const dec = useFileDecrypt();
+const enc = useFileEncrypt(keys.public);
+const dec = useFileDecrypt(keys.private);
 const { loadLink } = useShareLink();
 onload = async () => {
   const publicJwk = loadLink();

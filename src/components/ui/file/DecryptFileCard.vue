@@ -23,7 +23,7 @@ function onFileChange(event: Event) {
 
 <template>
   <Card class="rounded-lg">
-    <FileHeader :key-handle="keyHandle"> Decrypt </FileHeader>
+    <FileHeader :keyState="keyHandle"> Decrypt </FileHeader>
     <CardContent class="grid gap-4">
       <div
         v-if="files.error.value"
@@ -55,9 +55,7 @@ function onFileChange(event: Event) {
       />
       <ActionButton
         :files="files"
-        :crypto-key="keyHandle.key.value"
         :on-click="() => files.decryptSelectedFile(keyHandle.key.value)"
-        label="復号化"
       />
     </CardContent>
   </Card>

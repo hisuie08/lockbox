@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { KeyHandle } from "@/composables/useCryptoKeys.ts";
 import type { useFileEncrypt } from "@/composables/useFileCrypto";
 import { formatBytes } from "@/lib/unit";
 import ActionButton from "./ActionButton.vue";
@@ -10,7 +9,6 @@ import FileIndicator from "./FileIndicator.vue";
 
 const props = defineProps<{
   files: ReturnType<typeof useFileEncrypt>;
-  keyHandle: KeyHandle;
 }>();
 
 function onFileChange(event: Event) {
@@ -23,7 +21,7 @@ function onFileChange(event: Event) {
 
 <template>
   <Card class="rounded-lg">
-    <FileHeader :key-handle="keyHandle"> Encrypt </FileHeader>
+    <FileHeader :keyState="files.keyState"> Encrypt </FileHeader>
 
     <CardContent class="grid gap-4">
       <div
@@ -34,7 +32,7 @@ function onFileChange(event: Event) {
       </div>
       <FileInput
         :files="files"
-        :crypto-key="keyHandle.key.value"
+        :crypto-key="files.keyState.key.value"
         :callback="onFileChange"
       />
       <div
@@ -55,9 +53,7 @@ function onFileChange(event: Event) {
 
       <ActionButton
         :files="files"
-        :crypto-key="keyHandle.key.value"
-        :on-click="() => files.encryptSelectedFile(keyHandle.key.value)"
-        label="暗号化"
+        :on-click="() => files.encryptSelectedFile(files.keyState.key.value)"
       />
     </CardContent>
   </Card>

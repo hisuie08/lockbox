@@ -10,17 +10,16 @@ import { Spinner } from "@/components/base/spinner";
 
 const props = defineProps<{
   files: ReturnType<typeof useFileEncrypt> | ReturnType<typeof useFileDecrypt>;
-  cryptoKey: CryptoKey | null;
   onClick: () => void;
-  label: string;
 }>();
 
 const disabled = computed(
   () =>
     !props.files.fileToProcess ||
-    !props.cryptoKey ||
+    !props.files.keyState.key ||
     props.files.progress.value != 0,
 );
+const label = props.files.keyState.keyType == "public" ? "暗号化" : "復号化";
 </script>
 
 <template>

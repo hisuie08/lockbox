@@ -8,14 +8,13 @@ import { computed } from "vue";
 
 const props = defineProps<{
   files: ReturnType<typeof useFileEncrypt> | ReturnType<typeof useFileDecrypt>;
-  cryptoKey: CryptoKey | null;
   callback: (event: Event) => void;
 }>();
 
 const disabled = computed(
   () =>
     !(
-      props.cryptoKey != null &&
+      props.files.keyState.key != null &&
       (props.files.progress.value == 0 ||
         (props.files.progress.value == 1 && props.files.saved))
     ),

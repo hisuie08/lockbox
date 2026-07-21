@@ -9,6 +9,7 @@ import {
 import { FileCryptoError } from "@/crypt/errors";
 import { registerDownload } from "@/lib/registerDownload";
 import { CancelableWriter } from "@/crypt/cancelableWriter";
+import type { KeyState } from "./useKeyState";
 type FileCryptoState = {
   fileToProcess: File | null;
   progress: number;
@@ -22,7 +23,7 @@ function getErrorMessage(error: unknown): string {
   throw error;
 }
 
-function useFileCrypt() {
+function useFileCrypt(keyState: KeyState) {
   const state = reactive<FileCryptoState & { saved: boolean }>({
     fileToProcess: null,
     progress: 0,
@@ -83,6 +84,7 @@ function useFileCrypt() {
   }
 
   return {
+    keyState,
     ...toRefs(state),
     state,
     isProcessing,
@@ -96,8 +98,8 @@ function useFileCrypt() {
   };
 }
 
-export function useFileEncrypt() {
-  const fileCrypt = useFileCrypt();
+export function useFileEncrypt(publicKey: KeyState) {
+  const fileCrypt = useFileCrypt(publicKey);
 
   async function encryptSelectedFile(publicKey: CryptoKey | null) {
     if (!fileCrypt.state.fileToProcess || !publicKey) {
@@ -148,8 +150,8 @@ export function useFileEncrypt() {
   };
 }
 
-export function useFileDecrypt() {
-  const fileCrypt = useFileCrypt();
+export function useFileDecrypt(privateKey: KeyState) {
+  const fileCrypt = useFileCrypt(privateKey);
 
   const originFile = ref<EncryptedFileHeader | null>(null);
 
