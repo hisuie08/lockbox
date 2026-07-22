@@ -58,46 +58,37 @@ function useFileCrypt(keyState: KeyState) {
   async function setFile(file: File | null) {
     state.progress = 0;
     state.error = null;
-
-    if (!file) {
-      state.fileToProcess = null;
-      return;
-    }
     state.fileToProcess = file;
   }
 
   return {
     keyState,
     ...toRefs(state),
-    state,
     isProcessing,
-    setError,
-    setProgress,
     setFile,
-    getDownloadWriter,
+    cancel,
+    internal: { setError, setProgress, getDownloadWriter, currentController },
   };
 }
 
 export function useFileEncrypt(publicKey: KeyState) {
   const fileCrypt = useFileCrypt(publicKey);
+  const { internal, ...fc } = fileCrypt;
 
   async function encryptSelectedFile(publicKey: CryptoKey | null) {
-    if (!fileCrypt.state.fileToProcess || !publicKey) {
-      fileCrypt.setError("Choose a file and load a public key first.");
+    const file = fileCrypt.fileToProcess.value;
+    if (!file || !publicKey) {
+      internal.setError("Choose a file and load a public key first.");
       return;
     }
-
     try {
-      const file = fileCrypt.state.fileToProcess;
-
-      const encFileName = `${file.name}.enc`;
       const input = {
         source: file.stream(),
         filename: file.name,
         fileSize: file.size,
         filetype: file.type,
         publicKey: publicKey,
-        onProgress: fileCrypt.setProgress,
+        onProgress: internal.setProgress,
       };
 
       const { writer, signal } = await fileCrypt.getDownloadWriter(encFileName);
@@ -108,52 +99,46 @@ export function useFileEncrypt(publicKey: KeyState) {
         },
         signal,
       );
-      fileCrypt.setError(null);
+      internal.setError(null);
     } catch (error) {
       if ((error as Error).name == "AbortError") {
-        fileCrypt.setError("キャンセルされました");
+        internal.setError("キャンセルされました");
         fileCrypt.progress.value = 0;
       }
       if (error instanceof FileCryptoError) {
-        fileCrypt.setError(getErrorMessage(error));
+        internal.setError(getErrorMessage(error));
       }
       throw error;
     }
   }
-
   return {
-    ...fileCrypt,
+    ...fc,
     encryptSelectedFile,
   };
 }
 
 export function useFileDecrypt(privateKey: KeyState) {
   const fileCrypt = useFileCrypt(privateKey);
-
+  const { internal, ...fc } = fileCrypt;
   const originFile = ref<EncryptedFileHeader | null>(null);
-
   watchEffect(async () => {
     originFile.value = null;
-
-    const file = fileCrypt.state.fileToProcess;
+    const file = fileCrypt.fileToProcess.value;
     if (!file) {
       return;
     }
-
     try {
       originFile.value = await getEncryptedFileHeader({
         source: file.stream(),
       });
-
-      fileCrypt.setError(null);
+      internal.setError(null);
     } catch (error) {
       originFile.value = null;
-
       if (
         error instanceof DecryptionError ||
         error instanceof FileCryptoError
       ) {
-        fileCrypt.setError(
+        internal.setError(
           "このファイルは暗号化されていないか、暗号情報が破損しているようです",
         );
       } else {
@@ -163,15 +148,14 @@ export function useFileDecrypt(privateKey: KeyState) {
   });
 
   async function decryptSelectedFile(privateKey: CryptoKey | null) {
-    const file = fileCrypt.state.fileToProcess;
-
+    const file = fileCrypt.fileToProcess.value;
     if (!file || !privateKey) {
-      fileCrypt.setError("Choose a file and load a private key first.");
+      internal.setError("Choose a file and load a private key first.");
       return;
     }
 
     if (!originFile.value) {
-      fileCrypt.setError("暗号情報の読み込みが完了していません");
+      internal.setError("暗号情報の読み込みが完了していません");
       return;
     }
     try {
@@ -181,7 +165,7 @@ export function useFileDecrypt(privateKey: KeyState) {
         fileSize: file.size,
         filetype: file.type,
         privateKey,
-        onProgress: fileCrypt.setProgress,
+        onProgress: internal.setProgress,
       };
 
       const filename = originFile.value.originalName;
@@ -196,10 +180,10 @@ export function useFileDecrypt(privateKey: KeyState) {
         signal,
       );
 
-      fileCrypt.setError(null);
+      internal.setError(null);
     } catch (error) {
       if ((error as Error).name == "AbortError") {
-        fileCrypt.setError("キャンセルされました");
+        internal.setError("キャンセルされました");
         fileCrypt.progress.value = 0;
       }
       if (
@@ -208,11 +192,10 @@ export function useFileDecrypt(privateKey: KeyState) {
       ) {
         switch (error.name) {
           case "InvalidPrivateKeyError":
-            fileCrypt.setError("秘密鍵がファイルに対応していません");
+            internal.setError("秘密鍵がファイルに対応していません");
             break;
-
           default:
-            fileCrypt.setError(getErrorMessage(error));
+            internal.setError(getErrorMessage(error));
             break;
         }
       }
@@ -222,7 +205,7 @@ export function useFileDecrypt(privateKey: KeyState) {
   }
 
   return {
-    ...fileCrypt,
+    ...fc,
     originFile,
     decryptSelectedFile,
   };
