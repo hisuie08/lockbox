@@ -15,7 +15,7 @@ const props = defineProps<{
 const disabled = computed(
   () =>
     !props.files.fileToProcess ||
-    !props.files.keyState.key ||
+    !props.files.keyState.key.value ||
     props.files.progress.value == 1,
 );
 async function onClick() {
