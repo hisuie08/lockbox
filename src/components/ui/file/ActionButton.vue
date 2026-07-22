@@ -10,7 +10,6 @@ import { Spinner } from "@/components/base/spinner";
 
 const props = defineProps<{
   files: ReturnType<typeof useFileEncrypt> | ReturnType<typeof useFileDecrypt>;
-  onClick: () => void;
 }>();
 
 const disabled = computed(
@@ -24,10 +23,10 @@ async function onClick() {
     props.files.cancel();
   } else {
     if ("encryptSelectedFile" in props.files) {
-      await props.files.encryptSelectedFile(props.files.keyState.key.value);
+      await props.files.encryptSelectedFile();
     }
     if ("decryptSelectedFile" in props.files) {
-      await props.files.decryptSelectedFile(props.files.keyState.key.value);
+      await props.files.decryptSelectedFile();
     }
   }
 }
@@ -43,7 +42,7 @@ const label = props.files.keyState.keyType == "public" ? "暗号化" : "復号�
       files.progress.value == 0
         ? label + "開始"
         : files.isProcessing.value
-          ? label + "中..."
+          ? "キャンセル"
           : "完了"
     }}
   </Button>

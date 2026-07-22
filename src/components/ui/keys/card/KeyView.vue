@@ -49,8 +49,7 @@ function sharePublicKey() {
     <label class="grid gap-2">
       <span class="text-sm font-medium">
         {{ keyHandle.keyType == "public" ? "公開鍵" : "秘密鍵" }}
-
-        <span v-if="keyHandle.key.value" class="ml-1 text-green-700">
+        <span v-if="keyHandle.key.value" class="ml-1 text-primary">
           Loaded
         </span>
       </span>

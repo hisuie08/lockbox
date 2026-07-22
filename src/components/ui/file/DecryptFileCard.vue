@@ -49,10 +49,7 @@ function onFileChange(event: Event) {
         v-if="dec.fileToProcess.value"
         :progress="dec.progress.value"
       />
-      <ActionButton
-        :files="dec"
-        :on-click="() => dec.decryptSelectedFile(dec.keyState.key.value)"
-      />
+      <ActionButton :files="dec" />
     </CardContent>
   </Card>
 </template>

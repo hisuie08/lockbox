@@ -77,7 +77,8 @@ export function useFileEncrypt(publicKey: KeyState) {
   const fileCrypt = useFileCrypt(publicKey);
   const { internal, ...fc } = fileCrypt;
 
-  async function encryptSelectedFile(publicKey: CryptoKey | null) {
+  async function encryptSelectedFile() {
+    const publicKey = fc.keyState.key.value;
     const file = fileCrypt.fileToProcess.value;
     if (!file || !publicKey) {
       internal.setError("Choose a file and load a public key first.");
@@ -153,7 +154,8 @@ export function useFileDecrypt(privateKey: KeyState) {
     }
   });
 
-  async function decryptSelectedFile(privateKey: CryptoKey | null) {
+  async function decryptSelectedFile() {
+    const privateKey = fc.keyState.key.value;
     const file = fileCrypt.fileToProcess.value;
     if (!file || !privateKey) {
       internal.setError("Choose a file and load a private key first.");

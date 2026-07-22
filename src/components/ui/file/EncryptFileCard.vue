@@ -9,9 +9,9 @@ import FileIndicator from "./FileIndicator.vue";
 import type { KeyState } from "@/composables/useKeyState.ts";
 
 const props = defineProps<{
-  keyState:KeyState,
+  keyState: KeyState;
 }>();
-const enc = useFileEncrypt(props.keyState)
+const enc = useFileEncrypt(props.keyState);
 function onFileChange(event: Event) {
   const files = (event.target as HTMLInputElement).files;
   if (files != null) {
@@ -31,10 +31,7 @@ function onFileChange(event: Event) {
       >
         {{ enc.error.value }}
       </div>
-      <FileInput
-        :files="enc"
-        :callback="onFileChange"
-      />
+      <FileInput :files="enc" :callback="onFileChange" />
       <div
         v-if="enc.fileToProcess.value"
         class="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm whitespace-nowrap overflow-hidden text-ellipsis w-full"
@@ -51,10 +48,7 @@ function onFileChange(event: Event) {
         :progress="enc.progress.value"
       />
 
-      <ActionButton
-        :files="enc"
-        :on-click="() => enc.encryptSelectedFile(enc.keyState.key.value)"
-      />
+      <ActionButton :files="enc" />
     </CardContent>
   </Card>
 </template>
