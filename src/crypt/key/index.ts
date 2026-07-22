@@ -6,4 +6,10 @@ export {
   validateX25519Jwk,
   type X25519JwkValidationResult,
 } from "./validate";
-export { genKeyPair, toPublicJwk, exportAsJwk, importJwk } from "./keyPair";
+export {
+  genKeyPair,
+  toPublicJwk,
+  exportAsJwk,
+  importJwk,
+  importRaw,
+} from "./keyPair";

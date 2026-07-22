@@ -35,6 +35,20 @@ export async function importJwk(
   }
 }
 
+export async function importRaw(raw: ArrayBuffer): Promise<CryptoKey> {
+  try {
+    return await crypto.subtle.importKey(
+      "raw",
+      raw,
+      { name: "X25519" },
+      true,
+      [],
+    );
+  } catch (err) {
+    throw new KeyImportError("ephemeral", err);
+  }
+}
+
 export function toPublicJwk(privateJwk: JsonWebKey) {
   const { d, ...publicJwk } = privateJwk; // eslint-disable-line
   return publicJwk;

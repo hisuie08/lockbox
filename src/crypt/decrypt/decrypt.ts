@@ -25,6 +25,7 @@ import {
 } from "../constants";
 import { _SHA224 } from "@noble/hashes/sha2.js";
 import { getJwkThumbprint } from "../key/validate";
+import { importRaw } from "../key";
 const decoder = new TextDecoder();
 
 async function readFileHeader(
@@ -67,12 +68,8 @@ async function prepareAESKey(
   if (myThumbprint !== header.recipientThumbprint) {
     throw new InvalidPrivateKeyError();
   }
-  const ephemeralPubKey = await crypto.subtle.importKey(
-    "raw",
+  const ephemeralPubKey = await importRaw(
     base64UrlToArrayBuffer(header.ephemeralPublicKey),
-    { name: "X25519" },
-    true,
-    [],
   );
   const aesKey = await deriveContentEncryptionKey(
     ephemeralPubKey,
