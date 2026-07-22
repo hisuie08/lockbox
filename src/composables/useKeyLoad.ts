@@ -8,13 +8,13 @@ import {
 
 type LoadKeyState = {
   jwk: X25519JwkValidationResult | null;
-  error: string;
+  errors: string[];
 };
 
 export function useKeyLoad(keyType: KeyAgreementKeyType) {
   const state = reactive<LoadKeyState>({
     jwk: null,
-    error: "",
+    errors: [],
   });
 
   const isValid = computed(
@@ -25,9 +25,9 @@ export function useKeyLoad(keyType: KeyAgreementKeyType) {
 
   function validate(input: string) {
     try {
+      state.jwk = null;
+      state.errors = [];
       if (!input) {
-        state.jwk = null;
-        state.error = "";
         return;
       }
 
@@ -36,22 +36,24 @@ export function useKeyLoad(keyType: KeyAgreementKeyType) {
 
       if (!result.valid) {
         state.jwk = null;
-        state.error = result.errors.join(";");
+        state.errors.push(...result.errors);
         return;
       }
 
       if (result.keyType !== keyType) {
         state.jwk = null;
-        state.error = `invalid key type. this is ${result.keyType} key. paste ${keyType} key instead`;
+        state.errors.push(
+          `invalid key type. this is ${result.keyType} key. paste ${keyType} key instead`,
+        );
         return;
       }
 
       state.jwk = result;
-      state.error = "";
+      state.errors = [];
       return;
     } catch (error) {
       state.jwk = null;
-      state.error = error instanceof Error ? error.message : String(error);
+      state.errors.push(error instanceof Error ? error.message : String(error));
     }
   }
 

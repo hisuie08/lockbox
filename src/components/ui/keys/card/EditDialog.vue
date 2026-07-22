@@ -15,7 +15,7 @@ import { Check } from "lucide-vue-next";
 const props = defineProps<{
   keyHandle: KeyHandle;
 }>();
-const { isValid, validJwk, loadKeyFile, loadKeyString, error } = useKeyLoad(
+const { isValid, validJwk, loadKeyFile, loadKeyString, errors } = useKeyLoad(
   props.keyHandle.keyType,
 );
 const method = ref<"file" | "paste">("file");
@@ -53,7 +53,7 @@ function onSubmit() {
       </div>
     </RadioGroup>
     <div>
-      <ErrorView v-if="error" :errors="[error]" />
+      <ErrorView v-if="errors" :errors="errors" />
 
       <Input v-if="method === 'file'" type="file" @change="onChangeFile" />
       <Textarea
