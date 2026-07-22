@@ -8,7 +8,7 @@ import {
 } from "@/crypt";
 import { FileCryptoError } from "@/crypt/errors";
 import { registerDownload } from "@/lib/registerDownload";
-import { CancelableWriter } from "@/crypt/cancelableWriter";
+import { CancelableWriter } from "@/lib/writer/cancelableWriter";
 import type { KeyState } from "./useKeyState";
 type FileCryptoState = {
   fileToProcess: File | null;

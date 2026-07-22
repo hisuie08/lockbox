@@ -1,3 +1,4 @@
+// AbortSignalで書き込みを中断できるwriter
 export class CancelableWriter implements WritableStreamDefaultWriter {
   private readonly writer: WritableStreamDefaultWriter<Uint8Array>;
   private readonly signal: AbortSignal;
