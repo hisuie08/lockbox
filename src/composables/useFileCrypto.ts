@@ -1,4 +1,4 @@
-import { reactive, computed, toRefs, ref, watchEffect } from "vue";
+import { reactive, computed, toRefs, ref, watchEffect, shallowRef } from "vue";
 import {
   decryptFile,
   DecryptionError,
@@ -28,7 +28,10 @@ function useFileCrypt(keyState: KeyState) {
     progress: 0,
     error: null,
   });
-
+  const currentController = shallowRef<AbortController | null>(null);
+  function cancel() {
+    currentController.value?.abort();
+  }
   const isProcessing = computed(() => state.progress > 0 && state.progress < 1);
 
   function setError(message: string | null) {
@@ -46,7 +49,6 @@ function useFileCrypt(keyState: KeyState) {
       stream: pipe.readable,
       filename: filename,
     });
-    //TODO: キャンセル可能なstreaming downloadの模索
     const a: HTMLAnchorElement = document.createElement("a");
     a.href = reg.url;
     a.click();
@@ -90,8 +92,12 @@ export function useFileEncrypt(publicKey: KeyState) {
         publicKey: publicKey,
         onProgress: internal.setProgress,
       };
-
-      const { writer, signal } = await fileCrypt.getDownloadWriter(encFileName);
+      const encFileName = `${file.name}.enc`;
+      const controller = new AbortController();
+      internal.currentController.value = controller;
+      const { writer, signal: downloadSignal } =
+        await internal.getDownloadWriter(encFileName);
+      const signal = AbortSignal.any([controller.signal, downloadSignal]);
       await encryptFile(
         {
           ...input,
@@ -169,8 +175,11 @@ export function useFileDecrypt(privateKey: KeyState) {
       };
 
       const filename = originFile.value.originalName;
-
-      const { writer, signal } = await fileCrypt.getDownloadWriter(filename);
+      const controller = new AbortController();
+      internal.currentController.value = controller;
+      const { writer, signal: downloadSignal } =
+        await internal.getDownloadWriter(filename);
+      const signal = AbortSignal.any([controller.signal, downloadSignal]);
 
       await decryptFile(
         {

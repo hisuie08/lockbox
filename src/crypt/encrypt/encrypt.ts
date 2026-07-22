@@ -218,8 +218,12 @@ export async function encryptFile(
       throw new OutputWriteError("Failed to write encrypted output.", error);
     }
   } catch (error) {
+    try {
+      // 例外発生時はwriterを中断
+      await input.writer.abort(error);
+    } catch {} // abortの例外は握りつぶし
     signal?.throwIfAborted();
-    if (error instanceof EncryptionError || OutputWriteError) {
+    if (error instanceof EncryptionError || error instanceof OutputWriteError) {
       throw error;
     }
     throw new UnexpectedCryptoError(error);

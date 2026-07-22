@@ -205,8 +205,12 @@ export async function decryptFile(
     }
     return header;
   } catch (error) {
+    try {
+      // 例外発生時はwriterを中断
+      await input.writer.abort(error);
+    } catch {} // abortの例外は握りつぶし
     signal?.throwIfAborted();
-    if (error instanceof DecryptionError || InputReadError) {
+    if (error instanceof DecryptionError || error instanceof InputReadError) {
       throw error;
     }
     throw new UnexpectedCryptoError(error);
