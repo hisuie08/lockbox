@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { capitalize, ref } from "vue";
+import { ref } from "vue";
 
 import {
   DropdownMenu,
@@ -33,7 +33,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/base/popover/index.ts";
-import { Label } from "@/components/base/label/index.ts";
+import KeyStatus from "./KeyStatus.vue";
+import KeyInfo from "./KeyInfo.vue";
 const props = defineProps<{
   keyHandle: KeyHandle;
 }>();
@@ -54,37 +55,10 @@ function sharePublicKey() {
     <InputGroup class="w-full">
       <Popover>
         <PopoverTrigger as-child>
-          <p
-            class="place-self-stretch place-content-center w-full px-2 text-ellipsis overflow-hidden whitespace-nowrap"
-            @click=""
-          >
-            {{ capitalize(keyHandle.keyType) }}
-            <span
-              v-if="keyHandle.key.value"
-              class="ml-1 text-chart-3 dark:text-chart-1 font-medium"
-            >
-              Loaded
-            </span>
-            <span v-else class="ml-1 font-medium">Unset</span>
-          </p>
+          <KeyStatus :key-handle="keyHandle" class="px-2" />
         </PopoverTrigger>
-        <PopoverContent>
-          <div class="grid gap-2 w-full">
-            <div class="grid grid-cols-2 items-center gap-1">
-              <Label>Key Type</Label>
-              <span>{{ keyHandle.keyType }}</span>
-            </div>
-            <div class="grid grid-cols-2 items-center gap-1">
-              <Label>Algorithmn</Label>
-              <span>{{ keyHandle.key.value?.algorithm.name }}</span>
-            </div>
-            <div class="grid grid-cols-2 items-center gap-1">
-              <Label>Thumbprint</Label>
-              <span class="wrap-break-word">{{
-                keyHandle.thumbprint.value
-              }}</span>
-            </div>
-          </div>
+        <PopoverContent v-if="keyHandle.key.value">
+          <KeyInfo :key-handle="keyHandle" />
         </PopoverContent>
       </Popover>
       <InputGroupAddon align="inline-end">

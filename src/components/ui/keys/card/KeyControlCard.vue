@@ -11,8 +11,8 @@ import { KeyRound } from "lucide-vue-next";
 
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import GenerateKeyAction from "../generate/GenerateKeyAction.vue";
-import KeyView from "./KeyView.vue";
 import AlertView from "../../alerts/AlertView.vue";
+import KeyView from "./KeyView.vue";
 
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
