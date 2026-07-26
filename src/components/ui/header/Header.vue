@@ -10,10 +10,6 @@ import {
   KEY_EXCHANGE_ALGORITHM,
 } from "@/crypt/constants.ts";
 
-defineProps<{
-  publicKey: CryptoKey | null;
-  privateKey: CryptoKey | null;
-}>();
 const mode = useColorMode({ initialValue: "auto" });
 function changeColorMode() {
   mode.value = mode.value == "light" ? "dark" : "light";
@@ -49,25 +45,6 @@ const base = document.baseURI;
         </div>
         <Separator orientation="vertical" />
         <Github class="w-8 h-auto" />
-      </div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-2 text-sm sm:flex sm:items-center">
-      <div class="flex rounded-md border border-border bg-card px-3 py-2">
-        <span class="text-muted-foreground pr-1.5">Public </span>
-        <span
-          :class="publicKey ? 'font-medium text-emerald-700' : 'font-medium'"
-        >
-          {{ publicKey ? "Loaded" : "Empty" }}
-        </span>
-      </div>
-      <div class="flex rounded-md border border-border bg-card px-3 py-2">
-        <span class="text-muted-foreground pr-1.5">Private </span>
-        <span
-          :class="privateKey ? 'font-medium text-emerald-700' : 'font-medium'"
-        >
-          {{ privateKey ? "Loaded" : "Empty" }}
-        </span>
       </div>
     </div>
   </header>

@@ -10,9 +10,9 @@ defineProps<{
       <div
         class="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
       >
-        <p v-for="error in errors" :key="error">
+        <li v-for="error in errors" :key="error">
           {{ error }}
-        </p>
+        </li>
       </div>
     </div>
   </div>
