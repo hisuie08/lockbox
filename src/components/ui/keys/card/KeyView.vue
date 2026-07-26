@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { capitalize, ref } from "vue";
 
 import {
   DropdownMenu,
@@ -29,6 +29,12 @@ import { useShareLink } from "@/composables/useShareLink";
 import { useClipboard } from "@vueuse/core";
 import { toast } from "vue-sonner";
 import EditDialog from "./EditDialog.vue";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/base/popover/index.ts";
+import { Label } from "@/components/base/label/index.ts";
 const props = defineProps<{
   keyHandle: KeyHandle;
 }>();
@@ -45,54 +51,75 @@ function sharePublicKey() {
 }
 </script>
 <template>
-  <div class="grid">
-    <label class="grid gap-2">
-      <span class="text-sm font-medium">
-        {{ keyHandle.keyType == "public" ? "公開鍵" : "秘密鍵" }}
-        <span v-if="keyHandle.key.value" class="ml-1 text-primary">
-          Loaded
-        </span>
-      </span>
-
-      <InputGroup>
-        <InputGroupInput :value="keyHandle.thumbprint.value" readonly />
-        <InputGroupAddon align="inline-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <InputGroupButton variant="ghost" size="icon-xs" class="border-0">
-                <MoreHorizontal />
-              </InputGroupButton>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              :side-offset="8"
-              :align-offset="-4"
+  <div>
+    <InputGroup class="w-full">
+      <Popover>
+        <PopoverTrigger as-child>
+          <p
+            class="place-self-stretch place-content-center w-full px-2 text-ellipsis overflow-hidden whitespace-nowrap"
+            @click=""
+          >
+            {{ capitalize(keyHandle.keyType) }}
+            <span
+              v-if="keyHandle.key.value"
+              class="ml-1 text-chart-3 dark:text-chart-1 font-medium"
             >
-              <DropdownMenuItem @select="isOpen = true">
-                <Edit2Icon />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                v-if="keyHandle.keyType == 'public'"
-                :disabled="!keyHandle.key.value"
-                @select="sharePublicKey"
-              >
-                <Share2Icon />
-                Share Link
-              </DropdownMenuItem>
+              Loaded
+            </span>
+            <span v-else class="ml-1 font-medium">Unset</span>
+          </p>
+        </PopoverTrigger>
+        <PopoverContent>
+          <div class="grid gap-2 w-full">
+            <div class="grid grid-cols-2 items-center gap-1">
+              <Label>Key Type</Label>
+              <span>{{ keyHandle.keyType }}</span>
+            </div>
+            <div class="grid grid-cols-2 items-center gap-1">
+              <Label>Algorithmn</Label>
+              <span>{{ keyHandle.key.value?.algorithm.name }}</span>
+            </div>
+            <div class="grid grid-cols-2 items-center gap-1">
+              <Label>Thumbprint</Label>
+              <span class="wrap-break-word">{{
+                keyHandle.thumbprint.value
+              }}</span>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      <InputGroupAddon align="inline-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <InputGroupButton variant="ghost" size="icon-xs" class="border-0">
+              <MoreHorizontal />
+            </InputGroupButton>
+          </DropdownMenuTrigger>
 
-              <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" :side-offset="8" :align-offset="-4">
+            <DropdownMenuItem @select="isOpen = true">
+              <Edit2Icon />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              v-if="keyHandle.keyType == 'public'"
+              :disabled="!keyHandle.key.value"
+              @select="sharePublicKey"
+            >
+              <Share2Icon />
+              Share Link
+            </DropdownMenuItem>
 
-              <DropdownMenuItem variant="destructive" @select="keyHandle.clear">
-                <TrashIcon />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </InputGroupAddon>
-      </InputGroup>
-    </label>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem variant="destructive" @select="keyHandle.clear">
+              <TrashIcon />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </InputGroupAddon>
+    </InputGroup>
     <Dialog v-model:open="isOpen" modal>
       <DialogContent :aria-describedby="undefined">
         <EditDialog :key-handle="keyHandle" />

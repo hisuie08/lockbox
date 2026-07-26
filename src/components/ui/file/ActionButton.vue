@@ -40,7 +40,7 @@ const label = props.files.keyState.keyType == "public" ? "暗号化" : "復号�
     <Check v-else aria-hidden="true" />
     {{
       files.progress.value == 0
-        ? label + "開始"
+        ? label
         : files.isProcessing.value
           ? "キャンセル"
           : "完了"

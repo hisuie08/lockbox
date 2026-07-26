@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import { computed, provide, ref } from "vue";
-import { KeyRound } from "lucide-vue-next";
+import { PlusIcon } from "lucide-vue-next";
 import CopyableKeyView from "./CopyableKeyView.vue";
 import { keyIsGenerating } from "../provideKeys.ts";
 import DownloadKeyBtn from "./DownloadKeyBtn.vue";
@@ -43,8 +43,8 @@ function cancel() {
   <Dialog modal v-model:open="isOpen">
     <DialogTrigger as-child>
       <Button :disabled="keys.isGenerating.value" @click="openAndGenerate">
-        <KeyRound aria-hidden="true" />
-        {{ keys.isGenerating.value ? "作成中" : "新規鍵ペア" }}
+        <PlusIcon aria-hidden="true" />
+        {{ keys.isGenerating.value ? "作成中" : "鍵ペア作成" }}
       </Button></DialogTrigger
     >
     <DialogContent

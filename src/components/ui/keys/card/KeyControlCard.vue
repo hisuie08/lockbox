@@ -3,7 +3,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/base/card";
@@ -25,9 +24,8 @@ const props = defineProps<{
     <CardHeader>
       <CardTitle class="flex items-center gap-2">
         <KeyRound class="size-4" />
-        Keys
+        Key Vault
       </CardTitle>
-      <CardDescription> 鍵ペアの管理 </CardDescription>
       <CardAction>
         <GenerateKeyAction :keys="keys" />
       </CardAction>
@@ -39,8 +37,10 @@ const props = defineProps<{
         :title="'鍵のペアが一致していません'"
         :description="'この公開鍵で暗号化したファイルを、この秘密鍵で復号化は出来ないことに注意してください'"
       ></AlertView>
-      <KeyView :key-handle="keys.public" />
-      <KeyView :key-handle="keys.private" />
+      <div class="grid gap-2 grid-cols-2 lg:grid-cols-1">
+        <KeyView :key-handle="keys.public" />
+        <KeyView :key-handle="keys.private" />
+      </div>
     </CardContent>
   </Card>
 </template>
