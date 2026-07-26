@@ -30,8 +30,8 @@ function openAndGenerate() {
 }
 
 function submit() {
-  props.keys.public.importJwk(generatedPubKey.jwk.value!);
-  props.keys.private.importJwk(generatedPrivKey.jwk.value!);
+  props.keys.public.importJwk(generatedPubKey.jwk.value!,"public");
+  props.keys.private.importJwk(generatedPrivKey.jwk.value!,"private");
   isOpen.value = false;
 }
 function cancel() {

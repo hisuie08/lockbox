@@ -13,7 +13,7 @@ const keys = useCryptoKeys();
 const { loadLink } = useShareLink();
 onload = async () => {
   const publicJwk = loadLink();
-  if (publicJwk != null) await keys.public.importJwk(publicJwk);
+  if (publicJwk != null) await keys.public.importJwk(publicJwk, "public");
 };
 </script>
 <template>

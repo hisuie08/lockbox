@@ -6,7 +6,11 @@ import { useKeyGenerations } from "./useKeyGeneration";
 export { type GeneratedKeyHandle } from "./useKeyGeneration";
 
 export type KeyHandle = KeyState & {
-  importJwk(jwk: JsonWebKey, withPublic?: boolean): Promise<void>;
+  importJwk(
+    jwk: JsonWebKey,
+    keyType: KeyAgreementKeyType,
+    withPublic?: boolean,
+  ): Promise<void>;
   clear(): void;
 };
 
@@ -37,20 +41,17 @@ export function useCryptoKeys() {
     );
   }
 
-  async function importKey(jwk: JsonWebKey, keyType: KeyAgreementKeyType) {
-    const key = await importJwk(jwk, keyType);
-    state[keyType].key.value = key;
-  }
-  async function importPublicJwk(jwk: JsonWebKey) {
+  async function importKey(
+    jwk: JsonWebKey,
+    keyType: KeyAgreementKeyType,
+    withPublic = true,
+  ) {
     await withKeyPairError(async () => {
-      await importKey(jwk, "public");
-    });
-  }
-  async function importPrivateJwk(jwk: JsonWebKey, withPublic = false) {
-    await withKeyPairError(async () => {
-      await importKey(jwk, "private");
-      if (withPublic) {
-        await importKey(toPublicJwk(jwk), "public");
+      const key = await importJwk(jwk, keyType);
+      state[keyType].key.value = key;
+      if (withPublic && keyType == "private") {
+        const key = await importJwk(toPublicJwk(jwk), "public");
+        state["public"].key.value = key;
       }
     });
   }
@@ -62,12 +63,12 @@ export function useCryptoKeys() {
 
   const publicHandle: KeyHandle = {
     ...state.public,
-    importJwk: importPublicJwk,
+    importJwk: importKey,
     clear: () => clear("public"),
   };
   const privateHandle: KeyHandle = {
     ...state.private,
-    importJwk: importPrivateJwk,
+    importJwk: importKey,
     clear: () => clear("private"),
   };
 

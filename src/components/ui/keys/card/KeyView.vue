@@ -13,7 +13,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
 } from "@/components/base/input-group";
 
 import {

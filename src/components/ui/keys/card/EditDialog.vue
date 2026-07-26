@@ -15,11 +15,9 @@ import { Check } from "lucide-vue-next";
 const props = defineProps<{
   keyHandle: KeyHandle;
 }>();
-const { isValid, validJwk, loadKeyFile, loadKeyString, errors } = useKeyLoad(
-  props.keyHandle.keyType,
-);
+const { jwk, loadKeyFile, loadKeyString, errors } = useKeyLoad();
 const method = ref<"file" | "paste">("file");
-const checked = ref<boolean>(false);
+const checked = ref<boolean>(true);
 function onChangeString(event: Event) {
   const text = (event.target as HTMLTextAreaElement).value;
   loadKeyString(text);
@@ -32,15 +30,14 @@ function onChangeFile(event: Event) {
 }
 function onSubmit() {
   props.keyHandle.importJwk(
-    validJwk.value!,
-    props.keyHandle.keyType == "private" && checked.value,
+    jwk.value?.jwk!,
+    jwk.value?.keyType!,
+    jwk.value?.keyType == "private" && checked.value,
   );
 }
 </script>
 <template>
-  <DialogTitle>{{
-    keyHandle.keyType == "public" ? "公開鍵" : "秘密鍵"
-  }}</DialogTitle>
+  <DialogTitle>鍵をインポート</DialogTitle>
   <div class="grid gap-3">
     <RadioGroup v-model="method" class="w-fit">
       <div class="flex items-center gap-3">
@@ -62,13 +59,15 @@ function onSubmit() {
         placeholder="paste key"
         @keyup="onChangeString"
       />
-      <div v-if="isValid" class="flex text-green-700">
+      <div v-if="jwk?.valid" class="flex text-green-700">
         <Check :size="16" class="mr-1" color="green" />
-        <span color="green">Valid {{ keyHandle.keyType }} key</span>
+        <span color="green"
+          >Valid <span class="font-bold">{{ jwk.keyType }}</span> key</span
+        >
       </div>
     </div>
     <Field
-      v-if="keyHandle.keyType == 'private'"
+      v-if="jwk?.keyType == 'private'"
       orientation="horizontal"
       class="py-1"
     >
@@ -76,7 +75,7 @@ function onSubmit() {
       <Label for="with-pub">秘密鍵に対応する公開鍵を同時に設定する</Label>
     </Field>
     <DialogClose as-child>
-      <Button type="submit" :disabled="!isValid" @click="onSubmit">
+      <Button type="submit" :disabled="!jwk?.valid" @click="onSubmit">
         この鍵を使用
       </Button>
     </DialogClose>
