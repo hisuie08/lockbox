@@ -4,7 +4,7 @@ import type {
   useFileEncrypt,
 } from "@/composables/useFileCrypto";
 import { computed } from "vue";
-import { Check, LockKeyhole } from "lucide-vue-next";
+import { Check, LockKeyhole, LockKeyholeOpen } from "lucide-vue-next";
 import { Button } from "@/components/base/button";
 import { Spinner } from "@/components/base/spinner";
 
@@ -35,7 +35,13 @@ const label = props.files.keyState.keyType == "public" ? "暗号化" : "復号�
 
 <template>
   <Button :disabled="disabled" @click="onClick">
-    <LockKeyhole v-if="files.progress.value == 0" aria-hidden="true" />
+    <div v-if="files.progress.value == 0">
+      <LockKeyhole
+        v-if="files.keyState.keyType == 'public'"
+        aria-hidden="true"
+      />
+      <LockKeyholeOpen v-else />
+    </div>
     <Spinner v-else-if="files.isProcessing.value" aria-hidden="true" />
     <Check v-else aria-hidden="true" />
     {{
