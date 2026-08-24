@@ -9,7 +9,7 @@ import {
   UnsupportedVersionError,
 } from "./errors";
 import { BufferedWriter } from "../test/bufferWriter";
-import { genKeyPair } from "../key/keyPair";
+import { generate } from "../key/x25519";
 import { encryptFile } from "../encrypt/encrypt";
 import {
   ALGORITHMS,
@@ -119,7 +119,7 @@ describe("getEncryptedFileHeader", () => {
 
 describe("decryptFileToStream", () => {
   test("roundtrip encryption and decryption", async () => {
-    const recipient = await genKeyPair();
+    const recipient = await generate();
 
     const plaintext = "Hello LockBox!";
 
@@ -158,9 +158,9 @@ describe("decryptFileToStream", () => {
   });
 
   test("rejects wrong private key", async () => {
-    const recipientA = await genKeyPair();
+    const recipientA = await generate();
 
-    const recipientB = await genKeyPair();
+    const recipientB = await generate();
 
     const encryptedBuffer = new BufferedWriter();
 
@@ -189,7 +189,7 @@ describe("decryptFileToStream", () => {
   });
 
   test("detects tampered ciphertext", async () => {
-    const recipient = await genKeyPair();
+    const recipient = await generate();
 
     const encryptedBuffer = new BufferedWriter();
 
@@ -220,7 +220,7 @@ describe("decryptFileToStream", () => {
   });
 
   test("decrypts empty file", async () => {
-    const recipient = await genKeyPair();
+    const recipient = await generate();
 
     const encryptedBuffer = new BufferedWriter();
 

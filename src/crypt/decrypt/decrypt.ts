@@ -15,7 +15,6 @@ import {
   OutputWriteError,
   UnexpectedCryptoError,
 } from "../errors";
-import { deriveContentEncryptionKey } from "../key/kdf";
 import {
   CHUNK_HEADER_LAYOUT,
   CHUNK_HEADER_LENGTHS,
@@ -23,9 +22,7 @@ import {
   FORMAT_VERSION,
   PREAMBLE_LENGTHS,
 } from "../constants";
-import { _SHA224 } from "@noble/hashes/sha2.js";
-import { getJwkThumbprint } from "../key/validate";
-import { importRaw } from "../key";
+import { X25519, AESGCM } from "../key";
 const decoder = new TextDecoder();
 
 async function readFileHeader(
@@ -64,14 +61,14 @@ async function prepareAESKey(
   header: EncryptedFileHeader,
   privateKey: CryptoKey,
 ) {
-  const myThumbprint = await getJwkThumbprint(privateKey);
+  const myThumbprint = await X25519.getThumbprint(privateKey);
   if (myThumbprint !== header.recipientThumbprint) {
     throw new InvalidPrivateKeyError();
   }
-  const ephemeralPubKey = await importRaw(
+  const ephemeralPubKey = await X25519.importRaw(
     base64UrlToArrayBuffer(header.ephemeralPublicKey),
   );
-  const aesKey = await deriveContentEncryptionKey(
+  const aesKey = await AESGCM.deriveKey(
     ephemeralPubKey,
     privateKey,
     new Uint8Array(base64UrlToArrayBuffer(header.hkdfSalt)),

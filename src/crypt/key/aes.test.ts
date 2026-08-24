@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from "vitest";
-import { genKeyPair } from "./keyPair";
-import { deriveContentEncryptionKey, KeyDerivationError } from "./kdf";
-describe("derive key", () => {
+import { generate } from "./x25519";
+import { aesgcm, deriveKey, KeyDerivationError } from "./aes";
+describe("aes key", () => {
   let recipientKeyPair: CryptoKeyPair;
   let ephemeralKeyPair: CryptoKeyPair;
   const salt: Uint8Array<ArrayBuffer> = crypto.getRandomValues(
@@ -9,12 +9,12 @@ describe("derive key", () => {
   );
   beforeAll(async () => {
     [recipientKeyPair, ephemeralKeyPair] = await Promise.all([
-      genKeyPair(),
-      genKeyPair(),
+      generate(),
+      generate(),
     ]);
   });
   test("for encryption", async () => {
-    const derivedAES = await deriveContentEncryptionKey(
+    const derivedAES = await deriveKey(
       recipientKeyPair.publicKey,
       ephemeralKeyPair.privateKey,
       salt,
@@ -25,7 +25,7 @@ describe("derive key", () => {
     expect(derivedAES.usages).contains("encrypt");
   });
   test("for decryption", async () => {
-    const derivedAES = await deriveContentEncryptionKey(
+    const derivedAES = await deriveKey(
       ephemeralKeyPair.publicKey,
       recipientKeyPair.privateKey,
       salt,
@@ -43,39 +43,31 @@ describe("derive key", () => {
       ["encrypt"],
     );
     await expect(
-      deriveContentEncryptionKey(ephemeralKeyPair.publicKey, aesKey, salt),
+      deriveKey(ephemeralKeyPair.publicKey, aesKey, salt),
     ).rejects.toThrow(KeyDerivationError);
   });
 
   // 結合テスト
   test("derived keys are compatible", async () => {
-    const encKey = await deriveContentEncryptionKey(
+    const encKey = await deriveKey(
       recipientKeyPair.publicKey,
       ephemeralKeyPair.privateKey,
       salt,
     );
 
-    const decKey = await deriveContentEncryptionKey(
+    const decKey = await deriveKey(
       ephemeralKeyPair.publicKey,
       recipientKeyPair.privateKey,
       salt,
     );
-
+    const originalMsg = "hello";
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const plaintext = new TextEncoder().encode("hello");
+    const plaintext = new TextEncoder().encode(originalMsg);
 
-    const ciphertext = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
-      encKey,
-      plaintext,
-    );
+    const ciphertext = await aesgcm.encrypt(plaintext, encKey, iv);
 
-    const decrypted = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      decKey,
-      ciphertext,
-    );
+    const decrypted = await aesgcm.decrypt(ciphertext, decKey, iv);
 
-    expect(new TextDecoder().decode(decrypted)).toBe("hello");
+    expect(new TextDecoder().decode(decrypted)).toBe(originalMsg);
   });
 });

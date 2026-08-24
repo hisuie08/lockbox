@@ -6,7 +6,7 @@ import {
   getEncryptedFileHeader,
   type EncryptedFileHeader,
 } from "@/crypt";
-import { FileCryptoError } from "@/crypt/errors";
+import { FileCryptoError } from "@/crypt";
 import { registerDownload } from "@/lib/registerDownload";
 import { CancelableWriter } from "@/lib/writer/cancelableWriter";
 import type { KeyState } from "./useKeyState";

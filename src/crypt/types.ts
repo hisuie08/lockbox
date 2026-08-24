@@ -44,4 +44,4 @@ export type EncryptedChunk = {
   ciphertext: Uint8Array;
 };
 
-export type KeyAgreementKeyType = Exclude<KeyType, "secret">
+export type { KeyAgreementKeyType } from "./key/x25519";

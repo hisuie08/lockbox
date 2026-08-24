@@ -1,7 +1,7 @@
 import { reactive, toRefs } from "vue";
 import {
   parseJwk,
-  validateX25519Jwk,
+  X25519,
   type KeyAgreementKeyType,
   type X25519JwkValidationResult,
 } from "@/crypt";
@@ -28,7 +28,7 @@ export function useKeyLoad() {
       }
 
       const parsed = parseJwk(input);
-      const result = validateX25519Jwk(parsed);
+      const result = X25519.validate(parsed);
       if (!result.valid) {
         state.jwk = null;
         state.errors.push(...result.errors);

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { genKeyPair } from "../key/keyPair";
+import { generate } from "../key/x25519";
 import { encryptFile } from "./encrypt";
 import {
   ALGORITHMS,
@@ -26,7 +26,7 @@ async function blobToBytes(blob: Blob): Promise<Uint8Array> {
 describe("encryptStream", () => {
   const file = new File([] as BlobPart[], "test.txt");
   test("creates valid header", async () => {
-    const recipient = await genKeyPair();
+    const recipient = await generate();
 
     const result = await createEncryptedFileHeader({
       filename: file.name,
@@ -136,7 +136,7 @@ describe("writeChunk", () => {
 
 describe("encryptFileToStream", () => {
   test("encrypts file stream", async () => {
-    const { publicKey } = await genKeyPair();
+    const { publicKey } = await generate();
 
     const buffer = new BufferedWriter();
     const writer = buffer.stream.getWriter();
@@ -176,7 +176,7 @@ describe("encryptFileToStream", () => {
     );
   });
   test("encrypts empty file", async () => {
-    const { publicKey } = await genKeyPair();
+    const { publicKey } = await generate();
 
     const buffer = new BufferedWriter();
 
@@ -205,7 +205,7 @@ describe("encryptFileToStream", () => {
   });
 
   test("throws when source read fails", async () => {
-    const { publicKey } = await genKeyPair();
+    const { publicKey } = await generate();
 
     const source = new ReadableStream<Uint8Array>({
       start(controller) {

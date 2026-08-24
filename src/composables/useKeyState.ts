@@ -1,8 +1,4 @@
-import {
-  type KeyAgreementKeyType,
-  exportAsJwk,
-  getJwkThumbprint,
-} from "@/crypt";
+import { type KeyAgreementKeyType, X25519 } from "@/crypt";
 import { ref, watch, readonly, type Ref } from "vue";
 
 export type KeyState = ReturnType<typeof createKeyState>;
@@ -17,7 +13,7 @@ export function createKeyState(keyType: KeyAgreementKeyType) {
 function useJwk(key: Ref<CryptoKey | null>) {
   const jwk = ref<JsonWebKey | null>(null);
   watch(key, async () => {
-    jwk.value = key.value ? await exportAsJwk(key.value) : null;
+    jwk.value = key.value ? await X25519.exportAsJwk(key.value) : null;
   });
   return readonly(jwk);
 }
@@ -25,7 +21,7 @@ function useJwk(key: Ref<CryptoKey | null>) {
 function useThumbprint(key: Ref<CryptoKey | null>) {
   const thumbprint = ref("");
   watch(key, async () => {
-    thumbprint.value = key.value ? await getJwkThumbprint(key.value) : "";
+    thumbprint.value = key.value ? await X25519.getThumbprint(key.value) : "";
   });
   return readonly(thumbprint);
 }

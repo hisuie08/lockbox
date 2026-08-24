@@ -1,12 +1,26 @@
-import type { KeyAgreementKeyType } from "../types";
 import { KeyExportError, KeyGenerationError, KeyImportError } from "./errors";
 
-export async function genKeyPair(): Promise<CryptoKeyPair> {
+export const algorithm = { name: "X25519" } as const;
+const usage = ["deriveBits"] as const;
+export type KeyAgreementKeyType = Exclude<KeyType, "secret">;
+
+export async function generate(): Promise<CryptoKeyPair> {
   try {
-    return await crypto.subtle.generateKey("X25519", true, ["deriveBits"]);
+    return await crypto.subtle.generateKey(algorithm, true, usage);
   } catch (err) {
     throw new KeyGenerationError(err);
   }
+}
+
+export async function deriveSecret(
+  publicKey: CryptoKey,
+  privateKey: CryptoKey,
+): Promise<ArrayBuffer> {
+  return await crypto.subtle.deriveBits(
+    { ...algorithm, public: publicKey },
+    privateKey,
+    256,
+  );
 }
 
 export async function exportAsJwk(key: CryptoKey): Promise<JsonWebKey> {
@@ -16,19 +30,18 @@ export async function exportAsJwk(key: CryptoKey): Promise<JsonWebKey> {
     throw new KeyExportError(err);
   }
 }
+
 export async function importJwk(
   jwk: JsonWebKey,
   keytype: KeyAgreementKeyType,
 ): Promise<CryptoKey> {
-  const keyUsages: ReadonlyArray<KeyUsage> =
-    keytype == "private" ? ["deriveBits"] : [];
   try {
     return await crypto.subtle.importKey(
       "jwk",
       jwk,
-      { name: "X25519" },
+      algorithm,
       true,
-      keyUsages,
+      jwk.d ? usage : [],
     );
   } catch (err) {
     throw new KeyImportError(keytype, err);
@@ -37,19 +50,23 @@ export async function importJwk(
 
 export async function importRaw(raw: ArrayBuffer): Promise<CryptoKey> {
   try {
-    return await crypto.subtle.importKey(
-      "raw",
-      raw,
-      { name: "X25519" },
-      true,
-      [],
-    );
+    return await crypto.subtle.importKey("raw", raw, algorithm, true, []);
   } catch (err) {
     throw new KeyImportError("ephemeral", err);
   }
 }
 
-export function toPublicJwk(privateJwk: JsonWebKey) {
+export function toPublicJwk(privateJwk: JsonWebKey): JsonWebKey {
   const { d, ...publicJwk } = privateJwk; // eslint-disable-line
   return publicJwk;
 }
+
+export const x25519 = {
+  algorithm,
+  generate,
+  importJwk,
+  importRaw,
+  deriveSecret,
+  exportAsJwk,
+  toPublicJwk,
+};

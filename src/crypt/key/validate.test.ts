@@ -3,7 +3,7 @@
 import { describe, expect, test } from "vitest";
 import {
   canonicalizeX25519Jwk,
-  getJwkThumbprint,
+  getThumbprint,
   validateX25519Jwk,
 } from "./validate";
 
@@ -120,7 +120,7 @@ describe("canonicalizeX25519Jwk", () => {
   });
 });
 
-describe("getJwkThumbprint", () => {
+describe("getThumbprint", () => {
   const jwk1 = {
     kty: "OKP",
     crv: "X25519",
@@ -134,20 +134,20 @@ describe("getJwkThumbprint", () => {
   };
 
   test("returns empty string for null", async () => {
-    await expect(getJwkThumbprint(null)).resolves.toBe("");
+    await expect(getThumbprint(null)).resolves.toBe("");
   });
 
   test("returns stable thumbprint", async () => {
-    const thumb1 = await getJwkThumbprint(jwk1);
-    const thumb2 = await getJwkThumbprint(jwk1);
+    const thumb1 = await getThumbprint(jwk1);
+    const thumb2 = await getThumbprint(jwk1);
 
     expect(thumb1).toBe(thumb2);
   });
 
   test("same public key gives same thumbprint", async () => {
-    const thumbPublic = await getJwkThumbprint(jwk1);
+    const thumbPublic = await getThumbprint(jwk1);
 
-    const thumbPrivate = await getJwkThumbprint({
+    const thumbPrivate = await getThumbprint({
       ...jwk1,
       d: "secret",
     });
@@ -156,8 +156,8 @@ describe("getJwkThumbprint", () => {
   });
 
   test("different keys produce different thumbprints", async () => {
-    const thumb1 = await getJwkThumbprint(jwk1);
-    const thumb2 = await getJwkThumbprint(jwk2);
+    const thumb1 = await getThumbprint(jwk1);
+    const thumb2 = await getThumbprint(jwk2);
 
     expect(thumb1).not.toBe(thumb2);
   });

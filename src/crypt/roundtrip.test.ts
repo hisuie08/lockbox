@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { decryptFile } from "./decrypt/decrypt";
 import { encryptFile } from "./encrypt";
-import { genKeyPair } from "./key/keyPair";
+import { generate } from "./key/x25519";
 import { InvalidPrivateKeyError, CorruptedFileError } from "./decrypt/errors";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { base64UrlToArrayBuffer } from "./utils/encoding";
@@ -76,12 +76,12 @@ function createSourceFactory(size: number) {
 }
 
 describe("encrypt file stream round trip", () => {
-  let keyPair: Awaited<ReturnType<typeof genKeyPair>>;
+  let keyPair: Awaited<ReturnType<typeof generate>>;
   // encrypt → decrypt を直結
   let pipe: TransformStream<Uint8Array, Uint8Array>;
 
   beforeEach(async () => {
-    keyPair = await genKeyPair();
+    keyPair = await generate();
     pipe = new TransformStream<Uint8Array, Uint8Array>();
   });
 
@@ -167,7 +167,7 @@ describe("encrypt file stream round trip", () => {
   });
 
   test("rejects wrong private key", async () => {
-    const otherKeyPair = await genKeyPair();
+    const otherKeyPair = await generate();
 
     const encrypted = new BufferedWriter();
 

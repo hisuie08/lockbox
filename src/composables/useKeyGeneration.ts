@@ -1,4 +1,4 @@
-import { exportAsJwk, genKeyPair, type KeyAgreementKeyType } from "@/crypt";
+import { X25519, type KeyAgreementKeyType } from "@/crypt";
 import { downloadText } from "@/lib/download";
 import { useClipboard } from "@vueuse/core";
 import { ref, type Ref } from "vue";
@@ -41,10 +41,10 @@ export function useKeyGenerations() {
     isGenerating.value = true;
     init();
     error.value = null;
-    const keyPair = await genKeyPair();
+    const keyPair = await X25519.generate();
     const [publicJwk, privateJwk] = await Promise.all([
-      exportAsJwk(keyPair.publicKey),
-      exportAsJwk(keyPair.privateKey),
+      X25519.exportAsJwk(keyPair.publicKey),
+      X25519.exportAsJwk(keyPair.privateKey),
     ]);
     isGenerating.value = false;
     generatedPubKey.jwk.value = publicJwk;

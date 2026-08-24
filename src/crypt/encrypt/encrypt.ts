@@ -19,10 +19,8 @@ import type {
 } from "../types";
 import { genIv, genSalt } from "../utils/random";
 import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
-import { deriveContentEncryptionKey } from "../key/kdf";
-import { genKeyPair } from "../key/keyPair";
-import { getJwkThumbprint } from "../key/validate";
 import { StreamChunkReader, type ChunkReader } from "./chunkReader";
+import { AESGCM, X25519 } from "../key";
 
 class EncryptionError extends FileCryptoError {
   override cause?: unknown;
@@ -50,15 +48,15 @@ export async function createEncryptedFileHeader(
   header: EncryptedFileHeader;
   aesKey: CryptoKey;
 }> {
-  const recipientThumbprint = await getJwkThumbprint(
-    await crypto.subtle.exportKey("jwk", input.recipientPublicKey),
+  const recipientThumbprint = await X25519.getThumbprint(
+    await await crypto.subtle.exportKey("jwk", input.recipientPublicKey),
   );
-  const ephemeral = await genKeyPair();
+  const ephemeral = await X25519.generate();
   const ephemeralPubRaw = new Uint8Array(
     await crypto.subtle.exportKey("raw", ephemeral.publicKey),
   );
   const salt = genSalt();
-  const aesKey = await deriveContentEncryptionKey(
+  const aesKey = await AESGCM.deriveKey(
     input.recipientPublicKey,
     ephemeral.privateKey,
     salt,
@@ -90,14 +88,7 @@ export async function encryptChunk(
     );
     const view = new DataView(header.buffer);
     const iv = genIv();
-    const encrypted = await crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv,
-      },
-      aesKey,
-      content as BufferSource,
-    );
+    const encrypted = await AESGCM.encrypt(content, aesKey, iv);
     const ciphertext = new Uint8Array(encrypted);
 
     view.setUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET, ciphertext.length);

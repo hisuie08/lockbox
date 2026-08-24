@@ -4,7 +4,7 @@ import { KeyParseError } from "./errors";
 export type X25519JwkValidationResult =
   | {
       valid: true;
-      keyType:KeyAgreementKeyType;
+      keyType: KeyAgreementKeyType;
       jwk: JsonWebKey;
     }
   | {
@@ -92,7 +92,7 @@ export function canonicalizeX25519Jwk(jwk: JsonWebKey): string {
   });
 }
 
-export async function getJwkThumbprint(
+export async function getThumbprint(
   jwk: JsonWebKey | CryptoKey | null,
 ): Promise<string> {
   if (!jwk) {

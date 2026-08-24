@@ -1,5 +1,5 @@
 import { computed } from "vue";
-import { importJwk, toPublicJwk, type KeyAgreementKeyType } from "@/crypt";
+import { X25519, type KeyAgreementKeyType } from "@/crypt";
 import { useWithErrors } from "./useWithErrors";
 import { createKeyState, type KeyState } from "./useKeyState";
 import { useKeyGenerations } from "./useKeyGeneration";
@@ -47,10 +47,10 @@ export function useCryptoKeys() {
     withPublic = true,
   ) {
     await withKeyPairError(async () => {
-      const key = await importJwk(jwk, keyType);
+      const key = await X25519.importJwk(jwk, keyType);
       state[keyType].key.value = key;
       if (withPublic && keyType == "private") {
-        const key = await importJwk(toPublicJwk(jwk), "public");
+        const key = await X25519.importJwk(X25519.toPublicJwk(jwk), "public");
         state["public"].key.value = key;
       }
     });
