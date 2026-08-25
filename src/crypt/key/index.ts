@@ -1,12 +1,13 @@
 export * from "./errors";
 import { aesgcm } from "./aes";
-export { parseJwk, type X25519JwkValidationResult } from "./validate";
+export { parseJwk, type X25519JwkValidationResult } from "./x25519";
 import {
+  x25519,
+  type KeyAgreementKeyType,
   getThumbprint,
   validateX25519Jwk,
   type X25519JwkValidationResult,
-} from "./validate";
-import { x25519, type KeyAgreementKeyType } from "./x25519";
+} from "./x25519";
 
 export interface AESGCM {
   algorithm: { name: string; length: number };
