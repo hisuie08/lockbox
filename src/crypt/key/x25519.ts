@@ -31,6 +31,14 @@ export async function exportAsJwk(key: CryptoKey): Promise<JsonWebKey> {
   }
 }
 
+export async function exportAsRaw(key: CryptoKey): Promise<ArrayBuffer> {
+  try {
+    return crypto.subtle.exportKey("raw", key);
+  } catch (err) {
+    throw new KeyExportError(err);
+  }
+}
+
 export async function importJwk(
   jwk: JsonWebKey,
   keytype: KeyAgreementKeyType,
@@ -68,5 +76,6 @@ export const x25519 = {
   importRaw,
   deriveSecret,
   exportAsJwk,
+  exportAsRaw,
   toPublicJwk,
 };

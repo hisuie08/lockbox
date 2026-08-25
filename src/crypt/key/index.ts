@@ -17,14 +17,14 @@ export interface AESGCM {
     salt: Uint8Array<ArrayBuffer>,
   ): Promise<CryptoKey>;
   encrypt(
-    content: Uint8Array,
+    content: BufferSource,
     key: CryptoKey,
-    iv: Uint8Array<ArrayBuffer>,
+    iv: BufferSource,
   ): Promise<ArrayBuffer>;
   decrypt(
-    ciphertext: ArrayBuffer,
+    ciphertext: BufferSource,
     key: CryptoKey,
-    iv: Uint8Array<ArrayBuffer>,
+    iv: BufferSource,
   ): Promise<ArrayBuffer>;
 }
 
@@ -36,6 +36,7 @@ export interface X25519 {
     privateKey: CryptoKey,
   ): Promise<ArrayBuffer>;
   exportAsJwk(key: CryptoKey): Promise<JsonWebKey>;
+  exportAsRaw(key: CryptoKey): Promise<ArrayBuffer>;
   importJwk(jwk: JsonWebKey, keytype: KeyAgreementKeyType): Promise<CryptoKey>;
   importRaw(raw: ArrayBuffer): Promise<CryptoKey>;
   toPublicJwk(privateJwk: JsonWebKey): JsonWebKey;

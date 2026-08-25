@@ -57,21 +57,21 @@ export async function deriveKey(
 }
 
 export async function encrypt(
-  content: Uint8Array,
+  content: BufferSource,
   key: CryptoKey,
-  iv: Uint8Array<ArrayBuffer>,
+  iv: BufferSource,
 ): Promise<ArrayBuffer> {
   return await crypto.subtle.encrypt(
-    { ...AES.algorithm, iv:iv },
+    { ...AES.algorithm, iv: iv },
     key,
-    content as BufferSource,
+    content,
   );
 }
 
 export async function decrypt(
-  ciphertext: ArrayBuffer,
+  ciphertext: BufferSource,
   key: CryptoKey,
-  iv: Uint8Array<ArrayBuffer>,
+  iv: BufferSource,
 ): Promise<ArrayBuffer> {
   return await crypto.subtle.decrypt(
     { ...AES.algorithm, iv: iv },

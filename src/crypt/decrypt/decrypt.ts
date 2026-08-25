@@ -98,13 +98,10 @@ async function decryptChunk(input: {
   aesKey: CryptoKey;
 }): Promise<Uint8Array> {
   try {
-    const content = await crypto.subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv: input.iv as BufferSource,
-      },
-      input.aesKey,
+    const content = await AESGCM.decrypt(
       input.ciphertext as BufferSource,
+      input.aesKey,
+      input.iv as BufferSource,
     );
 
     return new Uint8Array(content);

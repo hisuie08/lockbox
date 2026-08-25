@@ -49,11 +49,11 @@ export async function createEncryptedFileHeader(
   aesKey: CryptoKey;
 }> {
   const recipientThumbprint = await X25519.getThumbprint(
-    await await crypto.subtle.exportKey("jwk", input.recipientPublicKey),
+    await X25519.exportAsJwk(input.recipientPublicKey),
   );
   const ephemeral = await X25519.generate();
   const ephemeralPubRaw = new Uint8Array(
-    await crypto.subtle.exportKey("raw", ephemeral.publicKey),
+    await X25519.exportAsRaw(ephemeral.publicKey),
   );
   const salt = genSalt();
   const aesKey = await AESGCM.deriveKey(
@@ -88,7 +88,7 @@ export async function encryptChunk(
     );
     const view = new DataView(header.buffer);
     const iv = genIv();
-    const encrypted = await AESGCM.encrypt(content, aesKey, iv);
+    const encrypted = await AESGCM.encrypt(content as BufferSource, aesKey, iv);
     const ciphertext = new Uint8Array(encrypted);
 
     view.setUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET, ciphertext.length);
