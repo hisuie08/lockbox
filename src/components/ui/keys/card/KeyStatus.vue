@@ -12,7 +12,7 @@ defineProps<{ keyHandle: KeyHandle }>();
         unset: !keyHandle.key.value,
       }"
     />
-    <p class="place-self-stretch place-content-center w-full" @click="">
+    <p class="place-self-stretch place-content-center w-full">
       {{ keyHandle.keyType == "public" ? "公開鍵" : "秘密鍵" }}
     </p>
   </div>

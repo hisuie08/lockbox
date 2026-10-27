@@ -14,7 +14,7 @@ import GenerateKeyAction from "../generate/GenerateKeyAction.vue";
 import AlertView from "../../alerts/AlertView.vue";
 import KeyView from "./KeyView.vue";
 
-const props = defineProps<{
+defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
 }>();
 </script>
