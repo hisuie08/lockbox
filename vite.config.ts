@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [vue(), tailwindcss(), viteSingleFile()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 });
