@@ -694,15 +694,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucide/vue@npm:^1.27.0":
-  version: 1.61.0
-  resolution: "@lucide/vue@npm:1.61.0"
-  peerDependencies:
-    vue: ">=3.0.1"
-  checksum: 10c0/5381ecf46a773ff6fbb4b6a9523593bddb3c8015e8e25bf04205e62360c292c2c2f3308e6add1be796f609aea3076765d9eb6e86531e1bb82c61ede8d9f23e9d
-  languageName: node
-  linkType: hard
-
 "@modelcontextprotocol/sdk@npm:^1.29.0":
   version: 1.32.2
   resolution: "@modelcontextprotocol/sdk@npm:1.32.2"
@@ -3697,7 +3688,6 @@ __metadata:
   dependencies:
     "@eslint/js": "npm:^10.0.1"
     "@fontsource-variable/inter": "npm:^5.2.8"
-    "@lucide/vue": "npm:^1.27.0"
     "@noble/hashes": "npm:^2.2.0"
     "@tailwindcss/vite": "npm:^4.3.0"
     "@types/node": "npm:^25.9.2"
