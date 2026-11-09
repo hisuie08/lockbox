@@ -4,7 +4,7 @@ import { useShareLink } from "./composables/useShareLink.ts";
 import EncryptFileCard from "./components/ui/file/EncryptFileCard.vue";
 import DecryptFileCard from "./components/ui/file/DecryptFileCard.vue";
 import Header from "./components/ui/header/Header.vue";
-import Algorithmns from "./components/ui/algorithms/Algorithmns.vue";
+import Algorithms from "./components/ui/algorithms/Algorithms.vue";
 import { Toaster } from "@/components/base/sonner";
 import KeyControlCard from "./components/ui/keys/card/KeyControlCard.vue";
 
@@ -28,7 +28,7 @@ onload = async () => {
           <div class="grid gap-6">
             <EncryptFileCard :keyState="keys.public" />
             <DecryptFileCard :keyState="keys.private" />
-            <Algorithmns />
+            <Algorithms />
           </div>
         </section>
       </div>

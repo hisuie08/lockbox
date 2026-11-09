@@ -11,7 +11,7 @@ defineProps<{ keyHandle: KeyHandle }>();
       <span>{{ keyHandle.keyType }}</span>
     </div>
     <div class="grid grid-cols-2 items-center gap-1">
-      <Label>Algorithmn</Label>
+      <Label>Algorithm</Label>
       <span>{{ keyHandle.key.value?.algorithm.name }}</span>
     </div>
     <div class="grid grid-cols-2 items-center gap-1">
