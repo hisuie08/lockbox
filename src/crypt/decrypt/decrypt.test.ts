@@ -16,6 +16,8 @@ import {
   ENCRYPTED_FILE_MIMETYPE,
   FILE_SIGNATURE,
   FORMAT_VERSION,
+  PREAMBLE_LAYOUT,
+  PREAMBLE_LENGTHS,
 } from "../constants";
 import { writeFileHeader } from "../encrypt/encrypt";
 import { uint32ToBytes } from "../utils/encoding";
@@ -212,6 +214,60 @@ describe("decryptFileToStream", () => {
     await expect(
       decryptFile({
         source: streamFromChunks([encryptedBytes]),
+        privateKey: recipient.privateKey,
+        writer: new BufferedWriter().stream.getWriter(),
+        onProgress() {},
+      }),
+    ).rejects.toThrow(CorruptedFileError);
+  });
+
+  test("rejects when decrypted size does not match header", async () => {
+    const recipient = await generate();
+
+    const plaintext = new TextEncoder().encode("test");
+
+    const encryptedBuffer = new BufferedWriter();
+
+    await encryptFile({
+      filename: "test.txt",
+      filetype: "text/plain",
+      fileSize: plaintext.length,
+      source: streamFromChunks([plaintext]),
+      publicKey: recipient.publicKey,
+      writer: encryptedBuffer.stream.getWriter(),
+      onProgress() {},
+    });
+
+    const encryptedBytes = await blobToBytes(
+      encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
+    );
+
+    // チャンクには手を触れず、ヘッダーの originalSize だけを書き換える
+    const headerLength = new DataView(
+      encryptedBytes.buffer,
+      encryptedBytes.byteOffset + PREAMBLE_LAYOUT.HEADER_LENGTH_OFFSET,
+      PREAMBLE_LENGTHS.HEADER_LENGTH,
+    ).getUint32(0);
+    const header = JSON.parse(
+      new TextDecoder().decode(
+        encryptedBytes.subarray(
+          PREAMBLE_LAYOUT.HEADER_OFFSET,
+          PREAMBLE_LAYOUT.HEADER_OFFSET + headerLength,
+        ),
+      ),
+    );
+    header.originalSize += 1;
+    const newHeaderBytes = new TextEncoder().encode(JSON.stringify(header));
+    const tampered = new Uint8Array([
+      ...encryptedBytes.subarray(0, PREAMBLE_LAYOUT.HEADER_LENGTH_OFFSET),
+      ...uint32ToBytes(newHeaderBytes.length),
+      ...newHeaderBytes,
+      ...encryptedBytes.subarray(PREAMBLE_LAYOUT.HEADER_OFFSET + headerLength),
+    ]);
+
+    await expect(
+      decryptFile({
+        source: streamFromChunks([tampered]),
         privateKey: recipient.privateKey,
         writer: new BufferedWriter().stream.getWriter(),
         onProgress() {},

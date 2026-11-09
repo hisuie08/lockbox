@@ -185,7 +185,12 @@ export async function decryptFile(
       writtenBytes += plaintext.length;
       input.onProgress(writtenBytes / header.originalSize);
     }
-
+    // ファイルサイズ照合
+    if (writtenBytes !== header.originalSize) {
+      throw new CorruptedFileError(
+        `size mismatch: expected ${header.originalSize}, got ${writtenBytes}`,
+      );
+    }
     // 出力ストリーム正常終了
     input.onProgress(1);
     try {
