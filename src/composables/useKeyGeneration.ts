@@ -1,32 +1,25 @@
 import { X25519, type KeyAgreementKeyType } from "@/crypt";
-import { downloadText } from "@/lib/download";
-import { useClipboard } from "@vueuse/core";
 import { ref, type Ref } from "vue";
-import { toast } from "vue-sonner";
 
 export type GeneratedKeyHandle = ReturnType<typeof createGeneratedKeyHandle>;
 function createGeneratedKeyHandle(keyType: KeyAgreementKeyType) {
-  const { copied, copy: _copy } = useClipboard();
   const jwk = ref<JsonWebKey | null>(null);
   const isSaved = ref(false);
-  async function copy() {
-    try {
-      await _copy(JSON.stringify(jwk.value));
-      isSaved.value = true;
-      toast.info(`${keyType} key was copied`);
-    } catch {
-      toast.error("Clipboard permission was blocked.");
-    }
-  }
+
   function download() {
-    const fileName =
-      keyType == "public"
-        ? "lockbox-public-key.jwk.json"
-        : "lockbox-private-key.jwk.json";
-    downloadText(JSON.stringify(jwk.value), fileName);
+    const fileName = `lockbox-${keyType}-key.jwk.json`;
+    const blob: Blob = new Blob([JSON.stringify(jwk.value)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
     isSaved.value = true;
   }
-  return { keyType, copied, jwk, isSaved, copy, download };
+  return { keyType, jwk, isSaved,download };
 }
 
 export function useKeyGenerations() {

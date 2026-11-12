@@ -9,11 +9,23 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/base/input-group";
+import { useClipboard } from "@vueuse/core";
+import { toast } from "vue-sonner";
 
 const props = defineProps<{
   genKey: GeneratedKeyHandle;
 }>();
 
+const { copied, copy: _copy } = useClipboard();
+async function copy() {
+  try {
+    await _copy(JSON.stringify(props.genKey.jwk.value));
+    props.genKey.isSaved.value = true;
+    toast.info(`${props.genKey.keyType} key was copied`);
+  } catch {
+    toast.error("Clipboard permission was blocked.");
+  }
+}
 const isGenerating = inject<Ref<boolean>>(keyIsGenerating);
 const inputType = props.genKey.keyType == "private" ? "password" : "text";
 
@@ -50,9 +62,9 @@ function onCopy() {
           aria-label="Copy"
           title="Copy"
           size="icon-xs"
-          @click="genKey.copy"
+          @click="copy"
         >
-          <Copy v-if="!props.genKey.copied.value" aria-hidden="true" />
+          <Copy v-if="!copied" aria-hidden="true" />
           <Check v-else aria-hidden="true" />
         </InputGroupButton>
       </InputGroupAddon>
