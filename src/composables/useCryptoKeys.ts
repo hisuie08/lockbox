@@ -1,7 +1,7 @@
-import { computed } from "vue";
+import { computed, readonly } from "vue";
 import { X25519, type KeyAgreementKeyType } from "@/crypt";
 import { useWithErrors } from "./useWithErrors";
-import { createKeyState, type KeyState } from "./useKeyState";
+import { useKeyState, type KeyState } from "./useKeyState";
 import { useKeyGenerations } from "./useKeyGeneration";
 export { type GeneratedKeyHandle } from "./useKeyGeneration";
 
@@ -16,10 +16,10 @@ export type KeyHandle = KeyState & {
 
 export function useCryptoKeys() {
   const state = {
-    public: createKeyState("public"),
-    private: createKeyState("private"),
+    public: useKeyState("public"),
+    private: useKeyState("private"),
   };
-  const { isGenerating, genKey, ...generator } = useKeyGenerations();
+  const { isGenerating, genKey, ...generatedKeyHandles } = useKeyGenerations();
   const { error, withKeyPairError } = useWithErrors();
 
   const mismatchKeys = computed(
@@ -76,9 +76,9 @@ export function useCryptoKeys() {
     public: publicHandle,
     private: privateHandle,
     mismatchKeys,
-    isGenerating,
+    isGenerating: readonly(isGenerating),
     error,
     generateKeys,
-    generator,
+    generatedKeyHandles,
   };
 }

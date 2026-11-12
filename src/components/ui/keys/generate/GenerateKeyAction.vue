@@ -17,7 +17,7 @@ import { CardContent } from "@/components/base/card";
 const props = defineProps<{
   keys: ReturnType<typeof useCryptoKeys>;
 }>();
-const { generatedPubKey, generatedPrivKey } = props.keys.generator;
+const { generatedPubKey, generatedPrivKey } = props.keys.generatedKeyHandles;
 provide(keyIsGenerating, props.keys.isGenerating);
 const isOpen = ref(false);
 const closable = computed(
@@ -30,8 +30,8 @@ function openAndGenerate() {
 }
 
 function submit() {
-  props.keys.public.importJwk(generatedPubKey.jwk.value!,"public");
-  props.keys.private.importJwk(generatedPrivKey.jwk.value!,"private");
+  props.keys.public.key.value = generatedPubKey.key.value;
+  props.keys.private.key.value = generatedPrivKey.key.value;
   isOpen.value = false;
 }
 function cancel() {

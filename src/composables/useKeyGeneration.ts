@@ -1,14 +1,21 @@
 import { X25519, type KeyAgreementKeyType } from "@/crypt";
 import { ref, type Ref } from "vue";
+import { useKeyState, type KeyState } from "./useKeyState";
 
-export type GeneratedKeyHandle = ReturnType<typeof createGeneratedKeyHandle>;
-function createGeneratedKeyHandle(keyType: KeyAgreementKeyType) {
-  const jwk = ref<JsonWebKey | null>(null);
+export type GeneratedKeyHandle = KeyState & {
+  isSaved: Ref<boolean>;
+  download: () => void;
+};
+
+function useGeneratedKeyHandle(
+  keyType: KeyAgreementKeyType,
+): GeneratedKeyHandle {
+  const keyState = useKeyState(keyType);
   const isSaved = ref(false);
 
   function download() {
     const fileName = `lockbox-${keyType}-key.jwk.json`;
-    const blob: Blob = new Blob([JSON.stringify(jwk.value)], {
+    const blob: Blob = new Blob([JSON.stringify(keyState.jwk.value)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -19,13 +26,13 @@ function createGeneratedKeyHandle(keyType: KeyAgreementKeyType) {
     setTimeout(() => URL.revokeObjectURL(url), 0);
     isSaved.value = true;
   }
-  return { keyType, jwk, isSaved,download };
+  return { ...keyState, isSaved, download };
 }
 
 export function useKeyGenerations() {
   const isGenerating = ref(false);
-  const generatedPubKey = createGeneratedKeyHandle("public");
-  const generatedPrivKey = createGeneratedKeyHandle("private");
+  const generatedPubKey = useGeneratedKeyHandle("public");
+  const generatedPrivKey = useGeneratedKeyHandle("private");
   function init() {
     generatedPubKey.isSaved.value = false;
     generatedPrivKey.isSaved.value = false;
@@ -35,19 +42,14 @@ export function useKeyGenerations() {
     init();
     error.value = null;
     const keyPair = await X25519.generate();
-    const [publicJwk, privateJwk] = await Promise.all([
-      X25519.exportAsJwk(keyPair.publicKey),
-      X25519.exportAsJwk(keyPair.privateKey),
-    ]);
+    generatedPubKey.key.value = keyPair.publicKey;
+    generatedPrivKey.key.value = keyPair.privateKey;
     isGenerating.value = false;
-    generatedPubKey.jwk.value = publicJwk;
-    generatedPrivKey.jwk.value = privateJwk;
   }
   return {
     isGenerating,
     generatedPubKey,
     generatedPrivKey,
     genKey,
-    init,
   };
 }
