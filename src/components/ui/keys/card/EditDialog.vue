@@ -15,7 +15,8 @@ import { Check } from "lucide-vue-next";
 const props = defineProps<{
   keyHandle: KeyHandle;
 }>();
-const { jwk, loadKeyFile, loadKeyString, errors } = useKeyLoad();
+const { valid, jwk, keyType, loadKeyFile, loadKeyString, errors } =
+  useKeyLoad();
 const method = ref<"file" | "paste">("file");
 const checked = ref<boolean>(true);
 function onChangeString(event: Event) {
@@ -29,11 +30,12 @@ function onChangeFile(event: Event) {
   }
 }
 function onSubmit() {
-  props.keyHandle.importJwk(
-    jwk.value?.jwk!,
-    jwk.value?.keyType!,
-    jwk.value?.keyType == "private" && checked.value,
-  );
+  if (jwk.value && keyType.value)
+    props.keyHandle.importJwk(
+      jwk.value,
+      keyType.value,
+      keyType.value == "private" && checked.value,
+    );
 }
 </script>
 <template>
@@ -59,23 +61,19 @@ function onSubmit() {
         placeholder="paste key"
         @keyup="onChangeString"
       />
-      <div v-if="jwk?.valid" class="flex text-green-700">
+      <div v-if="valid" class="flex text-green-700">
         <Check :size="16" class="mr-1" color="green" />
         <span color="green"
-          >Valid <span class="font-bold">{{ jwk.keyType }}</span> key</span
+          >Valid <span class="font-bold">{{ keyType }}</span> key</span
         >
       </div>
     </div>
-    <Field
-      v-if="jwk?.keyType == 'private'"
-      orientation="horizontal"
-      class="py-1"
-    >
+    <Field v-if="keyType == 'private'" orientation="horizontal" class="py-1">
       <Checkbox id="with-pub" v-model="checked" />
       <Label for="with-pub">秘密鍵に対応する公開鍵を同時に設定する</Label>
     </Field>
     <DialogClose as-child>
-      <Button type="submit" :disabled="!jwk?.valid" @click="onSubmit">
+      <Button type="submit" :disabled="!valid" @click="onSubmit">
         この鍵を使用
       </Button>
     </DialogClose>
