@@ -26,8 +26,7 @@ export function useKeyLoad(): LoadedKeyHandle {
   }
   async function validate(input: string) {
     try {
-      jwk.value = null;
-      errors.value = [];
+      setInvalid();
       if (!input) {
         return;
       }
