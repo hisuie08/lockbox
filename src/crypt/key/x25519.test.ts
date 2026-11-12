@@ -77,6 +77,12 @@ describe("validateX25519Jwk", () => {
     d: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
   };
 
+  test("rejects invalid key data", async () => {
+    await expect(importJwk(privateJwk, "private")).rejects.instanceof(
+      KeyImportError,
+    );
+  });
+
   test("accepts valid public key", () => {
     const result = validateX25519Jwk(publicJwk);
 

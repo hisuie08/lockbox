@@ -30,8 +30,17 @@ export function useKeyLoad() {
       const parsed = parseJwk(input);
       const result = X25519.validate(parsed);
       if (!result.valid) {
-        state.jwk = null;
-        state.errors.push(...result.errors);
+        setInvalid();
+        errors.value.push(...result.errors);
+        return;
+      }
+      try {
+        await X25519.importJwk(result.jwk, result.keyType);
+      } catch (error) {
+        if (error instanceof KeyImportError) {
+          setInvalid();
+          errors.value.push("invalid Key Data");
+        }
         return;
       }
 
