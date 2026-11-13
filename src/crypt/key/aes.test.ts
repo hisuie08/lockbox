@@ -1,9 +1,7 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { generate } from "./x25519";
 import { deriveKey, encrypt, decrypt } from "./aes";
-import { AES } from "./constants";
 import { KeyDerivationError } from "./errors";
-console.log(AES.algorithm);
 describe("aes key", () => {
   let recipientKeyPair: CryptoKeyPair;
   let ephemeralKeyPair: CryptoKeyPair;

@@ -1,4 +1,4 @@
-import { HKDF, X25519 } from "./key";
+import { HKDF, X25519, AES } from "./key/constants";
 // FILE_SIGNATURE は必ず8バイト
 export const FILE_SIGNATURE = "ENCFILE2";
 // FORMAT_VERSION は255以下
@@ -6,7 +6,7 @@ export const FORMAT_VERSION = 3;
 export const KEY_EXCHANGE_ALGORITHM = X25519.algorithm.name;
 export const KEY_DERIVATION_ALGORITHM = HKDF.algorithm.name;
 export const HASH_ALGORITHM = HKDF.algorithm.readable;
-export const ENCRYPTION_ALGORITHM = "AES-256-GCM";
+export const ENCRYPTION_ALGORITHM = AES.algorithm.readable;
 export const ALGORITHMS =
   `${KEY_EXCHANGE_ALGORITHM}-` +
   `${KEY_DERIVATION_ALGORITHM}-` +
@@ -27,8 +27,6 @@ export const PREAMBLE_LAYOUT = {
     PREAMBLE_LENGTHS.FORMAT_VERSION +
     PREAMBLE_LENGTHS.HEADER_LENGTH,
 } as const;
-
-export const KDF_KEY_INFO = "file-encryption-v1";
 
 // 暗号化ファイルのMIMEタイプ
 export const ENCRYPTED_FILE_MIMETYPE = "application/octet-stream";

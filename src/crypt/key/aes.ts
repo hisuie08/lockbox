@@ -1,4 +1,3 @@
-import { KDF_KEY_INFO } from "../constants";
 import { x25519 } from "./x25519";
 import { AES, HKDF } from "./constants";
 import { KeyDerivationError } from "./errors";
@@ -28,7 +27,7 @@ export async function deriveKey(
       {
         ...HKDF.algorithm,
         salt: salt,
-        info: new TextEncoder().encode(KDF_KEY_INFO),
+        info: new TextEncoder().encode(HKDF.keyInfo),
       },
       sharedSecretKey,
       AES.algorithm,

@@ -22,7 +22,9 @@ export const AES: {
 export const HKDF: {
   algorithm: HmacImportParams & { readable: string };
   usage: ReadonlyArray<KeyUsage>;
+  keyInfo: string;
 } = {
   algorithm: { name: "HKDF", hash: "SHA-256", readable: "SHA256" },
   usage: ["deriveKey"],
+  keyInfo: "file-encryption-v1",
 } as const;
