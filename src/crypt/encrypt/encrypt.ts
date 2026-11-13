@@ -19,7 +19,7 @@ import type {
 } from "../types";
 import { genIv, genSalt } from "../utils/random";
 import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
-import { StreamChunkReader, type ChunkReader } from "./chunkReader";
+import { StreamChunkReader, type ChunkReader } from "@/stream/chunkReader";
 import { AESGCM, X25519 } from "../key";
 
 class EncryptionError extends FileCryptoError {

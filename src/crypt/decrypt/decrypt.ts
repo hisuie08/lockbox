@@ -8,7 +8,10 @@ import {
   InvalidPrivateKeyError,
   UnsupportedVersionError,
 } from "./errors";
-import { StreamBufferedReader, type BufferedReader } from "./bufferedReader";
+import {
+  StreamBufferedReader,
+  type BufferedReader,
+} from "@/stream/bufferedReader";
 import {
   InputReadError,
   MemoryError,

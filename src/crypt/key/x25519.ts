@@ -1,14 +1,14 @@
 import { KeyExportError, KeyGenerationError, KeyImportError } from "./errors";
 import { arrayBufferToBase64Url, isBase64Url } from "../utils/encoding";
 import { KeyParseError } from "./errors";
+import { X25519 } from "./constants";
 
-export const algorithm = { name: "X25519" } as const;
-const usage = ["deriveBits"] as const;
+const { algorithm, usage } = X25519;
 export type KeyAgreementKeyType = Exclude<KeyType, "secret">;
 
 export async function generate(): Promise<CryptoKeyPair> {
   try {
-    return await crypto.subtle.generateKey(algorithm, true, usage);
+    return await crypto.subtle.generateKey("X25519", true, usage);
   } catch (err) {
     throw new KeyGenerationError(err);
   }
@@ -181,7 +181,7 @@ export async function getThumbprint(
 }
 
 export const x25519 = {
-  algorithm,
+  ...X25519,
   generate,
   importJwk,
   importRaw,

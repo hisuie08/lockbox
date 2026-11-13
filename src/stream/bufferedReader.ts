@@ -1,4 +1,4 @@
-import { InputReadError } from "../errors";
+import { InputReadError } from "../crypt/errors";
 export class UnexpectedEofError extends InputReadError {
   constructor() {
     super("Unexpected end of file.");

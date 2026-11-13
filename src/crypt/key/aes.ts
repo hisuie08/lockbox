@@ -1,23 +1,7 @@
 import { KDF_KEY_INFO } from "../constants";
 import { x25519 } from "./x25519";
-
-const AES = {
-  algorithm: { name: "AES-GCM", length: 256 },
-  usage: ["encrypt", "decrypt"],
-} as const;
-
-const HKDF = {
-  algorithm: { name: "HKDF", hash: "SHA-256" },
-  usage: ["deriveKey"],
-} as const;
-
-export class KeyDerivationError extends Error {
-  override cause?: unknown;
-  constructor(cause?: unknown) {
-    super("Failed to derive content encryption key.");
-    this.cause = cause;
-  }
-}
+import { AES, HKDF } from "./constants";
+import { KeyDerivationError } from "./errors";
 
 // 共有秘密の計算とAES鍵の導出
 export async function deriveKey(

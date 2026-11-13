@@ -30,3 +30,11 @@ export class KeyExportError extends KeyPairError {
     super("Failed to export key.", cause);
   }
 }
+
+export class KeyDerivationError extends Error {
+  override cause?: unknown;
+  constructor(cause?: unknown) {
+    super("Failed to derive content encryption key.");
+    this.cause = cause;
+  }
+}

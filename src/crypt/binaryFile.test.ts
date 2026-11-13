@@ -7,7 +7,6 @@ import {
   CHUNK_HEADER_LENGTHS,
   CHUNK_HEADER_LAYOUT,
 } from "./constants";
-
 describe("Binary format specification", () => {
   test("Verify file signature", () => {
     const sigBytes = new TextEncoder().encode(FILE_SIGNATURE);

@@ -1,5 +1,5 @@
-import { DEFAULT_CHUNK_SIZE } from "../constants";
-import { InputReadError } from "../errors";
+import { DEFAULT_CHUNK_SIZE } from "../crypt/constants";
+import { InputReadError } from "../crypt/errors";
 
 // チャンク単位で読み込む
 export interface ChunkReader {

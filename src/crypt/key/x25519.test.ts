@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import {
-  algorithm,
   exportAsJwk,
   generate,
   importJwk,
@@ -10,8 +9,9 @@ import {
   validateX25519Jwk,
   parseJwk,
 } from "./x25519";
+import { X25519 } from "./constants";
 import { KeyParseError, KeyImportError } from "./errors";
-
+const { algorithm } = X25519;
 describe("key pair test", () => {
   test("generate keypair", async () => {
     const { publicKey, privateKey } = await generate();

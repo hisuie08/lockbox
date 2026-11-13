@@ -1,6 +1,9 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { generate } from "./x25519";
-import { aesgcm, deriveKey, KeyDerivationError } from "./aes";
+import { deriveKey, encrypt, decrypt } from "./aes";
+import { AES } from "./constants";
+import { KeyDerivationError } from "./errors";
+console.log(AES.algorithm);
 describe("aes key", () => {
   let recipientKeyPair: CryptoKeyPair;
   let ephemeralKeyPair: CryptoKeyPair;
@@ -64,9 +67,9 @@ describe("aes key", () => {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const plaintext = new TextEncoder().encode(originalMsg);
 
-    const ciphertext = await aesgcm.encrypt(plaintext, encKey, iv);
+    const ciphertext = await encrypt(plaintext, encKey, iv);
 
-    const decrypted = await aesgcm.decrypt(ciphertext, decKey, iv);
+    const decrypted = await decrypt(ciphertext, decKey, iv);
 
     expect(new TextDecoder().decode(decrypted)).toBe(originalMsg);
   });

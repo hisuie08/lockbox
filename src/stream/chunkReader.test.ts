@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { StreamChunkReader } from "./chunkReader";
-import { InputReadError } from "../errors";
+import { InputReadError } from "../crypt/errors";
 
 function createStream(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream({

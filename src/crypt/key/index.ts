@@ -1,6 +1,8 @@
 export * from "./errors";
 import { aesgcm } from "./aes";
+import { type X25519KeyAlgorithm } from "./constants";
 export { parseJwk, type X25519JwkValidationResult } from "./x25519";
+export { HKDF } from "./constants";
 import {
   x25519,
   type KeyAgreementKeyType,
@@ -10,7 +12,7 @@ import {
 } from "./x25519";
 
 export interface AESGCM {
-  algorithm: { name: string; length: number };
+  algorithm: AesKeyAlgorithm & { readable: string };
   usage: ReadonlyArray<KeyUsage>;
   deriveKey(
     recipientPublicKey: CryptoKey,
@@ -30,7 +32,7 @@ export interface AESGCM {
 }
 
 export interface X25519 {
-  algorithm: { name: string };
+  algorithm: X25519KeyAlgorithm;
   generate(): Promise<CryptoKeyPair>;
   deriveSecret(
     publicKey: CryptoKey,
