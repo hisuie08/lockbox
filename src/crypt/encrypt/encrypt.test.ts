@@ -4,6 +4,7 @@ import { encryptFile } from "./encrypt";
 import {
   ALGORITHMS,
   CHUNK_HEADER_LAYOUT,
+  CHUNK_HEADER_LENGTHS,
   DEFAULT_CHUNK_SIZE,
   ENCRYPTED_FILE_MIMETYPE,
   FILE_SIGNATURE,
@@ -11,7 +12,11 @@ import {
   PREAMBLE_LAYOUT,
 } from "../constants";
 import { BufferedWriter } from "../test/bufferWriter";
-import { buildChunkAad } from "../aad";
+import { buildChunkAad, HEADER_HASH_LENGTH } from "../aad";
+import { uint32ToBytes } from "../utils/encoding";
+
+// AES-GCM の IV の長さ（仕様上の標準長）
+const AES_GCM_IV_LENGTH = 12;
 import type { EncryptedFileHeader } from "../types";
 import {
   createEncryptedFileHeader,
@@ -54,9 +59,9 @@ describe("encryptStream", () => {
     );
 
     const plaintext = new Uint8Array([1, 2, 3]);
-    const aad = buildChunkAad(new Uint8Array(32), 0, false);
+    const aad = buildChunkAad(new Uint8Array(HEADER_HASH_LENGTH), 0, false);
     const encrypted = await encryptChunk(plaintext, aesKey, aad);
-    expect(encrypted.iv.length).toBe(12);
+    expect(encrypted.iv.length).toBe(AES_GCM_IV_LENGTH);
     expect(encrypted.ciphertext.length).toBeGreaterThan(0);
   });
   describe("writeHeader", () => {
@@ -113,8 +118,14 @@ describe("writeChunk", () => {
     const ciphertext = new Uint8Array([4, 5, 6, 7]);
     const iv = new Uint8Array([1, 2, 3]);
 
+    // チャンクヘッダーは暗号文長と IV 長を uint32 ビッグエンディアンで並べたもの
+    const header = new Uint8Array([
+      ...uint32ToBytes(ciphertext.length),
+      ...uint32ToBytes(iv.length),
+    ]);
+
     await writeChunk(writer, {
-      header: new Uint8Array([0, 0, 0, 4, 0, 0, 0, 3]),
+      header,
       iv,
       ciphertext,
     });
@@ -130,9 +141,16 @@ describe("writeChunk", () => {
     );
     expect(view.getUint32(CHUNK_HEADER_LAYOUT.IV_OFFSET)).toBe(iv.length);
 
-    expect(Array.from(bytes.slice(8, 11))).toEqual([1, 2, 3]);
+    const headerLength =
+      CHUNK_HEADER_LENGTHS.CIPHERTEXT_LENGTH + CHUNK_HEADER_LENGTHS.IV_LENGTH;
 
-    expect(Array.from(bytes.slice(11))).toEqual([4, 5, 6, 7]);
+    expect(
+      Array.from(bytes.slice(headerLength, headerLength + iv.length)),
+    ).toEqual(Array.from(iv));
+
+    expect(Array.from(bytes.slice(headerLength + iv.length))).toEqual(
+      Array.from(ciphertext),
+    );
   });
 });
 

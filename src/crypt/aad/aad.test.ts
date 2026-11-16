@@ -1,41 +1,79 @@
 // aad.test.ts
 import { describe, expect, test } from "vitest";
-import { AAD_LENGTH, buildChunkAad, hashHeaderBytes } from "./aad";
+import { sha256 } from "@noble/hashes/sha2.js";
+import {
+  AAD_LENGTH,
+  HEADER_HASH_LENGTH,
+  buildChunkAad,
+  hashHeaderBytes,
+} from "./aad";
+
+// 期待値の出自について:
+// - 公知の定数は、出典を添えて定数として宣言してから使う
+// - 他の値から導ける期待値は、実装とは別経路の導出でその場で計算する
+// - 値そのものに意味のないもの（サンプルのファイル名やダミーの鍵など）は、
+//   テスト内で一貫していればよいので、そのまま使う
+
+// SHA-256 の公知のテストベクタ
+const SHA256_OF_ABC_HEX =
+  "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+const SHA256_OF_EMPTY_HEX =
+  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+// ENCFILE2 v4 の仕様で定めたドメイン文字列と、レイアウト上の各部の長さ
+const AAD_DOMAIN = "ENCFILE2-v4-chunk";
+const AAD_DOMAIN_BYTES = new TextEncoder().encode(AAD_DOMAIN);
+const CHUNK_INDEX_LENGTH = 8;
+const FINAL_FLAG_LENGTH = 1;
 
 function toHex(bytes: Uint8Array): string {
   return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function fromHex(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
+}
+
+// uint64 ビッグエンディアンの導出。実装は DataView.setBigUint64 を使うので、
+// ここでは BigInt のシフトで1バイトずつ取り出す別経路で導く
+function encodeUint64BE(value: number): Uint8Array {
+  let rest = BigInt(value);
+  const bytes = new Uint8Array(CHUNK_INDEX_LENGTH);
+  for (let i = CHUNK_INDEX_LENGTH - 1; i >= 0; i--) {
+    bytes[i] = Number(rest & 0xffn);
+    rest >>= 8n;
   }
   return bytes;
 }
 
-// 00 01 02 ... 1f の32バイトを固定のヘッダーハッシュとして使う
-const FIXED_HEADER_HASH = fromHex(
-  "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+// 00 01 02 ... と、位置を目で追えるようにした32バイト。
+// ハッシュの中身そのものに意味はない
+const FIXED_HEADER_HASH = Uint8Array.from(
+  { length: HEADER_HASH_LENGTH },
+  (_, i) => i,
 );
 
 describe("hashHeaderBytes", () => {
   test("matches the SHA-256 test vector for 'abc'", async () => {
     const digest = await hashHeaderBytes(new TextEncoder().encode("abc"));
-    expect(digest.length).toBe(32);
-    expect(toHex(digest)).toBe(
-      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-    );
+    expect(digest.length).toBe(HEADER_HASH_LENGTH);
+    expect(toHex(digest)).toBe(SHA256_OF_ABC_HEX);
   });
 
   test("matches the SHA-256 test vector for empty input", async () => {
     const digest = await hashHeaderBytes(new Uint8Array());
-    expect(toHex(digest)).toBe(
-      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    );
+    expect(toHex(digest)).toBe(SHA256_OF_EMPTY_HEX);
   });
 
-  test("hashes a sample header JSON to a fixed value", async () => {
+  test("hashes a sample header JSON", async () => {
+    // 実物のヘッダーと同じフィールド順のサンプル。
+    // フィールドの値そのものに意味はない
     const headerJson =
       '{"algorithm":"X25519-HKDF-SHA256-AES-256-GCM","chunkSize":4194304,' +
       '"ephemeralPublicKey":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",' +
@@ -44,10 +82,10 @@ describe("hashHeaderBytes", () => {
       '"hkdfSalt":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",' +
       '"originalType":"text/plain","originalSize":14,' +
       '"createdAt":"2026-01-01T00:00:00.000Z"}';
-    const digest = await hashHeaderBytes(new TextEncoder().encode(headerJson));
-    expect(toHex(digest)).toBe(
-      "9b4e1b3dd81bc117283b2450aedd6ed8df10987118f3d196df03ec37c749051b",
-    );
+    const headerBytes = new TextEncoder().encode(headerJson);
+    // 期待値は、実装（WebCrypto）とは別実装の SHA-256 で導出する
+    const expected = sha256(headerBytes);
+    expect(await hashHeaderBytes(headerBytes)).toEqual(expected);
   });
 
   test("produces different hashes for different inputs", async () => {
@@ -58,26 +96,39 @@ describe("hashHeaderBytes", () => {
 });
 
 describe("buildChunkAad", () => {
-  test("has a fixed total length", () => {
-    expect(AAD_LENGTH).toBe(58);
-    expect(buildChunkAad(FIXED_HEADER_HASH, 0, false).length).toBe(58);
-  });
-
-  test("lays out domain, header hash, index and flag in order", () => {
-    expect(toHex(buildChunkAad(FIXED_HEADER_HASH, 0, false))).toBe(
-      "454e4346494c45322d76342d6368756e6b" + // "ENCFILE2-v4-chunk"
-        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" +
-        "0000000000000000" + // chunk index 0
-        "00", // not final
+  test("has a length equal to the sum of its parts", () => {
+    const expectedLength =
+      AAD_DOMAIN_BYTES.length +
+      HEADER_HASH_LENGTH +
+      CHUNK_INDEX_LENGTH +
+      FINAL_FLAG_LENGTH;
+    expect(AAD_LENGTH).toBe(expectedLength);
+    expect(buildChunkAad(FIXED_HEADER_HASH, 0, false).length).toBe(
+      expectedLength,
     );
   });
 
+  test("lays out domain, header hash, index and flag in order", () => {
+    const expected = concatBytes([
+      AAD_DOMAIN_BYTES,
+      FIXED_HEADER_HASH,
+      encodeUint64BE(0),
+      Uint8Array.of(0x00), // not final
+    ]);
+    expect(buildChunkAad(FIXED_HEADER_HASH, 0, false)).toEqual(expected);
+  });
+
   test("encodes the chunk index as uint64 big-endian", () => {
-    expect(toHex(buildChunkAad(FIXED_HEADER_HASH, 4294967296, true))).toBe(
-      "454e4346494c45322d76342d6368756e6b" +
-        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" +
-        "0000000100000000" + // chunk index 2^32
-        "01", // final
+    // 32ビットに収まらない値で、8バイト分が使われることを確認する
+    const chunkIndex = 2 ** 32;
+    const expected = concatBytes([
+      AAD_DOMAIN_BYTES,
+      FIXED_HEADER_HASH,
+      encodeUint64BE(chunkIndex),
+      Uint8Array.of(0x01), // final
+    ]);
+    expect(buildChunkAad(FIXED_HEADER_HASH, chunkIndex, true)).toEqual(
+      expected,
     );
   });
 
@@ -96,12 +147,12 @@ describe("buildChunkAad", () => {
   });
 
   test("rejects a header hash of the wrong length", () => {
-    expect(() => buildChunkAad(new Uint8Array(31), 0, false)).toThrow(
-      RangeError,
-    );
-    expect(() => buildChunkAad(new Uint8Array(33), 0, false)).toThrow(
-      RangeError,
-    );
+    expect(
+      () => buildChunkAad(new Uint8Array(HEADER_HASH_LENGTH - 1), 0, false),
+    ).toThrow(RangeError);
+    expect(
+      () => buildChunkAad(new Uint8Array(HEADER_HASH_LENGTH + 1), 0, false),
+    ).toThrow(RangeError);
   });
 
   test("rejects an invalid chunk index", () => {
@@ -111,8 +162,9 @@ describe("buildChunkAad", () => {
     expect(() => buildChunkAad(FIXED_HEADER_HASH, 1.5, false)).toThrow(
       RangeError,
     );
-    expect(() => buildChunkAad(FIXED_HEADER_HASH, 2 ** 53, false)).toThrow(
-      RangeError,
-    );
+    expect(
+      () =>
+        buildChunkAad(FIXED_HEADER_HASH, Number.MAX_SAFE_INTEGER + 1, false),
+    ).toThrow(RangeError);
   });
 });
