@@ -394,6 +394,46 @@ describe("decryptFileToStream", () => {
     ).rejects.toThrow(UnexpectedEofError);
   });
 
+  test("reports only finite progress values for empty file", async () => {
+    const recipient = await generate();
+
+    const encryptedBuffer = new BufferedWriter();
+
+    await encryptFile({
+      filename: "empty.txt",
+      filetype: "text/plain",
+      fileSize: 0,
+      source: streamFromChunks([]),
+      publicKey: recipient.publicKey,
+      writer: encryptedBuffer.stream.getWriter(),
+      onProgress() {},
+    });
+
+    const encryptedBytes = await blobToBytes(
+      encryptedBuffer.toBlob(ENCRYPTED_FILE_MIMETYPE),
+    );
+
+    const progressValues: number[] = [];
+
+    await decryptFile({
+      source: streamFromChunks([encryptedBytes]),
+      privateKey: recipient.privateKey,
+      writer: new BufferedWriter().stream.getWriter(),
+      onProgress(value) {
+        progressValues.push(value);
+      },
+    });
+
+    // 進捗は 0..1 の有限な値だけが報告され、最後は 1 に到達すること
+    expect(progressValues.length).toBeGreaterThan(0);
+    for (const value of progressValues) {
+      expect(Number.isFinite(value)).toBe(true);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThanOrEqual(1);
+    }
+    expect(progressValues.at(-1)).toBe(1);
+  });
+
   test("decrypts empty file", async () => {
     const recipient = await generate();
 
