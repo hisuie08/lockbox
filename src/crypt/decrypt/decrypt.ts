@@ -203,7 +203,11 @@ export async function decryptFile(
         throw new OutputWriteError("Failed to write decrypted output.", error);
       }
       writtenBytes += plaintext.length;
-      input.onProgress(writtenBytes / header.originalSize);
+      // 空ファイルでは originalSize が 0 で割り算が NaN になるため、
+      // その場合は全体が書き込み済みとして 1 を報告する
+      input.onProgress(
+        header.originalSize === 0 ? 1 : writtenBytes / header.originalSize,
+      );
       sawFinalChunk = isFinal;
       chunkIndex++;
       pending = next;
