@@ -15,6 +15,18 @@ type FileCryptoState = {
   progress: number;
   error: string | null;
 };
+// 空のファイルを Blob の object URL から直接ダウンロードする。
+// Service Worker 経由のストリーミングでは、0バイトの応答を失敗扱いに
+// するブラウザがあるための回避策
+function downloadEmptyFile(filename: string) {
+  const url = URL.createObjectURL(new Blob([]));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return (error as Error).name + ": " + error.message;
@@ -179,9 +191,22 @@ export function useFileDecrypt(privateKey: KeyState) {
       const filename = originFile.value.originalName;
       const controller = new AbortController();
       internal.currentController.value = controller;
-      const { writer, signal: downloadSignal } =
-        await internal.getDownloadWriter(filename);
-      const signal = AbortSignal.any([controller.signal, downloadSignal]);
+
+      // サイズ0のファイルは、Service Worker 経由のストリーミング
+      // ダウンロードで失敗扱いになるブラウザがあるため、復号の検証は
+      // 通常どおり行い、保存だけ Blob で直接ダウンロードする
+      const isEmptyFile = originFile.value.originalSize === 0;
+
+      let writer: WritableStreamDefaultWriter<Uint8Array>;
+      let signal: AbortSignal = controller.signal;
+      if (isEmptyFile) {
+        // 書き捨て用のシンク。書き込まれた内容はそのまま破棄される
+        writer = new WritableStream<Uint8Array>().getWriter();
+      } else {
+        const download = await internal.getDownloadWriter(filename);
+        writer = download.writer;
+        signal = AbortSignal.any([controller.signal, download.signal]);
+      }
 
       await decryptFile(
         {
@@ -190,6 +215,10 @@ export function useFileDecrypt(privateKey: KeyState) {
         },
         signal,
       );
+
+      if (isEmptyFile) {
+        downloadEmptyFile(filename);
+      }
 
       internal.setError(null);
     } catch (error) {
