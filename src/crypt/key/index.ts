@@ -23,11 +23,13 @@ export interface AESGCM {
     content: BufferSource,
     key: CryptoKey,
     iv: BufferSource,
+    aad: BufferSource,
   ): Promise<ArrayBuffer>;
   decrypt(
     ciphertext: BufferSource,
     key: CryptoKey,
     iv: BufferSource,
+    aad: BufferSource,
   ): Promise<ArrayBuffer>;
 }
 

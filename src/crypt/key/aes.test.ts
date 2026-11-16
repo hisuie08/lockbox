@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { generate } from "./x25519";
 import { deriveKey, encrypt, decrypt } from "./aes";
+import { buildChunkAad } from "../aad";
 import { KeyDerivationError } from "./errors";
 describe("aes key", () => {
   let recipientKeyPair: CryptoKeyPair;
@@ -65,9 +66,10 @@ describe("aes key", () => {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const plaintext = new TextEncoder().encode(originalMsg);
 
-    const ciphertext = await encrypt(plaintext, encKey, iv);
+    const aad = buildChunkAad(new Uint8Array(32), 0, true);
+    const ciphertext = await encrypt(plaintext, encKey, iv, aad);
 
-    const decrypted = await decrypt(ciphertext, decKey, iv);
+    const decrypted = await decrypt(ciphertext, decKey, iv, aad);
 
     expect(new TextDecoder().decode(decrypted)).toBe(originalMsg);
   });

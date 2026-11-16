@@ -2,7 +2,7 @@ import { HKDF, X25519, AES } from "./key/constants";
 // FILE_SIGNATURE は必ず8バイト
 export const FILE_SIGNATURE = "ENCFILE2";
 // FORMAT_VERSION は255以下
-export const FORMAT_VERSION = 3;
+export const FORMAT_VERSION = 4;
 export const KEY_EXCHANGE_ALGORITHM = X25519.algorithm.name;
 export const KEY_DERIVATION_ALGORITHM = HKDF.algorithm.name;
 export const HASH_ALGORITHM = HKDF.algorithm.readable;

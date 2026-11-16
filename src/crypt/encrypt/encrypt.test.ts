@@ -11,6 +11,7 @@ import {
   PREAMBLE_LAYOUT,
 } from "../constants";
 import { BufferedWriter } from "../test/bufferWriter";
+import { buildChunkAad } from "../aad";
 import type { EncryptedFileHeader } from "../types";
 import {
   createEncryptedFileHeader,
@@ -53,7 +54,8 @@ describe("encryptStream", () => {
     );
 
     const plaintext = new Uint8Array([1, 2, 3]);
-    const encrypted = await encryptChunk(plaintext, aesKey);
+    const aad = buildChunkAad(new Uint8Array(32), 0, false);
+    const encrypted = await encryptChunk(plaintext, aesKey, aad);
     expect(encrypted.iv.length).toBe(12);
     expect(encrypted.ciphertext.length).toBeGreaterThan(0);
   });

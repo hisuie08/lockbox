@@ -21,6 +21,7 @@ import { genIv, genSalt } from "../utils/random";
 import { bytesToBase64Url, uint32ToBytes } from "../utils/encoding";
 import { StreamChunkReader, type ChunkReader } from "@/stream/chunkReader";
 import { AESGCM, X25519 } from "../key";
+import { buildChunkAad, hashHeaderBytes } from "../aad";
 
 class EncryptionError extends FileCryptoError {
   override cause?: unknown;
@@ -81,6 +82,7 @@ export async function createEncryptedFileHeader(
 export async function encryptChunk(
   content: Uint8Array,
   aesKey: CryptoKey,
+  aad: Uint8Array<ArrayBuffer>,
 ): Promise<EncryptedChunk> {
   try {
     const header = new Uint8Array(
@@ -88,7 +90,12 @@ export async function encryptChunk(
     );
     const view = new DataView(header.buffer);
     const iv = genIv();
-    const encrypted = await AESGCM.encrypt(content as BufferSource, aesKey, iv);
+    const encrypted = await AESGCM.encrypt(
+      content as BufferSource,
+      aesKey,
+      iv,
+      aad,
+    );
     const ciphertext = new Uint8Array(encrypted);
 
     view.setUint32(CHUNK_HEADER_LAYOUT.LENGTH_OFFSET, ciphertext.length);
@@ -119,7 +126,7 @@ function encodeHeader(header: EncryptedFileHeader): EncodedFileHeader {
 export async function writeFileHeader(
   writer: WritableStreamDefaultWriter<Uint8Array>,
   header: EncryptedFileHeader,
-): Promise<void> {
+): Promise<Uint8Array> {
   try {
     const encodedHeader = encodeHeader(header);
 
@@ -127,6 +134,7 @@ export async function writeFileHeader(
     await writer.write(encodedHeader.version);
     await writer.write(encodedHeader.headerLength);
     await writer.write(encodedHeader.headerBytes);
+    return encodedHeader.headerBytes;
   } catch (error) {
     if (error instanceof MemoryError) {
       throw error;
@@ -175,8 +183,13 @@ export async function encryptFile(
       algorithm: ALGORITHMS,
     });
 
-    await writeFileHeader(input.writer, header);
+    const headerBytes = await writeFileHeader(input.writer, header);
+    const headerHash = await hashHeaderBytes(headerBytes);
     const reader: ChunkReader = new StreamChunkReader(input.source);
+    let chunkIndex = 0;
+    // 最終チャンクかどうかは次のチャンクを読んでみるまで分からないため、
+    // 1チャンク遅らせて書き込む。保持し続けたチャンクが最終チャンクになる。
+    let pending: Uint8Array | null = null;
     while (true) {
       signal?.throwIfAborted();
       const chunk = await reader.readChunk();
@@ -186,16 +199,26 @@ export async function encryptFile(
       processedBytes += chunk.length;
       input.onProgress(processedBytes / input.fileSize);
       signal?.throwIfAborted();
-      const encrypted = await encryptChunk(chunk, aesKey);
-      await writeChunk(input.writer, encrypted);
+      if (pending !== null) {
+        const encrypted = await encryptChunk(
+          pending,
+          aesKey,
+          buildChunkAad(headerHash, chunkIndex, false),
+        );
+        chunkIndex++;
+        await writeChunk(input.writer, encrypted);
+      }
+      pending = chunk;
     }
 
-    // 空ファイルでも完全性保護のため空チャンクを1つ保存する。
-    if (processedBytes === 0) {
-      signal?.throwIfAborted();
-      const encrypted = await encryptChunk(new Uint8Array(), aesKey);
-      await writeChunk(input.writer, encrypted);
-    }
+    // 最終チャンクを書き込む。空ファイルでは空チャンクが最終チャンクになる。
+    signal?.throwIfAborted();
+    const encrypted = await encryptChunk(
+      pending ?? new Uint8Array(),
+      aesKey,
+      buildChunkAad(headerHash, chunkIndex, true),
+    );
+    await writeChunk(input.writer, encrypted);
 
     // 出力ストリームを正常終了する
     input.onProgress(1);

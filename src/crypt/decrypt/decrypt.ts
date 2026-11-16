@@ -26,11 +26,12 @@ import {
   PREAMBLE_LENGTHS,
 } from "../constants";
 import { X25519, AESGCM } from "../key";
+import { buildChunkAad, hashHeaderBytes } from "../aad";
 const decoder = new TextDecoder();
 
 async function readFileHeader(
   reader: BufferedReader,
-): Promise<EncryptedFileHeader> {
+): Promise<{ header: EncryptedFileHeader; headerHash: Uint8Array }> {
   const signature = decoder.decode(
     await reader.readBytes(PREAMBLE_LENGTHS.FILE_SIGNATURE),
   );
@@ -53,8 +54,14 @@ async function readFileHeader(
 
   const headerBytes = await reader.readBytes(headerLength);
 
+  // AAD の材料として、読み取った生バイト列のままハッシュする
+  const headerHash = await hashHeaderBytes(headerBytes);
+
   try {
-    return JSON.parse(decoder.decode(headerBytes)) as EncryptedFileHeader;
+    return {
+      header: JSON.parse(decoder.decode(headerBytes)) as EncryptedFileHeader,
+      headerHash,
+    };
   } catch (error) {
     throw new InvalidHeaderError(error);
   }
@@ -99,12 +106,14 @@ async function decryptChunk(input: {
   iv: Uint8Array;
   ciphertext: Uint8Array;
   aesKey: CryptoKey;
+  aad: Uint8Array<ArrayBuffer>;
 }): Promise<Uint8Array> {
   try {
     const content = await AESGCM.decrypt(
       input.ciphertext as BufferSource,
       input.aesKey,
       input.iv as BufferSource,
+      input.aad,
     );
 
     return new Uint8Array(content);
@@ -141,7 +150,8 @@ export async function getEncryptedFileHeader(
   try {
     signal?.throwIfAborted();
     const reader: BufferedReader = new StreamBufferedReader(input.source);
-    return await readFileHeader(reader);
+    const { header } = await readFileHeader(reader);
+    return header;
   } catch (error) {
     signal?.throwIfAborted();
     if (error instanceof DecryptionError || InputReadError) {
@@ -166,16 +176,23 @@ export async function decryptFile(
     let writtenBytes = 0;
     const reader = new StreamBufferedReader(input.source);
     signal?.throwIfAborted();
-    const header = await readFileHeader(reader);
+    const { header, headerHash } = await readFileHeader(reader);
     signal?.throwIfAborted();
     const aesKey = await prepareAESKey(header, input.privateKey);
-    while (true) {
-      const chunk = await readChunk(reader);
+    let chunkIndex = 0;
+    let sawFinalChunk = false;
+    // 最終チャンクかどうかは次のチャンクを読んでみるまで分からないため、
+    // 1チャンク先読みする。先読みが無ければ、手元が最終チャンクになる。
+    let pending = await readChunk(reader);
+    while (pending !== null) {
       signal?.throwIfAborted();
-      if (!chunk) {
-        break;
-      }
-      const plaintext = await decryptChunk({ ...chunk, aesKey });
+      const next = await readChunk(reader);
+      const isFinal = next === null;
+      const plaintext = await decryptChunk({
+        ...pending,
+        aesKey,
+        aad: buildChunkAad(headerHash, chunkIndex, isFinal),
+      });
       try {
         await input.writer.write(plaintext);
       } catch (error) {
@@ -187,6 +204,17 @@ export async function decryptFile(
       }
       writtenBytes += plaintext.length;
       input.onProgress(writtenBytes / header.originalSize);
+      sawFinalChunk = isFinal;
+      chunkIndex++;
+      pending = next;
+    }
+    // 最終チャンクの後ろに余分なバイトが残っていないことを確認する
+    if ((await reader.tryReadBytes(1)) !== null) {
+      throw new CorruptedFileError("trailing data after the final chunk");
+    }
+    // 最終チャンクを1つも見ていないファイルは不完全として扱う
+    if (!sawFinalChunk) {
+      throw new CorruptedFileError("missing final chunk");
     }
     // ファイルサイズ照合
     if (writtenBytes !== header.originalSize) {

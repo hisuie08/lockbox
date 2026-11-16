@@ -43,9 +43,10 @@ export async function encrypt(
   content: BufferSource,
   key: CryptoKey,
   iv: BufferSource,
+  aad: BufferSource,
 ): Promise<ArrayBuffer> {
   return await crypto.subtle.encrypt(
-    { ...AES.algorithm, iv: iv },
+    { ...AES.algorithm, iv: iv, additionalData: aad },
     key,
     content,
   );
@@ -55,9 +56,10 @@ export async function decrypt(
   ciphertext: BufferSource,
   key: CryptoKey,
   iv: BufferSource,
+  aad: BufferSource,
 ): Promise<ArrayBuffer> {
   return await crypto.subtle.decrypt(
-    { ...AES.algorithm, iv: iv },
+    { ...AES.algorithm, iv: iv, additionalData: aad },
     key,
     ciphertext,
   );
