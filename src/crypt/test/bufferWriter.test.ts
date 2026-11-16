@@ -7,13 +7,16 @@ describe("BufferWriter", () => {
 
     const streamWriter = writer.stream.getWriter();
 
-    await streamWriter.write(new TextEncoder().encode("Hello "));
+    const first = new TextEncoder().encode("Hello ");
+    const second = new TextEncoder().encode("World");
 
-    await streamWriter.write(new TextEncoder().encode("World"));
+    await streamWriter.write(first);
+
+    await streamWriter.write(second);
 
     await streamWriter.close();
 
-    expect(writer.size).toBe(11);
+    expect(writer.size).toBe(first.byteLength + second.byteLength);
   });
   test("creates blob", async () => {
     const writer = new BufferedWriter();
@@ -48,11 +51,13 @@ describe("BufferWriter", () => {
 
     const streamWriter = writer.stream.getWriter();
 
-    await streamWriter.write(new Uint8Array([1, 2, 3]));
+    const chunk = new Uint8Array([1, 2, 3]);
+
+    await streamWriter.write(chunk);
 
     await streamWriter.close();
 
-    expect(writer.size).toBe(3);
+    expect(writer.size).toBe(chunk.byteLength);
 
     writer.clear();
 

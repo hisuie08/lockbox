@@ -11,7 +11,16 @@ import {
 } from "./x25519";
 import { X25519 } from "./constants";
 import { KeyParseError, KeyImportError } from "./errors";
+import { bytesToBase64Url } from "../utils/encoding";
 const { algorithm } = X25519;
+
+// 形式だけ整えたダミーの鍵素材。32バイト分を base64url 化したもので、
+// 中身そのものに意味はない（互いに異なる値であることだけが前提）
+const DUMMY_X = bytesToBase64Url(new Uint8Array(32));
+const DUMMY_X_ALT = bytesToBase64Url(new Uint8Array(32).fill(0xff));
+const DUMMY_D = bytesToBase64Url(
+  Uint8Array.from({ length: 32 }, (_, i) => i),
+);
 describe("key pair test", () => {
   test("generate keypair", async () => {
     const { publicKey, privateKey } = await generate();
@@ -69,12 +78,12 @@ describe("validateX25519Jwk", () => {
   const publicJwk = {
     kty: "OKP",
     crv: "X25519",
-    x: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    x: DUMMY_X,
   };
 
   const privateJwk = {
     ...publicJwk,
-    d: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    d: DUMMY_D,
   };
 
   test("rejects invalid key data", async () => {
@@ -169,9 +178,10 @@ describe("canonicalizeX25519Jwk", () => {
       kid: "ignored",
     };
 
-    expect(canonicalizeX25519Jwk(jwk)).toBe(
-      '{"crv":"X25519","kty":"OKP","x":"xxx"}',
-    );
+    // RFC 7638 の正規形: 必須メンバだけを辞書順に並べた最小の JSON
+    const expected = JSON.stringify({ crv: "X25519", kty: "OKP", x: "xxx" });
+
+    expect(canonicalizeX25519Jwk(jwk)).toBe(expected);
   });
 
   test.each([
@@ -188,13 +198,13 @@ describe("getThumbprint", () => {
   const jwk1 = {
     kty: "OKP",
     crv: "X25519",
-    x: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    x: DUMMY_X,
   };
 
   const jwk2 = {
     kty: "OKP",
     crv: "X25519",
-    x: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    x: DUMMY_X_ALT,
   };
 
   test("returns empty string for null", async () => {

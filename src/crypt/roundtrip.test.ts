@@ -8,6 +8,9 @@ import { base64UrlToArrayBuffer } from "./utils/encoding";
 import { ALGORITHMS, ENCRYPTED_FILE_MIMETYPE } from "./constants";
 import { BufferedWriter } from "./test/bufferWriter";
 
+// X25519 の公開鍵のバイト長（RFC 7748）
+const X25519_PUBLIC_KEY_LENGTH = 32;
+
 export class HashWriter {
   private readonly hash = sha256.create();
 
@@ -135,7 +138,7 @@ describe("encrypt file stream round trip", () => {
       expect(header.originalSize).toBe(fileSize);
       expect(header.algorithm).toBe(ALGORITHMS);
       const ephemeralPubRaw = base64UrlToArrayBuffer(header.ephemeralPublicKey);
-      expect(ephemeralPubRaw.byteLength).toBe(32);
+      expect(ephemeralPubRaw.byteLength).toBe(X25519_PUBLIC_KEY_LENGTH);
     }, 60_000);
   }
 

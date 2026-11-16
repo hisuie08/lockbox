@@ -54,14 +54,18 @@ describe("bytesToBase64Url / base64UrlToArrayBuffer", () => {
     },
   );
 
-  test.each([
+  // RFC 4648 のテストベクタ。この入力範囲では base64 と base64url の
+  // 出力は同一で、base64url ではパディング "=" を付けない
+  const RFC4648_VECTORS: Array<[string, string]> = [
     ["f", "Zg"],
     ["fo", "Zm8"],
     ["foo", "Zm9v"],
     ["foob", "Zm9vYg"],
     ["fooba", "Zm9vYmE"],
     ["foobar", "Zm9vYmFy"],
-  ])("encodes known vector %s", (input, expected) => {
+  ];
+
+  test.each(RFC4648_VECTORS)("encodes RFC 4648 vector %s", (input, expected) => {
     const bytes = new TextEncoder().encode(input);
 
     expect(bytesToBase64Url(bytes)).toBe(expected);

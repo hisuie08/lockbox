@@ -1,14 +1,13 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { generate } from "./x25519";
 import { deriveKey, encrypt, decrypt } from "./aes";
-import { buildChunkAad } from "../aad";
+import { buildChunkAad, HEADER_HASH_LENGTH } from "../aad";
+import { genIv, genSalt } from "../utils/random";
 import { KeyDerivationError } from "./errors";
 describe("aes key", () => {
   let recipientKeyPair: CryptoKeyPair;
   let ephemeralKeyPair: CryptoKeyPair;
-  const salt: Uint8Array<ArrayBuffer> = crypto.getRandomValues(
-    new Uint8Array(32),
-  );
+  const salt = genSalt();
   beforeAll(async () => {
     [recipientKeyPair, ephemeralKeyPair] = await Promise.all([
       generate(),
@@ -63,10 +62,10 @@ describe("aes key", () => {
       salt,
     );
     const originalMsg = "hello";
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const iv = genIv();
     const plaintext = new TextEncoder().encode(originalMsg);
 
-    const aad = buildChunkAad(new Uint8Array(32), 0, true);
+    const aad = buildChunkAad(new Uint8Array(HEADER_HASH_LENGTH), 0, true);
     const ciphertext = await encrypt(plaintext, encKey, iv, aad);
 
     const decrypted = await decrypt(ciphertext, decKey, iv, aad);
