@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import { computed, provide, ref } from "vue";
-import { PlusIcon } from "lucide-vue-next";
+import { PlusIcon } from "@lucide/vue";
 import CopyableKeyView from "./CopyableKeyView.vue";
 import { keyIsGenerating } from "../provideKeys.ts";
 import DownloadKeyBtn from "./DownloadKeyBtn.vue";

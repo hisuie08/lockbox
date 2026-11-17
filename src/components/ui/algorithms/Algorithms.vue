@@ -6,7 +6,7 @@ import {
   KEY_DERIVATION_ALGORITHM,
   KEY_EXCHANGE_ALGORITHM,
 } from "@/crypt";
-import { FileKey2 } from "lucide-vue-next";
+import { FileKey2 } from "@lucide/vue";
 </script>
 
 <template>

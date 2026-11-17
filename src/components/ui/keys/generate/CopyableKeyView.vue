@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from "vue";
-import { Check, Copy } from "lucide-vue-next";
+import { Check, Copy } from "@lucide/vue";
 import { type GeneratedKeyHandle } from "@/composables/useCryptoKeys";
 import { keyIsGenerating } from "../provideKeys";
 import {

@@ -15,12 +15,7 @@ import {
   InputGroupButton,
 } from "@/components/base/input-group";
 
-import {
-  Edit2Icon,
-  MoreHorizontal,
-  Share2Icon,
-  TrashIcon,
-} from "lucide-vue-next";
+import { Edit2Icon, MoreHorizontal, Share2Icon, TrashIcon } from "@lucide/vue";
 
 import { Dialog, DialogContent } from "@/components/base/dialog";
 import type { KeyHandle } from "@/composables/useCryptoKeys";

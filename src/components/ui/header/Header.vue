@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MoonIcon, ShieldCheck, SunIcon } from "lucide-vue-next";
+import { MoonIcon, ShieldCheck, SunIcon } from "@lucide/vue";
 import Github from "./Github.vue";
 import { useColorMode } from "@vueuse/core";
 

@@ -11,7 +11,7 @@ import { Textarea } from "@/components/base/textarea";
 import { Button } from "@/components/base/button";
 import { DialogClose, DialogTitle } from "@/components/base/dialog";
 import type { KeyHandle } from "@/composables/useCryptoKeys.ts";
-import { Check } from "lucide-vue-next";
+import { Check } from "@lucide/vue";
 const props = defineProps<{
   keyHandle: KeyHandle;
 }>();

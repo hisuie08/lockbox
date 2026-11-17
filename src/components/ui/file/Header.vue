@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CardDescription, CardHeader, CardTitle } from "@/components/base/card";
 import type { KeyState } from "@/composables/useKeyState";
-import { LockKeyhole, UnlockKeyhole } from "lucide-vue-next";
+import { LockKeyhole, UnlockKeyhole } from "@lucide/vue";
 
 const props = defineProps<{
   keyState: KeyState;

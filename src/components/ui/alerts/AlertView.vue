@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Alert, AlertDescription, AlertTitle } from "@/components/base/alert";
-import { AlertTriangleIcon } from "lucide-vue-next";
+import { AlertTriangleIcon } from "@lucide/vue";
 
 defineProps<{
   title: string;

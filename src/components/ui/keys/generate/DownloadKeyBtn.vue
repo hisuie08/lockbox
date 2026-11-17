@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Download } from "lucide-vue-next";
+import { Download } from "@lucide/vue";
 import { computed, inject, type Ref } from "vue";
 import { keyIsGenerating } from "../provideKeys";
 import { Button } from "@/components/base/button";

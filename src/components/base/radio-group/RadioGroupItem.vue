@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleIcon } from "lucide-vue-next";
+import { CircleIcon } from "@lucide/vue";
 
 import type { RadioGroupItemProps } from "reka-ui";
 import type { HTMLAttributes } from "vue";

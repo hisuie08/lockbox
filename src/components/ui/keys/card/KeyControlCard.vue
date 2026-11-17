@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/base/card";
 
-import { KeyRound } from "lucide-vue-next";
+import { KeyRound } from "@lucide/vue";
 
 import type { useCryptoKeys } from "@/composables/useCryptoKeys";
 import GenerateKeyAction from "../generate/GenerateKeyAction.vue";

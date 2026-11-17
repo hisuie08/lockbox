@@ -4,7 +4,7 @@ import type {
   useFileEncrypt,
 } from "@/composables/useFileCrypto";
 import { computed } from "vue";
-import { Check, LockKeyhole, LockKeyholeOpen } from "lucide-vue-next";
+import { Check, LockKeyhole, LockKeyholeOpen } from "@lucide/vue";
 import { Button } from "@/components/base/button";
 import { Spinner } from "@/components/base/spinner";
 
