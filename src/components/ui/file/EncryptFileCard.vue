@@ -37,7 +37,7 @@ function onFileChange(event: Event) {
         class="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm whitespace-nowrap overflow-hidden text-ellipsis w-full"
       >
         <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{
-          enc.fileToProcess.value.name ?? "AAAAAAAAAAAAAAAAAAAAAAAA"
+          enc.fileToProcess.value.name ?? ""
         }}</span>
         <span class="ml-3 shrink-0 text-muted-foreground">
           {{ formatBytes(enc.fileToProcess.value.size) }}
